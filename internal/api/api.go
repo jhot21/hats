@@ -37,49 +37,16 @@ func Listen(parentLogger *slog.Logger) {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.Timeout(60 * time.Second))
 
-	router.Get(`/api/state/{entityId}`, func(w http.ResponseWriter, r *http.Request) {
-		logger.Debug(fmt.Sprintf("%s %s", r.Method, r.URL.Path), "method", r.Method, "path", r.URL.Path, "address", r.RemoteAddr)
-		entityId := chi.URLParam(r, "entityId")
+	router.Get(`/api/state/{entityId}`, getEntityStateHandler)
+	router.Post("/api/state/{entityId}/{service}", setEntityStateHandler)
 
-		kvVal, err := nats.GetKeyValue(fmt.Sprintf("%s.%s", HA_STATE_PREFIX, entityId))
-		if err == nil && len(kvVal) > 0 {
-			w.Write(kvVal)
-			return
-		}
+	router.Get("/api/timer/{timerName}", getTimerHandler)
+	router.Post("/api/timer/{timerName}", createTimerHandler)
+	router.Delete("/api/timer/{timerName}", deleteTimerHandler)
 
-		data, err := haClient.GetState(entityId)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		nats.SetKeyValueString(fmt.Sprintf("%s.%s", HA_STATE_PREFIX, entityId), data.State)
-		render.PlainText(w, r, data.State)
-	})
-
-	router.Post("/api/state/{entityId}/{service}", func(w http.ResponseWriter, r *http.Request) {
-		logger.Debug(fmt.Sprintf("%s %s", r.Method, r.URL.Path), "method", r.Method, "path", r.URL.Path, "address", r.RemoteAddr)
-		entityId := chi.URLParam(r, "entityId")
-		service := chi.URLParam(r, "service")
-
-		var extras map[string]string
-		err := render.DecodeJSON(r.Body, &extras)
-		var haErr error
-		if err == nil && len(extras) > 0 {
-			haErr = haClient.CallService(entityId, service, extras)
-		} else {
-			haErr = haClient.CallService(entityId, service)
-		}
-
-		if haErr != nil {
-			logger.Error("Error setting state", "error", haErr)
-			http.Error(w, fmt.Sprintf("error proxying request: %s", haErr.Error()), http.StatusInternalServerError)
-			return
-		}
-
-		render.Status(r, http.StatusOK)
-		render.PlainText(w, r, "OK")
-	})
+	router.Get("/api/schedule/{scheduleName}", getScheduleHandler)
+	router.Post("/api/schedule/{scheduleName}", createScheduleHandler)
+	router.Delete("/api/schedule/{scheduleName}", deleteScheduleHandler)
 
 	server = http.Server{
 		Addr:    ":8888",
@@ -93,4 +60,167 @@ func Close() {
 	if server.Addr != "" {
 		server.Close()
 	}
+}
+
+func logRequest(w http.ResponseWriter, r *http.Request) {
+	logger.Debug(fmt.Sprintf("%s %s", r.Method, r.URL.Path), "method", r.Method, "path", r.URL.Path, "address", r.RemoteAddr)
+}
+
+// HOME ASSISTANT ENTITIES
+
+func getEntityStateHandler(w http.ResponseWriter, r *http.Request) {
+	logRequest(w, r)
+	entityId := chi.URLParam(r, "entityId")
+
+	kvVal, err := nats.GetKeyValue(fmt.Sprintf("%s.%s", HA_STATE_PREFIX, entityId))
+	if err == nil && len(kvVal) > 0 {
+		w.Write(kvVal)
+		return
+	}
+
+	data, err := haClient.GetState(entityId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	nats.SetKeyValueString(fmt.Sprintf("%s.%s", HA_STATE_PREFIX, entityId), data.State)
+	render.PlainText(w, r, data.State)
+}
+
+func setEntityStateHandler(w http.ResponseWriter, r *http.Request) {
+	logRequest(w, r)
+	entityId := chi.URLParam(r, "entityId")
+	service := chi.URLParam(r, "service")
+
+	var extras map[string]string
+	err := render.DecodeJSON(r.Body, &extras)
+	var haErr error
+	if err == nil && len(extras) > 0 {
+		haErr = haClient.CallService(entityId, service, extras)
+	} else {
+		haErr = haClient.CallService(entityId, service)
+	}
+
+	if haErr != nil {
+		logger.Error("Error setting state", "error", haErr)
+		http.Error(w, fmt.Sprintf("error proxying request: %s", haErr.Error()), http.StatusInternalServerError)
+		return
+	}
+
+	render.Status(r, http.StatusOK)
+	render.PlainText(w, r, "OK")
+}
+
+// TIMERS
+
+func getTimerHandler(w http.ResponseWriter, r *http.Request) {
+	timerName := chi.URLParam(r, "timerName")
+	logRequest(w, r)
+
+	timer, err := nats.GetTimer(timerName)
+	if err != nil {
+		http.Error(w, "Unable to get timer: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	render.PlainText(w, r, string(timer.Marshall()))
+}
+
+type CreateTimerData struct {
+	Duration string `json:"duration"`
+	Force    bool   `json:"force"`
+}
+
+func createTimerHandler(w http.ResponseWriter, r *http.Request) {
+	timerName := chi.URLParam(r, "timerName")
+	logRequest(w, r)
+
+	data := &CreateTimerData{}
+	if err := render.DecodeJSON(r.Body, data); err != nil {
+		http.Error(w, "Unable to parse timer data", http.StatusNotAcceptable)
+		return
+	}
+
+	if data.Duration == "" {
+		http.Error(w, "duration required", http.StatusNotAcceptable)
+		return
+	}
+
+	timer := nats.NewTimerWithDuration(timerName, data.Duration).CalculateNext()
+	if data.Force {
+		timer.Activate()
+	} else {
+		timer.ActivateIfNotAlready()
+	}
+
+	getTimerHandler(w, r)
+}
+
+func deleteTimerHandler(w http.ResponseWriter, r *http.Request) {
+	logRequest(w, r)
+	timerName := chi.URLParam(r, "timerName")
+
+	timer, err := nats.GetTimer(timerName)
+	if err != nil {
+		http.Error(w, "Unable to get timer: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	timer.Cancel()
+	render.PlainText(w, r, "OK")
+}
+
+// SCHEDULES
+
+func getScheduleHandler(w http.ResponseWriter, r *http.Request) {
+	scheduleName := chi.URLParam(r, "scheduleName")
+	logRequest(w, r)
+
+	schedule, err := nats.GetSchedule(scheduleName)
+	if err != nil {
+		http.Error(w, "Unable to get schedule: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	render.PlainText(w, r, string(schedule.GetNext()))
+}
+
+type CreateScheduleData struct {
+	Cron string `json:"cron"`
+}
+
+func createScheduleHandler(w http.ResponseWriter, r *http.Request) {
+	scheduleName := chi.URLParam(r, "scheduleName")
+	logRequest(w, r)
+
+	data := &CreateScheduleData{}
+	if err := render.DecodeJSON(r.Body, data); err != nil {
+		http.Error(w, "Unable to parse schedule data", http.StatusNotAcceptable)
+		return
+	}
+
+	if data.Cron == "" {
+		http.Error(w, "cron required", http.StatusNotAcceptable)
+		return
+	}
+
+	schedule := nats.NewSchedule(scheduleName, data.Cron)
+	schedule.Activate()
+
+	getScheduleHandler(w, r)
+}
+
+func deleteScheduleHandler(w http.ResponseWriter, r *http.Request) {
+	logRequest(w, r)
+	scheduleName := chi.URLParam(r, "scheduleName")
+
+	schedule, err := nats.GetSchedule(scheduleName)
+	if err != nil {
+		http.Error(w, "Unable to get schedule: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	schedule.Cancel()
+	render.PlainText(w, r, "OK")
 }

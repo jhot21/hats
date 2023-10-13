@@ -30,11 +30,26 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer nats.Close()
+
 	err = nats.KvConnect()
 	if err != nil {
 		panic(err)
 	}
-	defer nats.Close()
+
+	err = nats.TimerStoreConnect()
+	if err != nil {
+		panic(err)
+	}
+	go nats.WatchTimers()
+	defer nats.StopTimers()
+
+	err = nats.ScheduleStoreConnect()
+	if err != nil {
+		panic(err)
+	}
+	nats.GetExistingSchedules()
+	defer nats.StopSchedules()
 
 	err = homeassistant.Subscribe(logger)
 	if err != nil {

@@ -62,10 +62,10 @@ func KvConnect() error {
 
 	var err error
 	if found {
-		logger.Debug("Connecting for KV store")
+		logger.Debug("Connecting to KV store")
 		kv, err = client.JS.KeyValue(ctx, "hats")
 	} else {
-		logger.Debug("Creating for KV store")
+		logger.Debug("Creating KV store")
 		kv, err = client.JS.CreateKeyValue(ctx, jetstream.KeyValueConfig{
 			Bucket: "hats",
 			TTL:    2 * time.Hour,

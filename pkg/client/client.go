@@ -3,6 +3,7 @@ package client
 import (
 	"fmt"
 
+	"code.jhot.me/jhot/hats/internal/api"
 	"code.jhot.me/jhot/hats/pkg/homeassistant"
 	"github.com/go-resty/resty/v2"
 )
@@ -63,4 +64,85 @@ func (c *HatsClient) CallService(entityId string, service string, extras ...map[
 	}
 
 	return nil
+}
+
+func (c *HatsClient) GetTimer(name string) (string, error) {
+	resp, err := c.client.R().Get(fmt.Sprintf("api/timer/%s", name))
+	if err == nil && !resp.IsSuccess() {
+		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	return resp.String(), nil
+}
+
+func (c *HatsClient) SetTimer(name string, duration string, force bool) (string, error) {
+	data := api.CreateTimerData{
+		Duration: duration,
+		Force:    force,
+	}
+
+	resp, err := c.client.R().SetBody(data).Post(fmt.Sprintf("api/timer/%s", name))
+	if err == nil && !resp.IsSuccess() {
+		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	return resp.String(), nil
+}
+
+func (c *HatsClient) DeleteTimer(name string) error {
+	resp, err := c.client.R().Delete(fmt.Sprintf("api/timer/%s", name))
+	if err == nil && !resp.IsSuccess() {
+		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
+	}
+	return err
+}
+
+func (c *HatsClient) GetSchedule(name string) (string, error) {
+	resp, err := c.client.R().Get(fmt.Sprintf("api/schedule/%s", name))
+	if err == nil && !resp.IsSuccess() {
+		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	return resp.String(), nil
+}
+
+// SetSchedule: set a cron schedule
+//
+//	name: a unique identifying string
+//	cron: a cron expression with seconds, like "0 */5 * * * *" (every 5 minutes)
+func (c *HatsClient) SetSchedule(name string, cron string) (string, error) {
+	data := api.CreateScheduleData{
+		Cron: cron,
+	}
+
+	resp, err := c.client.R().SetBody(data).Post(fmt.Sprintf("api/schedule/%s", name))
+	if err == nil && !resp.IsSuccess() {
+		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	return resp.String(), nil
+}
+
+func (c *HatsClient) DeleteSchedule(name string) error {
+	resp, err := c.client.R().Delete(fmt.Sprintf("api/schedule/%s", name))
+	if err == nil && !resp.IsSuccess() {
+		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
+	}
+	return err
 }
