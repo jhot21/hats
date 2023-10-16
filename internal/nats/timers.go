@@ -120,6 +120,7 @@ func WatchTimers() {
 			timer, err := GetTimer(timerName)
 			if err != nil {
 				logger.Error("Error retrieving timer", "timer", timerName, "error", err)
+				timer.Cancel()
 				continue
 			}
 

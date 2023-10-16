@@ -71,11 +71,14 @@ func logRequest(w http.ResponseWriter, r *http.Request) {
 func getEntityStateHandler(w http.ResponseWriter, r *http.Request) {
 	logRequest(w, r)
 	entityId := chi.URLParam(r, "entityId")
+	full := r.URL.Query().Get("full") == "true"
 
-	kvVal, err := nats.GetKeyValue(fmt.Sprintf("%s.%s", HA_STATE_PREFIX, entityId))
-	if err == nil && len(kvVal) > 0 {
-		w.Write(kvVal)
-		return
+	if !full {
+		kvVal, err := nats.GetKeyValue(fmt.Sprintf("%s.%s", HA_STATE_PREFIX, entityId))
+		if err == nil && len(kvVal) > 0 {
+			w.Write(kvVal)
+			return
+		}
 	}
 
 	data, err := haClient.GetState(entityId)
@@ -85,7 +88,11 @@ func getEntityStateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	nats.SetKeyValueString(fmt.Sprintf("%s.%s", HA_STATE_PREFIX, entityId), data.State)
-	render.PlainText(w, r, data.State)
+	if full {
+		render.JSON(w, r, data)
+	} else {
+		render.PlainText(w, r, data.State)
+	}
 }
 
 func setEntityStateHandler(w http.ResponseWriter, r *http.Request) {

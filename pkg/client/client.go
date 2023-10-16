@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"code.jhot.me/jhot/hats/internal/api"
-	"code.jhot.me/jhot/hats/pkg/homeassistant"
+	ha "code.jhot.me/jhot/hats/pkg/homeassistant"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -17,6 +17,20 @@ func NewHatsClient(baseUrl string) *HatsClient {
 	return &HatsClient{
 		client: client,
 	}
+}
+
+func (c *HatsClient) GetStateFull(entityId string) (ha.StateData, error) {
+	var data ha.StateData
+	resp, err := c.client.R().SetResult(&data).SetQueryParam("full", "true").Get(fmt.Sprintf("api/state/%s", entityId))
+	if err == nil && !resp.IsSuccess() {
+		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
+	}
+
+	if err != nil {
+		return data, err
+	}
+
+	return data, nil
 }
 
 func (c *HatsClient) GetState(entityId string) (string, error) {
@@ -39,7 +53,7 @@ func (c *HatsClient) GetStateBool(entityId string) (bool, error) {
 		return false, err
 	}
 
-	return homeassistant.StateToBool(stateString), nil
+	return ha.StateToBool(stateString), nil
 }
 
 func (c *HatsClient) CallService(entityId string, service string, extras ...map[string]string) error {
