@@ -46,6 +46,14 @@ func (c *HatsClient) GetState(entityId string) (string, error) {
 	return resp.String(), nil
 }
 
+func (c *HatsClient) GetStateWithDefault(entityId string, defaultValue string) string {
+	state, err := c.GetState(entityId)
+	if err != nil {
+		return defaultValue
+	}
+	return state
+}
+
 func (c *HatsClient) GetStateBool(entityId string) (bool, error) {
 	stateString, err := c.GetState(entityId)
 

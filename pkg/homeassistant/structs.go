@@ -38,23 +38,25 @@ var Domains = struct {
 
 // Home Assistant services
 var Services = struct {
-	TurnOn     string
-	TurnOff    string
-	Toggle     string
-	Reload     string
-	Lock       string
-	Unlock     string
-	OpenCover  string
-	CloseCover string
+	TurnOn       string
+	TurnOff      string
+	Toggle       string
+	Reload       string
+	Lock         string
+	Unlock       string
+	OpenCover    string
+	CloseCover   string
+	SelectOption string
 }{
-	TurnOn:     "turn_on",
-	TurnOff:    "turn_off",
-	Toggle:     "toggle",
-	Reload:     "reload",
-	Lock:       "lock",
-	Unlock:     "unlock",
-	OpenCover:  "open_cover",
-	CloseCover: "close_cover",
+	TurnOn:       "turn_on",
+	TurnOff:      "turn_off",
+	Toggle:       "toggle",
+	Reload:       "reload",
+	Lock:         "lock",
+	Unlock:       "unlock",
+	OpenCover:    "open_cover",
+	CloseCover:   "close_cover",
+	SelectOption: "select_option",
 }
 
 // Extra props that can be sent when calling a Home Assistant service
