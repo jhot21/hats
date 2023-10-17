@@ -9,19 +9,22 @@ import (
 	"code.jhot.me/jhot/hats/internal/api"
 	"code.jhot.me/jhot/hats/internal/homeassistant"
 	"code.jhot.me/jhot/hats/internal/nats"
+	"code.jhot.me/jhot/hats/pkg/config"
 )
 
 var (
 	interrupt chan os.Signal
+	cfg       *config.HatsConfig
 	logger    *slog.Logger
 	ctx       context.Context
 	cancel    context.CancelFunc
 )
 
 func main() {
+	cfg = config.FromEnvironment()
 	ctx, cancel = context.WithCancel(context.Background())
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
+		Level: cfg.GetLogLevel(),
 	}))
 	interrupt = make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)

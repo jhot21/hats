@@ -42,7 +42,7 @@ func Subscribe(parentLogger *slog.Logger) error {
 	cfg = config.FromEnvironment()
 	var err error
 
-	url := fmt.Sprintf(cfg.HomeAssistantWebsocketUrl)
+	url := cfg.GetHomeAssistantWebsocketUrl()
 
 	logger.Debug("Dialing Home Assistant websocket API", "url", url)
 

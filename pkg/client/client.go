@@ -64,7 +64,7 @@ func (c *HatsClient) GetStateBool(entityId string) (bool, error) {
 	return ha.StateToBool(stateString), nil
 }
 
-func (c *HatsClient) CallService(entityId string, service string, extras ...map[string]string) error {
+func (c *HatsClient) CallService(entityId string, service string, extras ...map[string]any) error {
 	req := c.client.R()
 	if len(extras) > 0 {
 		data := map[string]interface{}{}
@@ -101,6 +101,11 @@ func (c *HatsClient) GetTimer(name string) (string, error) {
 	return resp.String(), nil
 }
 
+// Set a timer
+//
+//	name: the name of the timer (should be unique)
+//	duration: time.Duration string for how long the timer should last
+//	force: if true, will start the timer over even if it is already running
 func (c *HatsClient) SetTimer(name string, duration string, force bool) (string, error) {
 	data := api.CreateTimerData{
 		Duration: duration,

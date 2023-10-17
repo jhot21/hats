@@ -2,33 +2,34 @@ package config
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
+	"strings"
 
 	"code.jhot.me/jhot/hats/internal/util"
 )
 
 type HatsConfig struct {
-	HomeAssistantHost         string
-	HomeAssistantPort         string
-	HomeAssistantSecure       bool
-	HomeAssistantBaseUrl      string
-	HomeAssistantWebsocketUrl string
-	HomeAssistantToken        string
+	LogLevl string
+
+	HomeAssistantHost   string
+	HomeAssistantPort   string
+	HomeAssistantSecure bool
+	HomeAssistantToken  string
 
 	NatsHost       string
 	NatsPort       string
-	NatsBaseUrl    string
 	NatsToken      string
 	NatsClientName string
 
-	HatsHost    string
-	HatsPort    string
-	HatsSecure  bool
-	HatsBaseUrl string
+	HatsHost   string
+	HatsPort   string
+	HatsSecure bool
 }
 
 func FromEnvironment() *HatsConfig {
 	config := &HatsConfig{
+		LogLevl:            util.GetEnvWithDefault("LOG_LEVEL", "INFO"),
 		HomeAssistantHost:  util.GetEnvWithDefault("HASS_HOST", "127.0.0.1"),
 		HomeAssistantPort:  util.GetEnvWithDefault("HASS_PORT", "8123"),
 		HomeAssistantToken: util.GetEnvWithDefault("HASS_TOKEN", ""),
@@ -41,23 +42,48 @@ func FromEnvironment() *HatsConfig {
 	}
 
 	config.HomeAssistantSecure, _ = strconv.ParseBool(util.GetEnvWithDefault("HASS_SECURE", "false"))
-	hassProtocol := "http"
-	HassWsProtocol := "ws"
-	if config.HomeAssistantSecure {
-		hassProtocol += "s"
-		HassWsProtocol += "s"
-	}
-	config.HomeAssistantBaseUrl = fmt.Sprintf("%s://%s:%s", hassProtocol, config.HomeAssistantHost, config.HomeAssistantPort)
-	config.HomeAssistantWebsocketUrl = fmt.Sprintf("%s://%s:%s/api/websocket", HassWsProtocol, config.HomeAssistantHost, config.HomeAssistantPort)
-
-	config.NatsBaseUrl = fmt.Sprintf("nats://%s:%s", config.NatsHost, config.NatsPort)
-
 	config.HatsSecure, _ = strconv.ParseBool(util.GetEnvWithDefault("HATS_SECURE", "false"))
-	hatsProtocol := "http"
-	if config.HatsSecure {
-		hatsProtocol += "s"
-	}
-	config.HatsBaseUrl = fmt.Sprintf("%s://%s:%s", hatsProtocol, config.HatsHost, config.HatsPort)
 
 	return config
+}
+
+func (c *HatsConfig) GetHomeAssistantBaseUrl() string {
+	hassProtocol := "http"
+	if c.HomeAssistantSecure {
+		hassProtocol += "s"
+	}
+	return fmt.Sprintf("%s://%s:%s", hassProtocol, c.HomeAssistantHost, c.HomeAssistantPort)
+}
+
+func (c *HatsConfig) GetHomeAssistantWebsocketUrl() string {
+	protocol := "ws"
+	if c.HomeAssistantSecure {
+		protocol += "s"
+	}
+	return fmt.Sprintf("%s://%s:%s/api/websocket", protocol, c.HomeAssistantHost, c.HomeAssistantPort)
+}
+
+func (c *HatsConfig) GetNatsBaseUrl() string {
+	return fmt.Sprintf("nats://%s:%s", c.NatsHost, c.NatsPort)
+}
+
+func (c *HatsConfig) GetHatsBaseUrl() string {
+	protocol := "http"
+	if c.HomeAssistantSecure {
+		protocol += "s"
+	}
+	return fmt.Sprintf("%s://%s:%s", protocol, c.HatsHost, c.HatsPort)
+}
+
+func (c *HatsConfig) GetLogLevel() slog.Level {
+	switch strings.ToLower(c.LogLevl) {
+	case "error":
+		return slog.LevelError
+	case "warn":
+		return slog.LevelWarn
+	case "debug":
+		return slog.LevelDebug
+	default:
+		return slog.LevelInfo
+	}
 }

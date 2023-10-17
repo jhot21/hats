@@ -29,7 +29,7 @@ const (
 func Listen(parentLogger *slog.Logger) {
 	logger = parentLogger
 	cfg = config.FromEnvironment()
-	haClient = homeassistant.NewRestClient(cfg.HomeAssistantBaseUrl, cfg.HomeAssistantToken)
+	haClient = homeassistant.NewRestClient(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
 	router := chi.NewRouter()
 
 	router.Use(middleware.RequestID)
