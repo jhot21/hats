@@ -2,6 +2,7 @@ package nats
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"code.jhot.me/jhot/hats/pkg/config"
@@ -26,13 +27,12 @@ type HatsTimer struct {
 	FinishTime time.Time
 }
 
-func (t *HatsTimer) getEntityId() string {
-	return fmt.Sprintf("timer.%s", t.Name)
-}
-
 func GetTimer(name string) (*HatsTimer, error) {
 	initHomeAssistantClient()
-	state, err := haClient.GetState(fmt.Sprintf("timer.%s", name))
+	if !strings.HasPrefix(name, "timer.") {
+		name = fmt.Sprintf("timer.%s", name)
+	}
+	state, err := haClient.GetState(name)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (t *HatsTimer) Activate(durationOverride string) {
 		}
 	}
 	logger.Error("Starting timer", "duration", int(d.Seconds()))
-	err := haClient.CallService(t.getEntityId(), homeassistant.Services.Start, map[string]any{
+	err := haClient.CallService(t.Name, homeassistant.Services.Start, map[string]any{
 		homeassistant.ExtraProps.Duration: int(d.Seconds()),
 	})
 	if err != nil {
@@ -75,18 +75,17 @@ func (t *HatsTimer) Activate(durationOverride string) {
 }
 
 func (t *HatsTimer) ActivateIfNotAlready(durationOverride string) {
-	state, err := haClient.GetState(t.getEntityId())
-	if err != nil || state.State != "active" {
+	if state, err := haClient.GetState(t.Name); err == nil && !homeassistant.StateToBool(state.State) {
 		t.Activate(durationOverride)
 	}
 }
 
 func (t *HatsTimer) Cancel() {
-	haClient.CallService(t.getEntityId(), homeassistant.Services.Cancel)
+	haClient.CallService(t.Name, homeassistant.Services.Cancel)
 }
 
 func (t *HatsTimer) ToString() string {
-	if t.State == "active" {
+	if homeassistant.StateToBool(t.State) {
 		time, _ := t.FinishTime.MarshalText()
 		return string(time)
 	}
