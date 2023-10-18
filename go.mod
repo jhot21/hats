@@ -12,7 +12,6 @@ require (
 	github.com/google/uuid v1.3.1 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/net v0.15.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 )
@@ -28,7 +27,6 @@ require (
 	github.com/nats-io/nats-server/v2 v2.10.2 // indirect
 	github.com/nats-io/nkeys v0.4.5 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
-	github.com/samber/lo v1.38.1
 	golang.org/x/crypto v0.13.0 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/text v0.13.0 // indirect

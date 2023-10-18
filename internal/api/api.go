@@ -41,7 +41,7 @@ func Listen(parentLogger *slog.Logger) {
 	router.Post("/api/state/{entityId}/{service}", setEntityStateHandler)
 
 	router.Get("/api/timer/{timerName}", getTimerHandler)
-	router.Post("/api/timer/{timerName}", createTimerHandler)
+	router.Post("/api/timer/{timerName}", startTimerHandler)
 	router.Delete("/api/timer/{timerName}", deleteTimerHandler)
 
 	router.Get("/api/schedule/{scheduleName}", getScheduleHandler)
@@ -100,7 +100,7 @@ func setEntityStateHandler(w http.ResponseWriter, r *http.Request) {
 	entityId := chi.URLParam(r, "entityId")
 	service := chi.URLParam(r, "service")
 
-	var extras map[string]string
+	var extras map[string]any
 	err := render.DecodeJSON(r.Body, &extras)
 	var haErr error
 	if err == nil && len(extras) > 0 {
@@ -131,34 +131,38 @@ func getTimerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	render.PlainText(w, r, string(timer.Marshall()))
+	render.PlainText(w, r, timer.ToString())
 }
 
-type CreateTimerData struct {
+type StartTimerData struct {
 	Duration string `json:"duration"`
 	Force    bool   `json:"force"`
 }
 
-func createTimerHandler(w http.ResponseWriter, r *http.Request) {
+func startTimerHandler(w http.ResponseWriter, r *http.Request) {
 	timerName := chi.URLParam(r, "timerName")
 	logRequest(w, r)
 
-	data := &CreateTimerData{}
+	data := &StartTimerData{}
 	if err := render.DecodeJSON(r.Body, data); err != nil {
 		http.Error(w, "Unable to parse timer data", http.StatusNotAcceptable)
 		return
 	}
 
-	if data.Duration == "" {
-		http.Error(w, "duration required", http.StatusNotAcceptable)
+	timer, err := nats.GetTimer(timerName)
+	if err != nil {
+		http.Error(w, "Unable to get timer: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	timer := nats.NewTimerWithDuration(timerName, data.Duration).CalculateNext()
+	if data.Duration == "" {
+		data.Duration = timer.Duration.String()
+	}
+
 	if data.Force {
-		timer.Activate()
+		timer.Activate(data.Duration)
 	} else {
-		timer.ActivateIfNotAlready()
+		timer.ActivateIfNotAlready(data.Duration)
 	}
 
 	getTimerHandler(w, r)

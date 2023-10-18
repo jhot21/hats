@@ -40,13 +40,6 @@ func main() {
 		panic(err)
 	}
 
-	err = nats.TimerStoreConnect()
-	if err != nil {
-		panic(err)
-	}
-	go nats.WatchTimers()
-	defer nats.StopTimers()
-
 	err = nats.ScheduleStoreConnect()
 	if err != nil {
 		panic(err)

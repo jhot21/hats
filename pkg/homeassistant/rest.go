@@ -31,9 +31,9 @@ func (c *RestClient) GetState(entityId string) (StateData, error) {
 	return data, err
 }
 
-func (c *RestClient) CallService(entityId string, service string, extras ...map[string]string) error {
+func (c *RestClient) CallService(entityId string, service string, extras ...map[string]any) error {
 	domain := strings.Split(entityId, ".")[0]
-	data := map[string]interface{}{
+	data := map[string]any{
 		"entity_id": entityId,
 	}
 	for _, extra := range extras {

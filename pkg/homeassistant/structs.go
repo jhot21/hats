@@ -11,6 +11,8 @@ var MessageType = struct {
 	SubscribeEvents string
 	StateChanged    string
 	TagScanned      string
+	TimerStarted    string
+	TimerFinished   string
 }{
 	AuthRequired:    "auth_required",
 	AuthOk:          "auth_ok",
@@ -21,6 +23,8 @@ var MessageType = struct {
 	SubscribeEvents: "subscribe_events",
 	StateChanged:    "state_changed",
 	TagScanned:      "tag_scanned",
+	TimerStarted:    "timer.started",
+	TimerFinished:   "timer.finished",
 }
 
 // Home Assistant device domains
@@ -50,6 +54,9 @@ var Services = struct {
 	SetHvacMode    string
 	SetFanMode     string
 	SetTemperature string
+	Start          string
+	Change         string
+	Cancel         string
 }{
 	TurnOn:         "turn_on",
 	TurnOff:        "turn_off",
@@ -63,6 +70,9 @@ var Services = struct {
 	SetHvacMode:    "set_hvac_mode",
 	SetFanMode:     "set_fan_mode",
 	SetTemperature: "set_temperature",
+	Start:          "start",
+	Change:         "change",
+	Cancel:         "cancel",
 }
 
 // Extra props that can be sent when calling a Home Assistant service
@@ -70,10 +80,20 @@ var ExtraProps = struct {
 	Transition        string
 	Brightness        string
 	BrightnessPercent string
+	HvacMode          string
+	Temperature       string
+	TargetTempHigh    string
+	TargetTempLow     string
+	Duration          string
 }{
 	Transition:        "transition",
 	Brightness:        "brightness",
 	BrightnessPercent: "brightness_pct",
+	HvacMode:          "hvac_mode",
+	Temperature:       "temperature",
+	TargetTempHigh:    "target_temp_high",
+	TargetTempLow:     "target_temp_low",
+	Duration:          "duration",
 }
 
 type ResultContext struct {

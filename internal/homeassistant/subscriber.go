@@ -22,9 +22,10 @@ var (
 )
 
 const (
-	stateChangeEventId = 1001
-	zhaEventId         = 1002
-	qrEventId          = 1003
+	stateChangeEventId   = 1001
+	zhaEventId           = 1002
+	qrEventId            = 1003
+	timerFinishedEventId = 1005
 )
 
 func CloseSubscription() error {
@@ -115,6 +116,10 @@ func handleMessages() {
 					Type:      ha.MessageType.SubscribeEvents,
 					EventType: ha.MessageType.TagScanned,
 					Id:        qrEventId})
+				haWebsocketConn.WriteJSON(ha.SubscribeEventsMessage{
+					Type:      ha.MessageType.SubscribeEvents,
+					EventType: ha.MessageType.TimerFinished,
+					Id:        timerFinishedEventId})
 			case ha.MessageType.Result:
 				if !message.Success {
 					logger.Error("Non-Success Result:", "message", message)
@@ -137,6 +142,8 @@ func handleMessages() {
 				case qrEventId:
 					data, _ := json.Marshal(message.Event.Data)
 					nats.Publish(fmt.Sprintf("homeassistant.qr.%s", message.Event.Data.TagId), data)
+				case timerFinishedEventId:
+					nats.PublishString(fmt.Sprintf("homeassistant.%s.finished", message.Event.Data.EntityId), "finished")
 				}
 			}
 		}

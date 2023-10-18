@@ -1,138 +1,94 @@
 package nats
 
 import (
-	"errors"
+	"fmt"
 	"time"
 
-	"github.com/nats-io/nats.go/jetstream"
+	"code.jhot.me/jhot/hats/pkg/config"
+	"code.jhot.me/jhot/hats/pkg/homeassistant"
 )
 
 var (
-	timerStore jetstream.KeyValue
-	ticker     *time.Ticker
+	haClient *homeassistant.RestClient
 )
 
-func TimerStoreConnect() error {
-	if client.JS == nil {
-		return errors.New("jetstream must be connected first")
+func initHomeAssistantClient() {
+	if haClient == nil {
+		cfg = config.FromEnvironment()
+		haClient = homeassistant.NewRestClient(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
 	}
-
-	logger.Debug("Looking for KV store")
-	listener := client.JS.KeyValueStoreNames(ctx)
-	found := false
-	for name := range listener.Name() {
-		if name == "KV_hats_timers" {
-			found = true
-		}
-	}
-
-	var err error
-	if found {
-		logger.Debug("Connecting to Timers KV store")
-		timerStore, err = client.JS.KeyValue(ctx, "hats_timers")
-	} else {
-		logger.Debug("Creating Timers KV store")
-		timerStore, err = client.JS.CreateKeyValue(ctx, jetstream.KeyValueConfig{
-			Bucket: "hats_timers",
-		})
-	}
-
-	return err
 }
 
 type HatsTimer struct {
-	Name           string
-	Duration       time.Duration
-	NextActivation time.Time
+	Name       string
+	State      string
+	Duration   time.Duration
+	FinishTime time.Time
 }
 
-func NewTimerWithDuration(name, duration string) *HatsTimer {
-	t := &HatsTimer{
-		Name: name,
-	}
-
-	d, err := time.ParseDuration(duration)
-	if err != nil {
-		d = 5 * time.Minute
-	}
-	t.Duration = d
-
-	return t.CalculateNext()
-}
-
-func NewTimerWithActivation(name string, activation []byte) (*HatsTimer, error) {
-	t := &HatsTimer{
-		Name:     name,
-		Duration: 5 * time.Minute,
-	}
-
-	a, err := time.Parse(time.RFC3339, string(activation))
-	if err != nil {
-		return t.CalculateNext(), err
-	}
-	t.NextActivation = a
-
-	return t, nil
+func (t *HatsTimer) getEntityId() string {
+	return fmt.Sprintf("timer.%s", t.Name)
 }
 
 func GetTimer(name string) (*HatsTimer, error) {
-	value, err := timerStore.Get(ctx, name)
+	initHomeAssistantClient()
+	state, err := haClient.GetState(fmt.Sprintf("timer.%s", name))
 	if err != nil {
 		return nil, err
 	}
 
-	return NewTimerWithActivation(name, value.Value())
+	d, err := homeassistant.ParseDuration(state.Attributes["duration"].(string))
+	if err != nil {
+		return nil, err
+	}
+
+	var finishTime time.Time
+	if finishesAt, ok := state.Attributes["finishes_at"]; ok {
+		finishTime, _ = time.Parse(time.RFC3339, finishesAt.(string))
+	}
+
+	return &HatsTimer{
+		Name:       name,
+		State:      state.State,
+		Duration:   d,
+		FinishTime: finishTime,
+	}, nil
 }
 
-func (t *HatsTimer) CalculateNext() *HatsTimer {
-	t.NextActivation = time.Now().Add(t.Duration)
-	return t
+func (t *HatsTimer) Activate(durationOverride string) {
+	d := t.Duration
+	if durationOverride != "" {
+		var err error
+		d, err = time.ParseDuration(durationOverride)
+		if err != nil {
+			logger.Error("Error parsing duration", "error", err)
+			d = t.Duration
+		}
+	}
+	logger.Error("Starting timer", "duration", int(d.Seconds()))
+	err := haClient.CallService(t.getEntityId(), homeassistant.Services.Start, map[string]any{
+		homeassistant.ExtraProps.Duration: int(d.Seconds()),
+	})
+	if err != nil {
+		logger.Error("Error starting timer", "error", err)
+	}
 }
 
-func (t *HatsTimer) Marshall() []byte {
-	timestamp, _ := t.NextActivation.MarshalText()
-	return timestamp
-}
-
-func (t *HatsTimer) Activate() {
-	timerStore.Put(ctx, t.Name, t.Marshall())
-}
-
-func (t *HatsTimer) ActivateIfNotAlready() {
-	timerStore.Create(ctx, t.Name, t.Marshall())
+func (t *HatsTimer) ActivateIfNotAlready(durationOverride string) {
+	state, err := haClient.GetState(t.getEntityId())
+	if err != nil || state.State != "active" {
+		t.Activate(durationOverride)
+	}
 }
 
 func (t *HatsTimer) Cancel() {
-	timerStore.Purge(ctx, t.Name)
+	haClient.CallService(t.getEntityId(), homeassistant.Services.Cancel)
 }
 
-func (t *HatsTimer) End() {
-	t.Cancel()
-	PublishString("timers."+t.Name, "done")
-}
-
-func WatchTimers() {
-	ticker = time.NewTicker(time.Second)
-	for {
-		t := <-ticker.C
-		timers, _ := timerStore.Keys(ctx, jetstream.IgnoreDeletes())
-		for _, timerName := range timers {
-			timer, err := GetTimer(timerName)
-			if err != nil {
-				logger.Error("Error retrieving timer", "timer", timerName, "error", err)
-				timer.Cancel()
-				continue
-			}
-
-			if t.After(timer.NextActivation) {
-				timer.End()
-			}
-		}
+func (t *HatsTimer) ToString() string {
+	if t.State == "active" {
+		time, _ := t.FinishTime.MarshalText()
+		return string(time)
 	}
-}
-
-func StopTimers() {
-	if ticker != nil {
-		ticker.Stop()
-	}
+	return t.State
 }

@@ -1,8 +1,10 @@
 package homeassistant
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
+	"time"
 )
 
 // StateToBool converts a state string into a boolean
@@ -43,3 +45,21 @@ func BoolToService(entityId string, desiredState bool) string {
 		}
 	}
 }
+
+// Parse a Home Assistant duration in HH:MM:SS format
+func ParseDuration(d string) (time.Duration, error) {
+	var hour, min, sec int
+	_, err := fmt.Sscanf(d, "%d:%d:%d", &hour, &min, &sec)
+	if err != nil {
+		return 5 * time.Minute, err
+	}
+
+	return time.Duration(hour)*time.Hour + time.Duration(min)*time.Minute + time.Duration(sec)*time.Second, nil
+}
+
+// func FormatDuration(d time.Duration) string {
+// 	hours := math.Floor(d.Hours())
+// 	minutes := math.Floor(d.Minutes() - (hours * 60))
+// 	seconds := math.Floor(d.Seconds() - (hours * 60 * 60) - (minutes * 60))
+// 	return fmt.Sprintf("%02.f:%02.f:%02.f", hours, minutes, seconds)
+// }

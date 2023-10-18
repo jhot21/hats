@@ -101,13 +101,13 @@ func (c *HatsClient) GetTimer(name string) (string, error) {
 	return resp.String(), nil
 }
 
-// Set a timer
+// Start a timer
 //
 //	name: the name of the timer (should be unique)
 //	duration: time.Duration string for how long the timer should last
 //	force: if true, will start the timer over even if it is already running
-func (c *HatsClient) SetTimer(name string, duration string, force bool) (string, error) {
-	data := api.CreateTimerData{
+func (c *HatsClient) StartTimer(name string, duration string, force bool) (string, error) {
+	data := api.StartTimerData{
 		Duration: duration,
 		Force:    force,
 	}
@@ -124,7 +124,7 @@ func (c *HatsClient) SetTimer(name string, duration string, force bool) (string,
 	return resp.String(), nil
 }
 
-func (c *HatsClient) DeleteTimer(name string) error {
+func (c *HatsClient) CancelTimer(name string) error {
 	resp, err := c.client.R().Delete(fmt.Sprintf("api/timer/%s", name))
 	if err == nil && !resp.IsSuccess() {
 		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
