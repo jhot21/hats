@@ -99,14 +99,23 @@ func setEntityStateHandler(w http.ResponseWriter, r *http.Request) {
 	logRequest(w, r)
 	entityId := chi.URLParam(r, "entityId")
 	service := chi.URLParam(r, "service")
+	domain := r.URL.Query().Get("domain")
 
 	var extras map[string]any
 	err := render.DecodeJSON(r.Body, &extras)
 	var haErr error
 	if err == nil && len(extras) > 0 {
-		haErr = haClient.CallService(entityId, service, extras)
+		if domain != "" {
+			haErr = haClient.CallServiceManual(domain, entityId, service, extras)
+		} else {
+			haErr = haClient.CallService(entityId, service, extras)
+		}
 	} else {
-		haErr = haClient.CallService(entityId, service)
+		if domain != "" {
+			haErr = haClient.CallServiceManual(domain, entityId, service)
+		} else {
+			haErr = haClient.CallService(entityId, service)
+		}
 	}
 
 	if haErr != nil {

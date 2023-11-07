@@ -70,7 +70,12 @@ func (c *HatsClient) CallService(entityId string, service string, extras ...map[
 		data := map[string]interface{}{}
 		for _, extra := range extras {
 			for k, v := range extra {
-				data[k] = v
+				switch k {
+				case "domain":
+					req.SetQueryParam(k, fmt.Sprintf("%v", v))
+				default:
+					data[k] = v
+				}
 			}
 		}
 		req.SetBody(data)
