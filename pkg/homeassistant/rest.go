@@ -33,6 +33,10 @@ func (c *RestClient) GetState(entityId string) (StateData, error) {
 
 func (c *RestClient) CallService(entityId string, service string, extras ...map[string]any) error {
 	domain := strings.Split(entityId, ".")[0]
+	return c.CallServiceManual(domain, entityId, service, extras...)
+}
+
+func (c *RestClient) CallServiceManual(domain string, entityId string, service string, extras ...map[string]any) error {
 	data := map[string]any{
 		"entity_id": entityId,
 	}

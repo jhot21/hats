@@ -29,15 +29,19 @@ var MessageType = struct {
 
 // Home Assistant device domains
 var Domains = struct {
-	Light  string
-	Switch string
-	Lock   string
-	Cover  string
+	Light         string
+	Switch        string
+	Lock          string
+	Cover         string
+	Homeassistant string
+	Group         string
 }{
-	Light:  "light",
-	Switch: "switch",
-	Lock:   "lock",
-	Cover:  "cover",
+	Light:         "light",
+	Switch:        "switch",
+	Lock:          "lock",
+	Cover:         "cover",
+	Homeassistant: "homeassistant",
+	Group:         "group",
 }
 
 // Home Assistant services
