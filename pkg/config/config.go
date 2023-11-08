@@ -25,6 +25,9 @@ type HatsConfig struct {
 	HatsHost   string
 	HatsPort   string
 	HatsSecure bool
+
+	NtfyHost  string
+	NtfyToken string
 }
 
 func FromEnvironment() *HatsConfig {
@@ -39,6 +42,8 @@ func FromEnvironment() *HatsConfig {
 		NatsClientName:     util.GetEnvWithDefault("NATS_CLIENT_NAME", "hats"),
 		HatsHost:           util.GetEnvWithDefault("HATS_HOST", "hats"),
 		HatsPort:           util.GetEnvWithDefault("HATS_PORT", "8888"),
+		NtfyHost:           util.GetEnvWithDefault("NTFY_HOST", "https://ntfy.sh"),
+		NtfyToken:          util.GetEnvWithDefault("NTFY_TOKEN", ""),
 	}
 
 	config.HomeAssistantSecure, _ = strconv.ParseBool(util.GetEnvWithDefault("HASS_SECURE", "false"))

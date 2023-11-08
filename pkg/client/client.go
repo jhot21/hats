@@ -5,6 +5,7 @@ import (
 
 	"code.jhot.me/jhot/hats/internal/api"
 	ha "code.jhot.me/jhot/hats/pkg/homeassistant"
+	"code.jhot.me/jhot/hats/pkg/ntfy"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -173,6 +174,14 @@ func (c *HatsClient) SetSchedule(name string, cron string) (string, error) {
 
 func (c *HatsClient) DeleteSchedule(name string) error {
 	resp, err := c.client.R().Delete(fmt.Sprintf("api/schedule/%s", name))
+	if err == nil && !resp.IsSuccess() {
+		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
+	}
+	return err
+}
+
+func (c *HatsClient) SendNtfyMessage(data ntfy.Message) error {
+	resp, err := c.client.R().SetBody(data).Post("api/ntfy")
 	if err == nil && !resp.IsSuccess() {
 		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
 	}

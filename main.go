@@ -9,6 +9,7 @@ import (
 	"code.jhot.me/jhot/hats/internal/api"
 	"code.jhot.me/jhot/hats/internal/homeassistant"
 	"code.jhot.me/jhot/hats/internal/nats"
+	"code.jhot.me/jhot/hats/internal/ntfy"
 	"code.jhot.me/jhot/hats/pkg/config"
 )
 
@@ -52,6 +53,8 @@ func main() {
 		panic(err)
 	}
 	defer homeassistant.CloseSubscription()
+
+	ntfy.InitClient(cfg)
 
 	api.Listen(logger)
 	defer api.Close()

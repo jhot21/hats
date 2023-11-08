@@ -8,8 +8,10 @@ import (
 	"log/slog"
 
 	"code.jhot.me/jhot/hats/internal/nats"
+	"code.jhot.me/jhot/hats/internal/ntfy"
 	"code.jhot.me/jhot/hats/pkg/config"
 	"code.jhot.me/jhot/hats/pkg/homeassistant"
+	ntfyPkg "code.jhot.me/jhot/hats/pkg/ntfy"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -47,6 +49,8 @@ func Listen(parentLogger *slog.Logger) {
 	router.Get("/api/schedule/{scheduleName}", getScheduleHandler)
 	router.Post("/api/schedule/{scheduleName}", createScheduleHandler)
 	router.Delete("/api/schedule/{scheduleName}", deleteScheduleHandler)
+
+	router.Post("/api/ntfy", postNtfyHandler)
 
 	server = http.Server{
 		Addr:    ":8888",
@@ -242,5 +246,22 @@ func deleteScheduleHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	schedule.Cancel()
+	render.PlainText(w, r, "OK")
+}
+
+// NTFY
+
+func postNtfyHandler(w http.ResponseWriter, r *http.Request) {
+	data := &ntfyPkg.Message{}
+	if err := render.DecodeJSON(r.Body, data); err != nil {
+		http.Error(w, "Unable to parse message data", http.StatusNotAcceptable)
+		return
+	}
+
+	if err := ntfy.Send(*data); err != nil {
+		http.Error(w, "Unable to send message", http.StatusBadRequest)
+		return
+	}
+
 	render.PlainText(w, r, "OK")
 }
