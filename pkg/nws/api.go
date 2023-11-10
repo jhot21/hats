@@ -1,0 +1,93 @@
+package nws
+
+import (
+	"fmt"
+	"strings"
+
+	"code.jhot.me/jhot/hats/internal/util"
+	"github.com/go-resty/resty/v2"
+	"github.com/samber/lo"
+)
+
+const (
+	NWS_BASE_URL = "https://api.weather.gov"
+)
+
+type NwsClient struct {
+	restClient *resty.Client
+}
+
+func New() *NwsClient {
+	return &NwsClient{
+		restClient: resty.New().
+			SetBaseURL(NWS_BASE_URL).
+			SetHeader("Accept", "application/geo+json").
+			SetHeader("User-Agent", util.GetEnvWithDefault("NWS_USER_AGENT", "(HATS-client, hats@jhot.me)")),
+	}
+}
+
+func (c *NwsClient) CoordinatesToPoint(lat float64, lon float64) (Point, error) {
+	var p Point
+	_, err := c.restClient.R().SetResult(&p).Get(fmt.Sprintf("points/%f,%f", lat, lon))
+	return p, err
+}
+
+func (c *NwsClient) GetHourlyForecast(p Point) (HourlyProps, error) {
+	var data struct {
+		Properties HourlyProps `json:"properties"`
+	}
+	_, err := util.CheckSuccess(c.restClient.R().SetResult(&data).
+		Get(removeBase(p.Properties.ForecastHourly)))
+	if err != nil {
+		return HourlyProps{}, nil
+	}
+
+	return data.Properties, nil
+}
+
+func (p HourlyProps) GetHighLow(hours int) (high int, low int) {
+	if hours > len(p.Periods) {
+		hours = len(p.Periods)
+	}
+
+	temps := lo.Map(p.Periods[0:hours-1], func(p HourlyPeriod, _ int) int {
+		return p.Temperature
+	})
+
+	return lo.Max(temps), lo.Min(temps)
+}
+
+func (c *NwsClient) GetStations(p Point) ([]string, error) {
+	var data struct {
+		ObservationStations []string `json:"observationStations"`
+	}
+	_, err := util.CheckSuccess(c.restClient.R().SetResult(&data).
+		Get(removeBase(p.Properties.ObservationStations)))
+	if err != nil {
+		return []string{}, err
+	}
+
+	return data.ObservationStations, nil
+}
+
+func (c *NwsClient) GetLatestObservations(p Point) (Observations, error) {
+	stations, err := c.GetStations(p)
+	if err != nil {
+		return Observations{}, fmt.Errorf("%w: error getting stations", err)
+	}
+
+	var data struct {
+		Properties Observations `json:"properties"`
+	}
+	_, err = util.CheckSuccess(c.restClient.R().SetResult(&data).
+		Get(removeBase(stations[0] + "/observations/latest")))
+	if err != nil {
+		return Observations{}, err
+	}
+
+	return data.Properties, nil
+}
+
+func removeBase(longUrl string) string {
+	return strings.TrimPrefix(longUrl, NWS_BASE_URL+"/")
+}

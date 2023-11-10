@@ -58,6 +58,7 @@ var Services = struct {
 	SetHvacMode    string
 	SetFanMode     string
 	SetTemperature string
+	SetValue       string
 	Start          string
 	Change         string
 	Cancel         string
@@ -74,6 +75,7 @@ var Services = struct {
 	SetHvacMode:    "set_hvac_mode",
 	SetFanMode:     "set_fan_mode",
 	SetTemperature: "set_temperature",
+	SetValue:       "set_value",
 	Start:          "start",
 	Change:         "change",
 	Cancel:         "cancel",
@@ -89,6 +91,7 @@ var ExtraProps = struct {
 	TargetTempHigh    string
 	TargetTempLow     string
 	Duration          string
+	Value             string
 }{
 	Transition:        "transition",
 	Brightness:        "brightness",
@@ -98,6 +101,7 @@ var ExtraProps = struct {
 	TargetTempHigh:    "target_temp_high",
 	TargetTempLow:     "target_temp_low",
 	Duration:          "duration",
+	Value:             "value",
 }
 
 type ResultContext struct {
