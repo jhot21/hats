@@ -1,5 +1,7 @@
 package ntfy
 
+import "encoding/json"
+
 type Message struct {
 	Topic    string   `json:"topic"` // Required
 	Message  string   `json:"message,omitempty"`
@@ -23,4 +25,28 @@ type Message struct {
 		Clear   bool              `json:"clear,omitempty"`
 		Extras  map[string]string `json:"extras,omitempty"`
 	} `json:"actions,omitempty"`
+}
+
+type RunOptions struct {
+	TaskName string `json:"taskName"`
+	Par1     string `json:"par1,omitempty"`
+	Par2     string `json:"par2,omitempty"`
+	Priority int    `json:"priority,omitempty"`
+}
+
+type VarOptions struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+type TaskerApi struct {
+	Run     []RunOptions `json:"run,omitempty"`
+	Set     []VarOptions `json:"set,omitempty"`
+	Enable  []string     `json:"enable,omitempty"`
+	Disable []string     `json:"disable,omitempty"`
+}
+
+func (t *TaskerApi) ToString() string {
+	b, _ := json.Marshal(t)
+	return string(b)
 }

@@ -56,6 +56,14 @@ func (c *QbittorrentClient) Login(user string, pass string) error {
 	return nil
 }
 
+func (c *QbittorrentClient) Logout() error {
+	_, err := util.CheckSuccess(c.restClient.R().Get("auth/logout"))
+
+	c.restClient.SetCookies([]*http.Cookie{})
+
+	return err
+}
+
 func (c *QbittorrentClient) GetVersion() (string, error) {
 	resp, err := util.CheckSuccess(c.restClient.R().Get("app/version"))
 	if err != nil {

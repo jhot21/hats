@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -51,6 +52,8 @@ func Listen(parentLogger *slog.Logger) {
 	router.Delete("/api/schedule/{scheduleName}", deleteScheduleHandler)
 
 	router.Post("/api/ntfy", postNtfyHandler)
+
+	router.Post("/api/command/{commandName}", postCommandHandler)
 
 	server = http.Server{
 		Addr:    ":8888",
@@ -264,4 +267,37 @@ func postNtfyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.PlainText(w, r, "OK")
+}
+
+// Command
+
+func postCommandHandler(w http.ResponseWriter, r *http.Request) {
+	commandName := chi.URLParam(r, "commandName")
+	logRequest(w, r)
+
+	switch commandName {
+	// Commands without payloads
+	case "bedtime":
+		nats.PublishString(fmt.Sprintf("command.%s", commandName), "called")
+		render.PlainText(w, r, "OK")
+		return
+	// Commands with payloads
+	case "sonarr":
+	case "radarr":
+	case "paupdate":
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			logger.Error("Error reading request body", "error", err, "url", r.URL.String())
+			http.Error(w, "Unable to read body", http.StatusBadRequest)
+			return
+		}
+		nats.Publish(fmt.Sprintf("command.%s", commandName), body)
+		render.PlainText(w, r, "OK")
+		return
+	// Otherwise
+	default:
+		logger.Error("Command not implemented", "commandName", commandName)
+		http.Error(w, "Command not implemented", http.StatusNotFound)
+		return
+	}
 }
