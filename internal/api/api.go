@@ -123,17 +123,22 @@ func loggerMiddleware(next http.Handler) http.Handler {
 func getEntityStateHandler(w http.ResponseWriter, r *http.Request) {
 	entityId := chi.URLParam(r, "entityId")
 	full := r.URL.Query().Get("full") == "true"
+	l := logger.With("endpoint", "GET /api/state/{entityId}", "entityId", entityId, "full", full)
 
 	if !full {
+		l.Debug("Getting state from KV store")
 		kvVal, err := nats.GetKeyValue(fmt.Sprintf("%s.%s", HA_STATE_PREFIX, entityId))
 		if err == nil && len(kvVal) > 0 {
-			w.Write(kvVal)
+			l.Debug("Returning", "value", string(kvVal))
+			render.PlainText(w, r, string(kvVal))
 			return
 		}
 	}
 
+	l.Debug("Getting state from Home Assistant")
 	data, err := haClient.GetState(entityId)
 	if err != nil {
+		l.Error("Error getting state from Home Assistant", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
