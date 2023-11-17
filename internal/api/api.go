@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"log/slog"
@@ -37,8 +38,10 @@ func Listen(parentLogger *slog.Logger) {
 
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
+	router.Use(loggerMiddleware)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.Timeout(60 * time.Second))
+	router.Use(tokenAuthMiddleware)
 
 	router.Get(`/api/state/{entityId}`, getEntityStateHandler)
 	router.Post("/api/state/{entityId}/{service}", setEntityStateHandler)
@@ -69,14 +72,36 @@ func Close() {
 	}
 }
 
-func logRequest(w http.ResponseWriter, r *http.Request) {
-	logger.Debug(fmt.Sprintf("%s %s", r.Method, r.URL.Path), "method", r.Method, "path", r.URL.Path, "address", r.RemoteAddr)
+func tokenAuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if cfg.HatsToken == "" { // No token required
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		authHeaderParts := strings.Split(r.Header.Get("Authorization"), "")
+		switch {
+		case len(authHeaderParts) != 2:
+		case authHeaderParts[0] != "Bearer":
+		case authHeaderParts[1] != cfg.HatsToken:
+			http.Error(w, "Bearer authorization header doesn't match configured token", http.StatusUnauthorized)
+			return
+		default:
+			next.ServeHTTP(w, r)
+		}
+	})
+}
+
+func loggerMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logger.Debug(fmt.Sprintf("%s %s", r.Method, r.URL.Path), "method", r.Method, "path", r.URL.Path, "address", r.RemoteAddr)
+		next.ServeHTTP(w, r)
+	})
 }
 
 // HOME ASSISTANT ENTITIES
 
 func getEntityStateHandler(w http.ResponseWriter, r *http.Request) {
-	logRequest(w, r)
 	entityId := chi.URLParam(r, "entityId")
 	full := r.URL.Query().Get("full") == "true"
 
@@ -103,7 +128,6 @@ func getEntityStateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func setEntityStateHandler(w http.ResponseWriter, r *http.Request) {
-	logRequest(w, r)
 	entityId := chi.URLParam(r, "entityId")
 	service := chi.URLParam(r, "service")
 	domain := r.URL.Query().Get("domain")
@@ -139,7 +163,6 @@ func setEntityStateHandler(w http.ResponseWriter, r *http.Request) {
 
 func getTimerHandler(w http.ResponseWriter, r *http.Request) {
 	timerName := chi.URLParam(r, "timerName")
-	logRequest(w, r)
 
 	timer, err := nats.GetTimer(timerName)
 	if err != nil {
@@ -157,7 +180,6 @@ type StartTimerData struct {
 
 func startTimerHandler(w http.ResponseWriter, r *http.Request) {
 	timerName := chi.URLParam(r, "timerName")
-	logRequest(w, r)
 
 	data := &StartTimerData{}
 	if err := render.DecodeJSON(r.Body, data); err != nil {
@@ -185,7 +207,6 @@ func startTimerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteTimerHandler(w http.ResponseWriter, r *http.Request) {
-	logRequest(w, r)
 	timerName := chi.URLParam(r, "timerName")
 
 	timer, err := nats.GetTimer(timerName)
@@ -202,7 +223,6 @@ func deleteTimerHandler(w http.ResponseWriter, r *http.Request) {
 
 func getScheduleHandler(w http.ResponseWriter, r *http.Request) {
 	scheduleName := chi.URLParam(r, "scheduleName")
-	logRequest(w, r)
 
 	schedule, err := nats.GetSchedule(scheduleName)
 	if err != nil {
@@ -219,7 +239,6 @@ type CreateScheduleData struct {
 
 func createScheduleHandler(w http.ResponseWriter, r *http.Request) {
 	scheduleName := chi.URLParam(r, "scheduleName")
-	logRequest(w, r)
 
 	data := &CreateScheduleData{}
 	if err := render.DecodeJSON(r.Body, data); err != nil {
@@ -239,7 +258,6 @@ func createScheduleHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteScheduleHandler(w http.ResponseWriter, r *http.Request) {
-	logRequest(w, r)
 	scheduleName := chi.URLParam(r, "scheduleName")
 
 	schedule, err := nats.GetSchedule(scheduleName)
@@ -273,7 +291,6 @@ func postNtfyHandler(w http.ResponseWriter, r *http.Request) {
 
 func postCommandHandler(w http.ResponseWriter, r *http.Request) {
 	commandName := chi.URLParam(r, "commandName")
-	logRequest(w, r)
 
 	switch commandName {
 	// Commands without payloads

@@ -13,8 +13,11 @@ type HatsClient struct {
 	client *resty.Client
 }
 
-func NewHatsClient(baseUrl string) *HatsClient {
+func NewHatsClient(baseUrl string, token string) *HatsClient {
 	client := resty.New().SetBaseURL(baseUrl)
+	if token != "" {
+		client.SetHeader("Authorization", fmt.Sprintf("Bearer %s", token))
+	}
 	return &HatsClient{
 		client: client,
 	}

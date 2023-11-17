@@ -24,6 +24,7 @@ type HatsConfig struct {
 
 	HatsHost   string
 	HatsPort   string
+	HatsToken  string
 	HatsSecure bool
 
 	NtfyHost  string
@@ -32,18 +33,23 @@ type HatsConfig struct {
 
 func FromEnvironment() *HatsConfig {
 	config := &HatsConfig{
-		LogLevl:            util.GetEnvWithDefault("LOG_LEVEL", "INFO"),
+		LogLevl: util.GetEnvWithDefault("LOG_LEVEL", "INFO"),
+
 		HomeAssistantHost:  util.GetEnvWithDefault("HASS_HOST", "127.0.0.1"),
 		HomeAssistantPort:  util.GetEnvWithDefault("HASS_PORT", "8123"),
 		HomeAssistantToken: util.GetEnvWithDefault("HASS_TOKEN", ""),
-		NatsHost:           util.GetEnvWithDefault("NATS_HOST", "127.0.0.1"),
-		NatsPort:           util.GetEnvWithDefault("NATS_PORT", "4222"),
-		NatsToken:          util.GetEnvWithDefault("NATS_TOKEN", ""),
-		NatsClientName:     util.GetEnvWithDefault("NATS_CLIENT_NAME", "hats"),
-		HatsHost:           util.GetEnvWithDefault("HATS_HOST", "hats"),
-		HatsPort:           util.GetEnvWithDefault("HATS_PORT", "8888"),
-		NtfyHost:           util.GetEnvWithDefault("NTFY_HOST", "https://ntfy.sh"),
-		NtfyToken:          util.GetEnvWithDefault("NTFY_TOKEN", ""),
+
+		NatsHost:       util.GetEnvWithDefault("NATS_HOST", "127.0.0.1"),
+		NatsPort:       util.GetEnvWithDefault("NATS_PORT", "4222"),
+		NatsToken:      util.GetEnvWithDefault("NATS_TOKEN", ""),
+		NatsClientName: util.GetEnvWithDefault("NATS_CLIENT_NAME", "hats"),
+
+		HatsHost:  util.GetEnvWithDefault("HATS_HOST", "hats"),
+		HatsPort:  util.GetEnvWithDefault("HATS_PORT", "8888"),
+		HatsToken: util.GetEnvWithDefault("HATS_TOKEN", ""),
+
+		NtfyHost:  util.GetEnvWithDefault("NTFY_HOST", "https://ntfy.sh"),
+		NtfyToken: util.GetEnvWithDefault("NTFY_TOKEN", ""),
 	}
 
 	config.HomeAssistantSecure, _ = strconv.ParseBool(util.GetEnvWithDefault("HASS_SECURE", "false"))

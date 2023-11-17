@@ -11,8 +11,10 @@ import (
 //
 //	States that return true: "on", "home", "open", "playing", non-zero numbers, etc.
 //	All others return false
+//
+//	regex: ^(on|home|open(ing)?|unlocked|playing|active|good|walking|charging|alive|heat|cool|heat_cool|above_horizon|[1-9][\d\.]*|0\.0*[1-9]\d*)$
 func StateToBool(state string) bool {
-	trueRegex := regexp.MustCompile(`^(on|home|open(ing)?|unlocked|playing|active|good|walking|charging|alive|heat|cool|heat_cool|[1-9][\d\.]*|0\.0*[1-9]\d*)$`)
+	trueRegex := regexp.MustCompile(`^(on|home|open(ing)?|unlocked|playing|active|good|walking|charging|alive|heat|cool|heat_cool|above_horizon|[1-9][\d\.]*|0\.0*[1-9]\d*)$`)
 	return trueRegex.MatchString(state)
 }
 
