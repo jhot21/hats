@@ -17,6 +17,9 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
+	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
 )
 
 var (
@@ -24,14 +27,21 @@ var (
 	logger   *slog.Logger
 	server   http.Server
 	haClient *homeassistant.RestClient
+	homepage string
 )
 
 const (
 	HA_STATE_PREFIX = "homeassistant.states"
 )
 
-func Listen(parentLogger *slog.Logger) {
+func Listen(parentLogger *slog.Logger, readme []byte) {
 	logger = parentLogger
+
+	// render readme to HTML
+	p := parser.NewWithExtensions(parser.CommonExtensions | parser.AutoHeadingIDs | parser.NoEmptyLineBeforeBlock)
+	doc := p.Parse(readme)
+	homepage = string(markdown.Render(doc, html.NewRenderer(html.RendererOptions{Flags: html.CommonFlags | html.HrefTargetBlank})))
+
 	cfg = config.FromEnvironment()
 	haClient = homeassistant.NewRestClient(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
 	router := chi.NewRouter()
@@ -41,22 +51,31 @@ func Listen(parentLogger *slog.Logger) {
 	router.Use(loggerMiddleware)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.Timeout(60 * time.Second))
-	router.Use(tokenAuthMiddleware)
 
-	router.Get(`/api/state/{entityId}`, getEntityStateHandler)
-	router.Post("/api/state/{entityId}/{service}", setEntityStateHandler)
+	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		render.HTML(w, r, homepage)
+	})
+	router.Get("/status", func(w http.ResponseWriter, r *http.Request) {
+		render.PlainText(w, r, "OK")
+	})
 
-	router.Get("/api/timer/{timerName}", getTimerHandler)
-	router.Post("/api/timer/{timerName}", startTimerHandler)
-	router.Delete("/api/timer/{timerName}", deleteTimerHandler)
+	router.Route("/api", func(r chi.Router) {
+		r.Use(tokenAuthMiddleware)
+		r.Get(`/api/state/{entityId}`, getEntityStateHandler)
+		r.Post("/api/state/{entityId}/{service}", setEntityStateHandler)
 
-	router.Get("/api/schedule/{scheduleName}", getScheduleHandler)
-	router.Post("/api/schedule/{scheduleName}", createScheduleHandler)
-	router.Delete("/api/schedule/{scheduleName}", deleteScheduleHandler)
+		r.Get("/api/timer/{timerName}", getTimerHandler)
+		r.Post("/api/timer/{timerName}", startTimerHandler)
+		r.Delete("/api/timer/{timerName}", deleteTimerHandler)
 
-	router.Post("/api/ntfy", postNtfyHandler)
+		r.Get("/api/schedule/{scheduleName}", getScheduleHandler)
+		r.Post("/api/schedule/{scheduleName}", createScheduleHandler)
+		r.Delete("/api/schedule/{scheduleName}", deleteScheduleHandler)
 
-	router.Post("/api/command/{commandName}", postCommandHandler)
+		r.Post("/api/ntfy", postNtfyHandler)
+
+		r.Post("/api/command/{commandName}", postCommandHandler)
+	})
 
 	server = http.Server{
 		Addr:    ":8888",
