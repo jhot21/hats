@@ -61,20 +61,20 @@ func Listen(parentLogger *slog.Logger, readme []byte) {
 
 	router.Route("/api", func(r chi.Router) {
 		r.Use(tokenAuthMiddleware)
-		r.Get(`/api/state/{entityId}`, getEntityStateHandler)
+		r.Get(`/state/{entityId}`, getEntityStateHandler)
 		r.Post("/api/state/{entityId}/{service}", setEntityStateHandler)
 
-		r.Get("/api/timer/{timerName}", getTimerHandler)
-		r.Post("/api/timer/{timerName}", startTimerHandler)
-		r.Delete("/api/timer/{timerName}", deleteTimerHandler)
+		r.Get("/timer/{timerName}", getTimerHandler)
+		r.Post("/timer/{timerName}", startTimerHandler)
+		r.Delete("/timer/{timerName}", deleteTimerHandler)
 
-		r.Get("/api/schedule/{scheduleName}", getScheduleHandler)
-		r.Post("/api/schedule/{scheduleName}", createScheduleHandler)
-		r.Delete("/api/schedule/{scheduleName}", deleteScheduleHandler)
+		r.Get("/schedule/{scheduleName}", getScheduleHandler)
+		r.Post("/schedule/{scheduleName}", createScheduleHandler)
+		r.Delete("/schedule/{scheduleName}", deleteScheduleHandler)
 
-		r.Post("/api/ntfy", postNtfyHandler)
+		r.Post("/ntfy", postNtfyHandler)
 
-		r.Post("/api/command/{commandName}", postCommandHandler)
+		r.Post("/command/{commandName}", postCommandHandler)
 	})
 
 	server = http.Server{
