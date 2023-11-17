@@ -99,18 +99,15 @@ func tokenAuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		authHeaderParts := strings.Split(r.Header.Get("Authorization"), "")
-		switch {
-		case len(authHeaderParts) != 2:
-		case authHeaderParts[0] != "Bearer":
-		case authHeaderParts[1] != cfg.HatsToken:
+		logger.Debug("Checking bearer token")
+		authHeaderParts := strings.Split(r.Header.Get("Authorization"), " ")
+		if len(authHeaderParts) != 2 || authHeaderParts[0] != "Bearer" || authHeaderParts[1] != cfg.HatsToken {
 			logger.Warn("Unauthorized request", "method", r.Method, "path", r.URL.Path, "address", r.RemoteAddr)
 			http.Error(w, "Bearer authorization header doesn't match configured token", http.StatusUnauthorized)
 			return
-		default:
-			logger.Debug("Token valid")
-			next.ServeHTTP(w, r)
 		}
+		logger.Debug("Token valid")
+		next.ServeHTTP(w, r)
 	})
 }
 
