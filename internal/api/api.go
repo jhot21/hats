@@ -94,6 +94,7 @@ func Close() {
 func tokenAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if cfg.HatsToken == "" { // No token required
+			logger.Debug("Skipping token auth")
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -103,9 +104,11 @@ func tokenAuthMiddleware(next http.Handler) http.Handler {
 		case len(authHeaderParts) != 2:
 		case authHeaderParts[0] != "Bearer":
 		case authHeaderParts[1] != cfg.HatsToken:
+			logger.Warn("Unauthorized request", "method", r.Method, "path", r.URL.Path, "address", r.RemoteAddr)
 			http.Error(w, "Bearer authorization header doesn't match configured token", http.StatusUnauthorized)
 			return
 		default:
+			logger.Debug("Token valid")
 			next.ServeHTTP(w, r)
 		}
 	})
