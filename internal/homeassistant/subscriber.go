@@ -134,7 +134,11 @@ func handleMessages() {
 					if marshallErr != nil {
 						logger.Error("Error marshalling event data", "error", marshallErr)
 					}
-					nats.Publish(fmt.Sprintf("homeassistant.states.%s.%s", message.Event.Data.EntityId, message.Event.Data.NewState.State), data)
+					if message.Event.Data.NewState.State == message.Event.Data.OldState.State {
+						nats.Publish(fmt.Sprintf("homeassistant.attributues.%s.%s", message.Event.Data.EntityId, message.Event.Data.NewState.State), data)
+					} else {
+						nats.Publish(fmt.Sprintf("homeassistant.states.%s.%s", message.Event.Data.EntityId, message.Event.Data.NewState.State), data)
+					}
 					nats.SetKeyValueString(fmt.Sprintf("homeassistant.states.%s", message.Event.Data.EntityId), message.Event.Data.NewState.State)
 				case zhaEventId:
 					data, _ := json.Marshal(message.Event.Data)
