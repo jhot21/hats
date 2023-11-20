@@ -24,7 +24,7 @@ var (
 const (
 	stateChangeEventId   = 1001
 	zhaEventId           = 1002
-	qrEventId            = 1003
+	nfcEventId           = 1003
 	timerFinishedEventId = 1005
 )
 
@@ -115,7 +115,7 @@ func handleMessages() {
 				haWebsocketConn.WriteJSON(ha.SubscribeEventsMessage{
 					Type:      ha.MessageType.SubscribeEvents,
 					EventType: ha.MessageType.TagScanned,
-					Id:        qrEventId})
+					Id:        nfcEventId})
 				haWebsocketConn.WriteJSON(ha.SubscribeEventsMessage{
 					Type:      ha.MessageType.SubscribeEvents,
 					EventType: ha.MessageType.TimerFinished,
@@ -139,9 +139,9 @@ func handleMessages() {
 				case zhaEventId:
 					data, _ := json.Marshal(message.Event.Data)
 					nats.Publish(fmt.Sprintf("homeassistant.zha.%s", message.Event.Data.DeviceIeee), data)
-				case qrEventId:
+				case nfcEventId:
 					data, _ := json.Marshal(message.Event.Data)
-					nats.Publish(fmt.Sprintf("homeassistant.qr.%s", message.Event.Data.TagId), data)
+					nats.Publish(fmt.Sprintf("homeassistant.nfc.%s", message.Event.Data.TagId), data)
 				case timerFinishedEventId:
 					nats.PublishString(fmt.Sprintf("homeassistant.%s.finished", message.Event.Data.EntityId), "finished")
 				}

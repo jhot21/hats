@@ -12,6 +12,15 @@
     - [Syncthing](https://github.com/syncthing/syncthing)
     - [National Weather Service](https://www.weather.gov/)
 
+## NATS Topics
+
+- `homeassistant.states.{domain}.{entity}.{state}` - Home Assistant device state changes: [payload](https://www.home-assistant.io/docs/configuration/state_object/)
+- `homeassistant.zha.{device IEEE}` - ZHA events: [payload](https://www.home-assistant.io/docs/configuration/state_object/)
+- `homeassistant.nfc.{tag ID}` - Home Assistant NFC tag scanned: [payload](https://www.home-assistant.io/docs/configuration/state_object/)
+- `homeassistant.timer.{timer name}.finished` - Home Assistant timer finished: payload is simply `"finished"`
+- `schedules.{schedule name}` - HATS schedule finished: payload is simply `"finished"`
+- `command.{command name}` - Command called via HATS API: payload is a byte array of the HTTP Post body
+
 ## Example Client
 
 ```golang

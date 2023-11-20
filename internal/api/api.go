@@ -316,29 +316,10 @@ func postNtfyHandler(w http.ResponseWriter, r *http.Request) {
 func postCommandHandler(w http.ResponseWriter, r *http.Request) {
 	commandName := chi.URLParam(r, "commandName")
 
-	switch commandName {
-	// Commands without payloads
-	case "bedtime":
-		nats.PublishString(fmt.Sprintf("command.%s", commandName), "called")
-		render.PlainText(w, r, "OK")
-		return
-	// Commands with payloads
-	case "sonarr":
-	case "radarr":
-	case "paupdate":
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			logger.Error("Error reading request body", "error", err, "url", r.URL.String())
-			http.Error(w, "Unable to read body", http.StatusBadRequest)
-			return
-		}
-		nats.Publish(fmt.Sprintf("command.%s", commandName), body)
-		render.PlainText(w, r, "OK")
-		return
-	// Otherwise
-	default:
-		logger.Error("Command not implemented", "commandName", commandName)
-		http.Error(w, "Command not implemented", http.StatusNotFound)
-		return
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		logger.Error("Error reading request body", "error", err, "url", r.URL.String())
 	}
+	nats.Publish(fmt.Sprintf("command.%s", commandName), body)
+	render.PlainText(w, r, "OK")
 }
