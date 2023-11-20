@@ -15,6 +15,7 @@
 ## NATS Topics
 
 - `homeassistant.states.{domain}.{entity}.{state}` - Home Assistant device state changes: [payload](https://www.home-assistant.io/docs/configuration/state_object/)
+- `homeassistant.attributes.{domain}.{entity}.{state}` - When a device's attributes change but the state hasn't changed: [payload](https://www.home-assistant.io/docs/configuration/state_object/)
 - `homeassistant.zha.{device IEEE}` - ZHA events: [payload](https://www.home-assistant.io/docs/configuration/state_object/)
 - `homeassistant.nfc.{tag ID}` - Home Assistant NFC tag scanned: [payload](https://www.home-assistant.io/docs/configuration/state_object/)
 - `homeassistant.timer.{timer name}.finished` - Home Assistant timer finished: payload is simply `"finished"`

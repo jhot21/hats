@@ -65,12 +65,12 @@ func (t *HatsTimer) Activate(durationOverride string) {
 			d = t.Duration
 		}
 	}
-	logger.Error("Starting timer", "duration", int(d.Seconds()))
+	logger.Debug("Starting timer", "name", t.Name, "duration", int(d.Seconds()))
 	err := haClient.CallService(t.Name, homeassistant.Services.Start, map[string]any{
 		homeassistant.ExtraProps.Duration: int(d.Seconds()),
 	})
 	if err != nil {
-		logger.Error("Error starting timer", "error", err)
+		logger.Error("Error starting timer", "name", t.Name, "error", err)
 	}
 }
 
