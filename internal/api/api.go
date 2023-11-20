@@ -158,17 +158,24 @@ func setEntityStateHandler(w http.ResponseWriter, r *http.Request) {
 
 	var extras map[string]any
 	err := render.DecodeJSON(r.Body, &extras)
+	if err != nil {
+		logger.Error("Error decoding JSON body", "error", err)
+	}
 	var haErr error
 	if err == nil && len(extras) > 0 {
 		if domain != "" {
+			logger.Debug("Calling service manually", "service", service, "domain", domain, "entity", entityId, "extras", extras)
 			haErr = haClient.CallServiceManual(domain, entityId, service, extras)
 		} else {
+			logger.Debug("Calling service", "service", service, "entity", entityId, "extras", extras)
 			haErr = haClient.CallService(entityId, service, extras)
 		}
 	} else {
 		if domain != "" {
+			logger.Debug("Calling service manually (without extras)", "service", service, "domain", domain, "entity", entityId)
 			haErr = haClient.CallServiceManual(domain, entityId, service)
 		} else {
+			logger.Debug("Calling service (without extras)", "service", service, "entity", entityId)
 			haErr = haClient.CallService(entityId, service)
 		}
 	}
