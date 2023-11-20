@@ -62,7 +62,7 @@ func Listen(parentLogger *slog.Logger, readme []byte) {
 	router.Route("/api", func(r chi.Router) {
 		r.Use(tokenAuthMiddleware)
 		r.Get(`/state/{entityId}`, getEntityStateHandler)
-		r.Post("/api/state/{entityId}/{service}", setEntityStateHandler)
+		r.Post("/state/{entityId}/{service}", setEntityStateHandler)
 
 		r.Get("/timer/{timerName}", getTimerHandler)
 		r.Post("/timer/{timerName}", startTimerHandler)
