@@ -135,6 +135,7 @@ func handleMessages() {
 						logger.Error("Error marshalling event data", "error", marshallErr)
 					}
 					if message.Event.Data.NewState.State == message.Event.Data.OldState.State {
+						logger.Debug("State unchanged, publishing to attributes topic")
 						nats.Publish(fmt.Sprintf("homeassistant.attributues.%s.%s", message.Event.Data.EntityId, message.Event.Data.NewState.State), data)
 					} else {
 						nats.Publish(fmt.Sprintf("homeassistant.states.%s.%s", message.Event.Data.EntityId, message.Event.Data.NewState.State), data)
