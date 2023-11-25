@@ -158,7 +158,8 @@ func setEntityStateHandler(w http.ResponseWriter, r *http.Request) {
 	var extras map[string]any
 	err := render.DecodeJSON(r.Body, &extras)
 	if err != nil {
-		l.Error("Error decoding JSON body", "error", err, "body", string(r.Body))
+		b, _ := io.ReadAll(r.Body)
+		l.Error("Error decoding JSON body", "error", err, "body", string(b))
 	}
 	var haErr error
 	if err == nil && len(extras) > 0 {
