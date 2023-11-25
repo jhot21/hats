@@ -152,33 +152,35 @@ func setEntityStateHandler(w http.ResponseWriter, r *http.Request) {
 	entityId := chi.URLParam(r, "entityId")
 	service := chi.URLParam(r, "service")
 	domain := r.URL.Query().Get("domain")
+	
+	l := logger.With("endpoint", "POST /api/state/{entityId}/{service}", "entityId", entityId, "service", service, "domain", domain)
 
 	var extras map[string]any
 	err := render.DecodeJSON(r.Body, &extras)
 	if err != nil {
-		logger.Error("Error decoding JSON body", "error", err)
+		l.Error("Error decoding JSON body", "error", err, "body", string(r.Body))
 	}
 	var haErr error
 	if err == nil && len(extras) > 0 {
 		if domain != "" {
-			logger.Debug("Calling service manually", "service", service, "domain", domain, "entity", entityId, "extras", extras)
+			l.Debug("Calling service manually", "extras", extras)
 			haErr = haClient.CallServiceManual(domain, entityId, service, extras)
 		} else {
-			logger.Debug("Calling service", "service", service, "entity", entityId, "extras", extras)
+			l.Debug("Calling service", "extras", extras)
 			haErr = haClient.CallService(entityId, service, extras)
 		}
 	} else {
 		if domain != "" {
-			logger.Debug("Calling service manually (without extras)", "service", service, "domain", domain, "entity", entityId)
+			l.Debug("Calling service manually (without extras)")
 			haErr = haClient.CallServiceManual(domain, entityId, service)
 		} else {
-			logger.Debug("Calling service (without extras)", "service", service, "entity", entityId)
+			l.Debug("Calling service (without extras)")
 			haErr = haClient.CallService(entityId, service)
 		}
 	}
 
 	if haErr != nil {
-		logger.Error("Error setting state", "error", haErr)
+		l.Error("Error setting state", "error", haErr)
 		http.Error(w, fmt.Sprintf("error proxying request: %s", haErr.Error()), http.StatusInternalServerError)
 		return
 	}
