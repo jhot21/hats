@@ -80,7 +80,7 @@ func (c *HatsConfig) GetNatsBaseUrl() string {
 
 func (c *HatsConfig) GetHatsBaseUrl() string {
 	protocol := "http"
-	if c.HomeAssistantSecure {
+	if c.HatsSecure {
 		protocol += "s"
 	}
 	return fmt.Sprintf("%s://%s:%s", protocol, c.HatsHost, c.HatsPort)
