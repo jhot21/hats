@@ -38,7 +38,7 @@ func (c *QbittorrentClient) Login(user string, pass string) error {
 
 	authCookie := resp.Header().Get("set-cookie")
 	if authCookie == "" {
-		return fmt.Errorf("auth cookie not found. Headers: %+v", resp.Header())
+		return fmt.Errorf("auth cookie not found.\nResponse: %s\nHeaders: %+v", resp.Body(), resp.Header())
 	}
 
 	first := strings.Split(authCookie, ";")[0]
