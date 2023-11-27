@@ -1,7 +1,6 @@
 package qbittorrent
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -39,7 +38,7 @@ func (c *QbittorrentClient) Login(user string, pass string) error {
 
 	authCookie := resp.Header().Get("set-cookie")
 	if authCookie == "" {
-		return errors.New("auth cookie not found")
+		return fmt.Errorf("auth cookie not found. Headers: %+v", resp.Header())
 	}
 
 	first := strings.Split(authCookie, ";")[0]
