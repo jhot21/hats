@@ -17,6 +17,7 @@
 - `homeassistant.states.{domain}.{entity}.{state}` - Home Assistant device state changes: [payload](https://www.home-assistant.io/docs/configuration/state_object/)
 - `homeassistant.attributes.{domain}.{entity}.{state}` - When a device's attributes change but the state hasn't changed: [payload](https://www.home-assistant.io/docs/configuration/state_object/)
 - `homeassistant.zha.{device IEEE}` - ZHA events: [payload](https://www.home-assistant.io/docs/configuration/state_object/)
+- `homeassistant.zwave-scene.{device ID}` - ZwaveJS scene events: [payload](https://www.home-assistant.io/integrations/zwave_js/#scene-events-value-notification)
 - `homeassistant.nfc.{tag ID}` - Home Assistant NFC tag scanned: [payload](https://www.home-assistant.io/docs/configuration/state_object/)
 - `homeassistant.timer.{timer name}.finished` - Home Assistant timer finished: payload is simply `"finished"`
 - `schedules.{schedule name}` - HATS schedule finished: payload is simply `"finished"`

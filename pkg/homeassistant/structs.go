@@ -8,6 +8,7 @@ var MessageType = struct {
 	Result          string
 	Event           string
 	ZhaEvent        string
+	ZwaveEvent      string
 	SubscribeEvents string
 	StateChanged    string
 	TagScanned      string
@@ -20,6 +21,7 @@ var MessageType = struct {
 	Result:          "result",
 	Event:           "event",
 	ZhaEvent:        "zha_event",
+	ZwaveEvent:      "zwave_js_value_notification",
 	SubscribeEvents: "subscribe_events",
 	StateChanged:    "state_changed",
 	TagScanned:      "tag_scanned",
@@ -83,25 +85,27 @@ var Services = struct {
 
 // Extra props that can be sent when calling a Home Assistant service
 var ExtraProps = struct {
-	Transition        string
-	Brightness        string
-	BrightnessPercent string
-	HvacMode          string
-	Temperature       string
-	TargetTempHigh    string
-	TargetTempLow     string
-	Duration          string
-	Value             string
+	Transition            string
+	Brightness            string
+	BrightnessPercent     string
+	BrightnessPercentStep string
+	HvacMode              string
+	Temperature           string
+	TargetTempHigh        string
+	TargetTempLow         string
+	Duration              string
+	Value                 string
 }{
-	Transition:        "transition",
-	Brightness:        "brightness",
-	BrightnessPercent: "brightness_pct",
-	HvacMode:          "hvac_mode",
-	Temperature:       "temperature",
-	TargetTempHigh:    "target_temp_high",
-	TargetTempLow:     "target_temp_low",
-	Duration:          "duration",
-	Value:             "value",
+	Transition:            "transition",
+	Brightness:            "brightness",
+	BrightnessPercent:     "brightness_pct",
+	BrightnessPercentStep: "brightness_step_pct",
+	HvacMode:              "hvac_mode",
+	Temperature:           "temperature",
+	TargetTempHigh:        "target_temp_high",
+	TargetTempLow:         "target_temp_low",
+	Duration:              "duration",
+	Value:                 "value",
 }
 
 type ResultContext struct {
@@ -121,15 +125,34 @@ type StateData struct {
 }
 
 type EventData struct {
-	EntityId   string      `json:"entity_id,omitempty"`
-	NewState   StateData   `json:"new_state,omitempty"`
-	OldState   StateData   `json:"old_state,omitempty"`
+	EntityId string    `json:"entity_id,omitempty"`
+	NewState StateData `json:"new_state,omitempty"`
+	OldState StateData `json:"old_state,omitempty"`
+
+	// ZHA
 	DeviceIeee string      `json:"device_ieee,omitempty"`
 	DeviceId   string      `json:"device_id,omitempty"`
 	Command    string      `json:"command,omitempty"`
 	Args       interface{} `json:"args,omitempty"`
 	Params     interface{} `json:"params,omitempty"`
-	TagId      string      `json:"tag_id,omitempty"`
+
+	// NFC
+	TagId string `json:"tag_id,omitempty"`
+
+	// ZwaveJS Scene
+	Domain           string `json:"domain,omitempty"`
+	NodeID           int    `json:"node_id,omitempty"`
+	HomeID           string `json:"home_id,omitempty"`
+	Endpoint         int    `json:"endpoint,omitempty"`
+	CommandClass     int    `json:"command_class,omitempty"`
+	CommandClassName string `json:"command_class_name,omitempty"`
+	Label            string `json:"label,omitempty"`
+	Property         string `json:"property,omitempty"`
+	PropertyName     string `json:"property_name,omitempty"`
+	PropertyKey      string `json:"property_key,omitempty"`
+	PropertyKeyName  string `json:"property_key_name,omitempty"`
+	Value            string `json:"value,omitempty"`
+	ValueRaw         int    `json:"value_raw,omitempty"`
 }
 
 type Event struct {
