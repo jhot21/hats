@@ -142,7 +142,6 @@ type EventData struct {
 	// ZwaveJS Scene
 	Domain           string `json:"domain,omitempty"`
 	NodeID           int    `json:"node_id,omitempty"`
-	HomeID           string `json:"home_id,omitempty"`
 	Endpoint         int    `json:"endpoint,omitempty"`
 	CommandClass     int    `json:"command_class,omitempty"`
 	CommandClassName string `json:"command_class_name,omitempty"`
