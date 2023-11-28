@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"code.jhot.me/jhot/hats/internal/util"
 	"github.com/go-resty/resty/v2"
@@ -16,7 +17,7 @@ type QbittorrentClient struct {
 
 func New(host string) *QbittorrentClient {
 	return &QbittorrentClient{
-		restClient: resty.New().SetBaseURL(fmt.Sprintf("%s/api/v2", host)),
+		restClient: resty.New().SetTimeout(30 * time.Second).SetBaseURL(fmt.Sprintf("%s/api/v2", host)),
 	}
 }
 
