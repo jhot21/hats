@@ -13,7 +13,7 @@ func GenericStateSubscriber(logger *slog.Logger, natsClient *NatsConnection, ent
 	if entityId == "" {
 		panic(errors.New("entity ID cannot be empty"))
 	}
-	topic := fmt.Sprintf("homeassistant.states..%s.>", entityId)
+	topic := fmt.Sprintf("homeassistant.states.%s.>", entityId)
 	l := logger.With("topic", topic, "entity_id", entityId)
 	l.Debug("Subscribing to topic")
 	sub, ch, err := natsClient.Subscribe(topic)
