@@ -41,6 +41,32 @@ func (n *NatsConnection) GenericStateSubscriber(logger *slog.Logger, entityId st
 	}
 }
 
+func (n *NatsConnection) GenericTimerListener(logger *slog.Logger, timerName string, handler func() error) {
+	if timerName == "" {
+		panic(errors.New("timer name cannot be empty"))
+	}
+	topic := fmt.Sprintf("homeassistant.%s.finished", timerName)
+	l := logger.With("topic", topic, "timer", timerName)
+	l.Debug("Subscribing to topic")
+	sub, ch, err := n.Subscribe(topic)
+	if err != nil {
+		l.Error("Error subscribing to topic", "error", err)
+		return
+	}
+
+	defer sub.Unsubscribe()
+
+	for msg := range ch {
+		go msg.Ack()
+		l.Debug("Timer ended", "name", timerName)
+		err = handler()
+		if err != nil {
+			l.Error("Error handling timer event", "error", err)
+			continue
+		}
+	}
+}
+
 func (n *NatsConnection) GenericScheduleSubscriber(logger *slog.Logger, scheduleName string, handler func() error) {
 	if scheduleName == "" {
 		panic(errors.New("schedule name cannot be empty"))

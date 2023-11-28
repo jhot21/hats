@@ -1,8 +1,10 @@
 package homeassistant
 
 import (
+	"errors"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -50,4 +52,36 @@ func (c *RestClient) CallServiceManual(domain string, entityId string, service s
 		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
 	}
 	return err
+}
+
+type CallServiceInput struct {
+	EntityID string
+	Service  string
+	Extras   map[string]any
+}
+
+func (c *RestClient) CallServices(inputs ...*CallServiceInput) error {
+	errorChannel := make(chan error)
+	var wg sync.WaitGroup
+
+	wg.Add(len(inputs))
+
+	go func() {
+		wg.Wait()
+		close(errorChannel)
+	}()
+
+	for _, input := range inputs {
+		go func(input *CallServiceInput) {
+			defer wg.Done()
+			err := c.CallService(input.EntityID, input.Service, input.Extras)
+			errorChannel <- err
+		}(input)
+	}
+
+	var returnErrors []error
+	for err := range errorChannel {
+		returnErrors = append(returnErrors, err)
+	}
+	return errors.Join(returnErrors...)
 }
