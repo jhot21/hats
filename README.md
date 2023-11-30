@@ -5,6 +5,7 @@
 ## Features
 - Push Home Assistant websocket events to a NATS message queue
 - Caching proxy for Home Assistant API
+- Generic implementations for subscribing to NATS topics
 - Clients for some application APIs (limited functionality)
     - [Gokapi](https://github.com/Forceu/Gokapi)
     - [ntfy](https://github.com/binwiederhier/ntfy)
@@ -29,8 +30,6 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -39,14 +38,14 @@ import (
 	"code.jhot.me/jhot/hats/pkg/client"
 	"code.jhot.me/jhot/hats/pkg/config"
 	ha "code.jhot.me/jhot/hats/pkg/homeassistant"
-	n "code.jhot.me/jhot/hats/pkg/nats"
-	"github.com/nats-io/nats.go"
+	"code.jhot.me/jhot/hats/pkg/nats"
+	n "github.com/nats-io/nats.go"
 )
 
 var (
 	logger     *slog.Logger
 	hatsClient *client.HatsClient
-	natsClient *n.NatsConnection
+	natsClient *nats.NatsConnection
 )
 
 func main() {
@@ -56,10 +55,15 @@ func main() {
 	}))
 
 	hatsClient = client.NewHatsClient(cfg.GetHatsBaseUrl(), cfg.HatsToken)
-	natsClient = n.DefaultNatsConnection().WithJetstream(false).WithHostName(cfg.NatsHost).WithPort(cfg.NatsPort).WithConnectionOption(nats.Name(cfg.NatsClientName))
+	natsClient = nats.DefaultNatsConnection().WithJetstream(false).WithHostName(cfg.NatsHost).
+		WithPort(cfg.NatsPort).WithConnectionOption(n.Name(cfg.NatsClientName))
+	err := natsClient.Connect()
+	if err != nil {
+		panic(err)
+	}
 	defer natsClient.Close()
 
-	go GenericStateListener("sun.sun", SunHandler)
+	go natsClient.GenericStateSubscriber(logger, "sun.sun", SunHandler)
 
 	sigch := make(chan os.Signal, 1)
 	signal.Notify(sigch, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
@@ -68,36 +72,13 @@ func main() {
 }
 
 func SunHandler(state ha.StateData) error {
-	return hatsClient.CallService("light.some_light", ha.Services.TurnOn)
-}
-
-func GenericStateListener(entityId string, handler func(ha.StateData) error) {
-	topic := fmt.Sprintf("homeassistant.states.%s.*", entityId)
-	l := logger.With("topic", topic, "entity_id", entityId)
-	l.Debug("Subscribing to topic")
-	sub, ch, err := natsClient.Subscribe(topic)
-	if err != nil {
-		l.Error("Error subscribing to topic", "error", err)
-		return
+	var service string
+	if up := ha.StateToBool(state.State); up {
+		service = ha.Services.TurnOff
+	} else {
+		service = ha.Services.TurnOn
 	}
-
-	defer sub.Unsubscribe()
-
-	for msg := range ch {
-		msg.Ack()
-		var data ha.EventData
-		err = json.Unmarshal(msg.Data, &data)
-		if err != nil {
-			l.Error("Error parsing message", "error", err)
-			continue
-		}
-		l.Debug("Event state " + data.NewState.State)
-		err = handler(data.NewState)
-		if err != nil {
-			l.Error("Error handling state event", "error", err)
-			continue
-		}
-	}
+	return hatsClient.CallService("light.some_light", service)
 }
 
 ```
