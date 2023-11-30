@@ -2,20 +2,36 @@ package homeassistant
 
 import (
 	"fmt"
-	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
 
 // StateToBool converts a state string into a boolean
 //
-//	States that return true: "on", "home", "open", "playing", non-zero numbers, etc.
+//	States that return true: "on", "home", "open", "opening", "unlocked", "playing", "active", "good",
+//		"walking", "charging", "alive", "heat", "heat_cool", "cool", "above_horizon", numbers > 0
 //	All others return false
-//
-//	regex: ^(on|home|open(ing)?|unlocked|playing|active|good|walking|charging|alive|heat|cool|heat_cool|above_horizon|[1-9][\d\.]*|0\.0*[1-9]\d*)$
 func StateToBool(state string) bool {
-	trueRegex := regexp.MustCompile(`^(on|home|open(ing)?|unlocked|playing|active|good|walking|charging|alive|heat|cool|heat_cool|above_horizon|[1-9][\d\.]*|0\.0*[1-9]\d*)$`)
-	return trueRegex.MatchString(state)
+	switch state {
+	// truthy
+	case "on", "home", "open", "opening", "unlocked", "playing", "active", "good",
+		"walking", "charging", "alive", "heat", "heat_cool", "cool", "above_horizon":
+		return true
+	// falsey
+	case "off", "away", "closed", "closing", "locked", "paused", "inactive", "bad",
+		"discharging", "dead", "below_horizon", "0", "0.0":
+		return false
+	}
+
+	// number greater than zero
+	val, err := strconv.ParseFloat(state, 64)
+	if err == nil && val > 0.0 {
+		return true
+	}
+
+	// unaccounted for
+	return false
 }
 
 // BoolToService converts a boolean into the appropriate service string
