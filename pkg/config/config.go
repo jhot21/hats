@@ -29,6 +29,8 @@ type HatsConfig struct {
 
 	NtfyHost  string
 	NtfyToken string
+
+	ConfigDir string
 }
 
 func FromEnvironment() *HatsConfig {
@@ -50,6 +52,8 @@ func FromEnvironment() *HatsConfig {
 
 		NtfyHost:  util.GetEnvWithDefault("NTFY_HOST", "https://ntfy.sh"),
 		NtfyToken: util.GetEnvWithDefault("NTFY_TOKEN", ""),
+
+		ConfigDir: util.GetEnvWithDefault("CONFIG_DIR", "/config"),
 	}
 
 	config.HomeAssistantSecure, _ = strconv.ParseBool(util.GetEnvWithDefault("HASS_SECURE", "false"))

@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"strconv"
 
 	"code.jhot.me/jhot/hats/internal/api"
 	ha "code.jhot.me/jhot/hats/pkg/homeassistant"
@@ -66,6 +67,17 @@ func (c *HatsClient) GetStateBool(entityId string) (bool, error) {
 	}
 
 	return ha.StateToBool(stateString), nil
+}
+
+func (c *HatsClient) GetStateFloat(entityId string) (float64, error) {
+	stateString, err := c.GetState(entityId)
+
+	if err != nil {
+		return 0.0, err
+	}
+
+	parsed, err := strconv.ParseFloat(stateString, 64)
+	return parsed, err
 }
 
 func (c *HatsClient) CallService(entityId string, service string, extras ...map[string]any) error {
