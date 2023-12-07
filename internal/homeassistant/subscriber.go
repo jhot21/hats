@@ -144,9 +144,9 @@ func handleMessages() {
 						go nats.SetKeyValueString(fmt.Sprintf("homeassistant.states.%s", message.Event.Data.EntityId), message.Event.Data.NewState.State)
 						if message.Event.Data.NewState.State == message.Event.Data.OldState.State {
 							logger.Debug("State unchanged, publishing to attributes topic")
-							nats.PublishRequest(fmt.Sprintf("homeassistant.attributues.%s.%s", message.Event.Data.EntityId, message.Event.Data.NewState.State), data, defaultTimeout, 2)
+							nats.Publish(fmt.Sprintf("homeassistant.attributues.%s.%s", message.Event.Data.EntityId, message.Event.Data.NewState.State), data)
 						} else {
-							nats.Publish(fmt.Sprintf("homeassistant.states.%s.%s", message.Event.Data.EntityId, message.Event.Data.NewState.State), data)
+							nats.PublishRequest(fmt.Sprintf("homeassistant.states.%s.%s", message.Event.Data.EntityId, message.Event.Data.NewState.State), data, defaultTimeout, 2)
 						}
 					case zhaEventId:
 						data, _ := json.Marshal(message.Event.Data)
