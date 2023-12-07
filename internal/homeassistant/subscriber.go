@@ -27,6 +27,7 @@ const (
 	nfcEventId           = 1003
 	zwaveEventId         = 1004
 	timerFinishedEventId = 1005
+	defaultTimeout       = 250 * time.Millisecond
 )
 
 func CloseSubscription() error {
@@ -132,32 +133,34 @@ func handleMessages() {
 					return
 				}
 			case ha.MessageType.Event:
-				logger.Debug("Event received", "event", message.Event)
-				switch message.Id {
-				case stateChangeEventId:
-					data, marshallErr := json.Marshal(message.Event.Data)
-					if marshallErr != nil {
-						logger.Error("Error marshalling event data", "error", marshallErr)
+				go func() {
+					logger.Debug("Event received", "event", message.Event)
+					switch message.Id {
+					case stateChangeEventId:
+						data, marshallErr := json.Marshal(message.Event.Data)
+						if marshallErr != nil {
+							logger.Error("Error marshalling event data", "error", marshallErr)
+						}
+						go nats.SetKeyValueString(fmt.Sprintf("homeassistant.states.%s", message.Event.Data.EntityId), message.Event.Data.NewState.State)
+						if message.Event.Data.NewState.State == message.Event.Data.OldState.State {
+							logger.Debug("State unchanged, publishing to attributes topic")
+							nats.PublishRequest(fmt.Sprintf("homeassistant.attributues.%s.%s", message.Event.Data.EntityId, message.Event.Data.NewState.State), data, defaultTimeout, 2)
+						} else {
+							nats.Publish(fmt.Sprintf("homeassistant.states.%s.%s", message.Event.Data.EntityId, message.Event.Data.NewState.State), data)
+						}
+					case zhaEventId:
+						data, _ := json.Marshal(message.Event.Data)
+						nats.Publish(fmt.Sprintf("homeassistant.zha.%s", message.Event.Data.DeviceIeee), data)
+					case nfcEventId:
+						data, _ := json.Marshal(message.Event.Data)
+						nats.PublishRequest(fmt.Sprintf("homeassistant.nfc.%s", message.Event.Data.TagId), data, defaultTimeout, 3)
+					case zwaveEventId:
+						data, _ := json.Marshal(message.Event.Data)
+						nats.Publish(fmt.Sprintf("homeassistant.zwave-scene.%s", message.Event.Data.DeviceId), data)
+					case timerFinishedEventId:
+						nats.PublishRequest(fmt.Sprintf("homeassistant.%s.finished", message.Event.Data.EntityId), []byte("finished"), defaultTimeout, 3)
 					}
-					if message.Event.Data.NewState.State == message.Event.Data.OldState.State {
-						logger.Debug("State unchanged, publishing to attributes topic")
-						nats.Publish(fmt.Sprintf("homeassistant.attributues.%s.%s", message.Event.Data.EntityId, message.Event.Data.NewState.State), data)
-					} else {
-						nats.Publish(fmt.Sprintf("homeassistant.states.%s.%s", message.Event.Data.EntityId, message.Event.Data.NewState.State), data)
-					}
-					nats.SetKeyValueString(fmt.Sprintf("homeassistant.states.%s", message.Event.Data.EntityId), message.Event.Data.NewState.State)
-				case zhaEventId:
-					data, _ := json.Marshal(message.Event.Data)
-					nats.Publish(fmt.Sprintf("homeassistant.zha.%s", message.Event.Data.DeviceIeee), data)
-				case nfcEventId:
-					data, _ := json.Marshal(message.Event.Data)
-					nats.Publish(fmt.Sprintf("homeassistant.nfc.%s", message.Event.Data.TagId), data)
-				case zwaveEventId:
-					data, _ := json.Marshal(message.Event.Data)
-					nats.Publish(fmt.Sprintf("homeassistant.zwave-scene.%s", message.Event.Data.DeviceId), data)
-				case timerFinishedEventId:
-					go nats.PublishRequest(fmt.Sprintf("homeassistant.%s.finished", message.Event.Data.EntityId), []byte("finished"), 500*time.Millisecond, 3)
-				}
+				}()
 			}
 		}
 	}()

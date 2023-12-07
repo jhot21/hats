@@ -94,7 +94,7 @@ func PublishRequest(subject string, message []byte, timeout time.Duration, retri
 		resp, err := client.Conn.Request(subject, message, timeout)
 
 		if err == nil {
-			logger.Debug("Request response received", "response", string(resp.Data), "attempts", attempts)
+			logger.Debug("Request response received", "response", string(resp.Data), "attempts", attempts, "subject", subject)
 			return
 		}
 	}

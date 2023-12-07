@@ -14,7 +14,7 @@ var (
 	schedules     = map[string]*gocron.Job{}
 
 	fireSchedule = func(name string) {
-		PublishString("schedules."+name, "fired")
+		PublishRequest("schedules."+name, []byte("fired"), 500*time.Millisecond, 3)
 	}
 )
 

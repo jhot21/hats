@@ -25,7 +25,7 @@ func (n *NatsConnection) GenericStateSubscriber(logger *slog.Logger, entityId st
 	defer sub.Unsubscribe()
 
 	for msg := range ch {
-		go msg.Ack()
+		go msg.Respond([]byte("got it"))
 		var data ha.EventData
 		err = json.Unmarshal(msg.Data, &data)
 		if err != nil {
@@ -41,7 +41,7 @@ func (n *NatsConnection) GenericStateSubscriber(logger *slog.Logger, entityId st
 	}
 }
 
-func (n *NatsConnection) GenericTimerListener(logger *slog.Logger, timerName string, handler func() error) {
+func (n *NatsConnection) GenericTimerSubscriber(logger *slog.Logger, timerName string, handler func() error) {
 	if timerName == "" {
 		panic(errors.New("timer name cannot be empty"))
 	}
@@ -83,7 +83,7 @@ func (n *NatsConnection) GenericScheduleSubscriber(logger *slog.Logger, schedule
 	defer sub.Unsubscribe()
 
 	for msg := range ch {
-		go msg.Ack()
+		go msg.Respond([]byte("got it"))
 		l.Debug("Schedule fired", "name", scheduleName)
 		err = handler()
 		if err != nil {
@@ -109,7 +109,7 @@ func (n *NatsConnection) GenericCommandSubscriber(logger *slog.Logger, commandNa
 	defer sub.Unsubscribe()
 
 	for msg := range ch {
-		go msg.Ack()
+		go msg.Respond([]byte("got it"))
 		l.Debug("Command fired")
 		err = handler(msg.Data)
 		if err != nil {
@@ -135,7 +135,7 @@ func (n *NatsConnection) GenericNfcSubscriber(logger *slog.Logger, tagId string,
 	defer sub.Unsubscribe()
 
 	for msg := range ch {
-		go msg.Ack()
+		go msg.Respond([]byte("got it"))
 		l.Debug("NFC tag scanned")
 		err = handler(msg.Data)
 		if err != nil {
@@ -161,7 +161,7 @@ func (n *NatsConnection) GenericZhaSubscriber(logger *slog.Logger, deviceIeee st
 	defer sub.Unsubscribe()
 
 	for msg := range ch {
-		go msg.Ack()
+		go msg.Respond([]byte("got it"))
 		var data ha.EventData
 		err = json.Unmarshal(msg.Data, &data)
 		if err != nil {
@@ -197,7 +197,7 @@ func (n *NatsConnection) GenericZwaveLSubscriber(logger *slog.Logger, deviceId s
 	defer sub.Unsubscribe()
 
 	for msg := range ch {
-		go msg.Ack()
+		go msg.Respond([]byte("got it"))
 		var data ha.EventData
 		err = json.Unmarshal(msg.Data, &data)
 		if err != nil {
