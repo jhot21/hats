@@ -89,11 +89,13 @@ func PublishRequest(subject string, message []byte, timeout time.Duration, retri
 		attempts += 1
 		if attempts > retries {
 			logger.Error("Request retries exceeded", "subject", subject)
+			return
 		}
 		resp, err := client.Conn.Request(subject, message, timeout)
 
 		if err == nil {
 			logger.Debug("Request response received", "response", string(resp.Data))
+			return
 		}
 	}
 }
