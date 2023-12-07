@@ -57,7 +57,7 @@ func (n *NatsConnection) GenericTimerListener(logger *slog.Logger, timerName str
 	defer sub.Unsubscribe()
 
 	for msg := range ch {
-		go msg.Ack()
+		go msg.Respond([]byte("got it"))
 		l.Debug("Timer ended", "name", timerName)
 		err = handler()
 		if err != nil {

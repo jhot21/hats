@@ -83,6 +83,21 @@ func PublishString(subject, message string) {
 	Publish(subject, []byte(message))
 }
 
+func PublishRequest(subject string, message []byte, timeout time.Duration, retries int) {
+	attempts := 0
+	for {
+		attempts += 1
+		if attempts > retries {
+			logger.Error("Request retries exceeded", "subject", subject)
+		}
+		resp, err := client.Conn.Request(subject, message, timeout)
+
+		if err == nil {
+			logger.Debug("Request response received", "response", string(resp.Data))
+		}
+	}
+}
+
 func GetKeyValue(key string) ([]byte, error) {
 	value, err := kv.Get(ctx, key)
 	if err != nil {
