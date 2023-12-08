@@ -60,7 +60,7 @@ func Listen(parentLogger *slog.Logger, readme []byte) {
 	})
 
 	router.Route("/api", func(r chi.Router) {
-		r.Use(tokenAuthMiddleware)
+		r.Use(authMiddleware)
 		r.Get(`/state/{entityId}`, getEntityStateHandler)
 		r.Post("/state/{entityId}/{service}", setEntityStateHandler)
 
@@ -91,20 +91,32 @@ func Close() {
 	}
 }
 
-func tokenAuthMiddleware(next http.Handler) http.Handler {
+// authMiddleware checks both basic and bearer auth schemes for a token
+//
+//	When using basic auth: the username does not matter and the the password should equal the configured token
+//	When using bearer auth: set the "Authorization" header to "Bearer your-token-here"
+func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if cfg.HatsToken == "" { // No token required
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		authHeaderParts := strings.Split(r.Header.Get("Authorization"), " ")
-		if len(authHeaderParts) != 2 || authHeaderParts[0] != "Bearer" || authHeaderParts[1] != cfg.HatsToken {
-			logger.Warn("Unauthorized request", "method", r.Method, "path", r.URL.Path, "address", r.RemoteAddr)
-			http.Error(w, "Bearer authorization header doesn't match configured token", http.StatusUnauthorized)
+		_, p, ok := r.BasicAuth()
+
+		if ok && p == cfg.HatsToken {
+			next.ServeHTTP(w, r)
 			return
 		}
-		next.ServeHTTP(w, r)
+
+		authHeaderPars := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
+		if len(authHeaderPars) > 1 && strings.EqualFold(authHeaderPars[0], "bearer") && authHeaderPars[1] == cfg.HatsToken {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		logger.Warn("Unauthorized request", "method", r.Method, "path", r.URL.Path, "address", r.RemoteAddr)
+		http.Error(w, "Bearer authorization header doesn't match configured token", http.StatusUnauthorized)
 	})
 }
 
@@ -152,7 +164,7 @@ func setEntityStateHandler(w http.ResponseWriter, r *http.Request) {
 	entityId := chi.URLParam(r, "entityId")
 	service := chi.URLParam(r, "service")
 	domain := r.URL.Query().Get("domain")
-	
+
 	l := logger.With("endpoint", "POST /api/state/{entityId}/{service}", "entityId", entityId, "service", service, "domain", domain)
 
 	var extras map[string]any
