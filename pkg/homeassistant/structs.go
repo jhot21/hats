@@ -90,6 +90,7 @@ var ExtraProps = struct {
 	BrightnessPercent     string
 	BrightnessPercentStep string
 	HvacMode              string
+	FanMode               string
 	Temperature           string
 	TargetTempHigh        string
 	TargetTempLow         string
@@ -101,6 +102,7 @@ var ExtraProps = struct {
 	BrightnessPercent:     "brightness_pct",
 	BrightnessPercentStep: "brightness_step_pct",
 	HvacMode:              "hvac_mode",
+	FanMode:               "fan_mode",
 	Temperature:           "temperature",
 	TargetTempHigh:        "target_temp_high",
 	TargetTempLow:         "target_temp_low",
