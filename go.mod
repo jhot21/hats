@@ -26,6 +26,7 @@ require (
 	github.com/go-resty/resty/v2 v2.9.1
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/gomarkdown/markdown v0.0.0-20231115200524-a660076da3fd
+	github.com/icholy/digest v0.1.22
 	github.com/klauspost/compress v1.17.0 // indirect
 	github.com/nats-io/nats-server/v2 v2.10.2 // indirect
 	github.com/nats-io/nkeys v0.4.5 // indirect

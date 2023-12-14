@@ -3,20 +3,36 @@ package amcrest
 import (
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"code.jhot.me/jhot/hats/internal/util"
 	"github.com/go-resty/resty/v2"
+	"github.com/icholy/digest"
+	"github.com/samber/lo"
 )
 
 type AmcrestClient struct {
+	rawClient  *http.Client
 	restClient *resty.Client
+	host       string
+	user       string
+	pass       string
 }
 
 func New(host string, username string, password string) *AmcrestClient {
 	return &AmcrestClient{
+		rawClient: &http.Client{Timeout: 30 * time.Second, Transport: &digest.Transport{
+			Username: username,
+			Password: password,
+		}},
 		restClient: resty.New().SetBaseURL(host).SetDigestAuth(username, password),
+		host:       host,
+		user:       username,
+		pass:       password,
 	}
 }
 
@@ -105,13 +121,29 @@ func (c *AmcrestClient) SetConfig(inputs ...ConfigValue) error {
 		return errors.New("no inputs provided")
 	}
 
-	req := c.restClient.R().SetQueryParam("action", "setConfig")
-
-	for _, input := range inputs {
-		req.SetQueryParam(input.ToParamString(), fmt.Sprintf("%v", input.Value))
+	// Have to use net/http so the raw query can be set without url encoding the value(s)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/cgi-bin/configManager.cgi", c.host), nil)
+	if err != nil {
+		return fmt.Errorf("error creating request: %w", err)
 	}
 
-	_, err := util.CheckSuccess(req.Get("cgi-bin/configManager.cgi"))
+	formattedInputs := lo.Map[ConfigValue, string](inputs, func(input ConfigValue, _ int) string {
+		return fmt.Sprintf("%s=%v", input.ToParamString(), input.Value)
+	})
+
+	req.URL.RawQuery = fmt.Sprintf("action=setConfig&%s", strings.Join(formattedInputs, "&"))
+
+	resp, err := c.rawClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("error making request: %w", err)
+	}
+
+	defer resp.Body.Close()
+	if resp.StatusCode > 299 {
+		body, _ := io.ReadAll(resp.Body)
+		err = fmt.Errorf("%d status code received: %s", resp.StatusCode, string(body))
+	}
+
 	return err
 }
 
