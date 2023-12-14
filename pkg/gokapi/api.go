@@ -1,9 +1,12 @@
 package gokapi
 
 import (
+	"bytes"
+	"encoding/base64"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"code.jhot.me/jhot/hats/internal/util"
 	"github.com/gabriel-vasile/mimetype"
@@ -64,12 +67,36 @@ type UploadOptions struct {
 	FilenameOverride string
 }
 
+func (c *GokapiClient) UploadBytes(data []byte, opts *UploadOptions) (GokapiFile, error) {
+	mimeType := mimetype.Detect(data)
+	if opts.FilenameOverride == "" {
+		opts.FilenameOverride = strings.TrimRight(base64.StdEncoding.EncodeToString(data), "=") + mimeType.Extension()
+	}
+
+	req := c.restClient.R().
+		SetFileReader("file", opts.FilenameOverride, bytes.NewReader(data)).
+		SetMultipartFormData(map[string]string{
+			"allowedDownloads": fmt.Sprintf("%d", opts.AllowedDownloads),
+			"expiryDays":       fmt.Sprintf("%d", opts.ExpiryDays),
+			"password":         opts.Password,
+		})
+
+	var returnData struct {
+		Result   string     `json:"Result"`
+		FileInfo GokapiFile `json:"FileInfo"`
+	}
+
+	_, err := util.CheckSuccess(req.SetResult(&returnData).Post("files/add"))
+	if err != nil {
+		return GokapiFile{}, err
+	}
+
+	return returnData.FileInfo, nil
+}
+
 func (c *GokapiClient) UploadFile(filePath string, opts *UploadOptions) (GokapiFile, error) {
-	var fileName string
-	if opts.FilenameOverride != "" {
-		fileName = opts.FilenameOverride
-	} else {
-		fileName = filepath.Base(filePath)
+	if opts.FilenameOverride == "" {
+		opts.FilenameOverride = filepath.Base(filePath)
 	}
 
 	f, err := os.Open(filePath)
@@ -78,27 +105,11 @@ func (c *GokapiClient) UploadFile(filePath string, opts *UploadOptions) (GokapiF
 	}
 	defer f.Close()
 
-	mimeType, _ := mimetype.DetectFile(filePath)
-
-	req := c.restClient.R().
-		SetMultipartField("file", fileName, mimeType.String(), f).
-		SetMultipartFormData(map[string]string{
-			"allowedDownloads": fmt.Sprintf("%d", opts.AllowedDownloads),
-			"expiryDays":       fmt.Sprintf("%d", opts.ExpiryDays),
-			"password":         opts.Password,
-		})
-
-	var data struct {
-		Result   string     `json:"Result"`
-		FileInfo GokapiFile `json:"FileInfo"`
-	}
-
-	_, err = util.CheckSuccess(req.SetResult(&data).Post("files/add"))
+	data, err := os.ReadFile(filePath)
 	if err != nil {
-		return GokapiFile{}, err
+		return GokapiFile{}, fmt.Errorf("error reading file: %w", err)
 	}
-
-	return data.FileInfo, nil
+	return c.UploadBytes(data, opts)
 }
 
 func (c *GokapiClient) GetDownloadUrl(f GokapiFile) string {
