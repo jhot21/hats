@@ -69,9 +69,11 @@ func (c *RestClient) SetThermostatState(entityId string, desiredState Thermostat
 		return c.CallService(entityId, Services.TurnOff)
 	}
 
-	err := c.CallService(entityId, Services.TurnOn)
-	if err != nil {
-		return fmt.Errorf("error turning on thermostat: %w", err)
+	if state, _ := c.GetState(entityId); !StateToBool(state.State) {
+		err := c.CallService(entityId, Services.TurnOn)
+		if err != nil {
+			return fmt.Errorf("error turning on thermostat: %w", err)
+		}
 	}
 
 	extras := map[string]any{

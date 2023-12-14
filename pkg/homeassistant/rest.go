@@ -75,11 +75,13 @@ func (c *RestClient) CallServices(inputs ...*CallServiceInput) error {
 		go func(input *CallServiceInput) {
 			defer wg.Done()
 			err := c.CallService(input.EntityID, input.Service, input.Extras)
-			errorChannel <- err
+			if err != nil {
+				errorChannel <- fmt.Errorf("error calling service %s for %s: %w", input.Service, input.EntityID, err)
+			}
 		}(input)
 	}
 
-	var returnErrors []error
+	returnErrors := []error{}
 	for err := range errorChannel {
 		returnErrors = append(returnErrors, err)
 	}
