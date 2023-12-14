@@ -31,12 +31,12 @@ type GetSnapshotResponse struct {
 //
 //	channel int (optional): the channel index (starts at 1)
 func (c *AmcrestClient) GetSnapshot(channel ...int) (GetSnapshotResponse, error) {
-	cameraChannel := 1
+	req := c.restClient.R()
 	if len(channel) > 0 && channel[0] != 0 {
-		cameraChannel = channel[0]
+		req.SetQueryParam("channel", fmt.Sprintf("%d", channel[0]))
 	}
 
-	resp, err := util.CheckSuccess(c.restClient.R().SetQueryParam("channel", fmt.Sprintf("%d", cameraChannel)).Get("cgi-bin/snapshot.cgi"))
+	resp, err := util.CheckSuccess(req.Get("cgi-bin/snapshot.cgi"))
 	if err != nil {
 		return GetSnapshotResponse{}, err
 	}
