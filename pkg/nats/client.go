@@ -75,7 +75,7 @@ func (n *NatsConnection) Connect() error {
 
 func (n *NatsConnection) Close() {
 	if n.Conn != nil {
-		n.Conn.Close()
+		n.Conn.Drain()
 	}
 }
 
