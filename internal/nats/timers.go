@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"code.jhot.me/jhot/hats/pkg/config"
 	"code.jhot.me/jhot/hats/pkg/homeassistant"
 )
 
@@ -15,7 +14,6 @@ var (
 
 func initHomeAssistantClient() {
 	if haClient == nil {
-		cfg = config.FromEnvironment()
 		haClient = homeassistant.NewRestClient(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
 	}
 }

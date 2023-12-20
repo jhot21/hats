@@ -27,10 +27,6 @@ func New(host string, token string) *GokapiClient {
 	}
 }
 
-func NewFromEnv() *GokapiClient {
-	return New(os.Getenv("GOKAPI_HOST"), os.Getenv("GOKAPI_TOKEN"))
-}
-
 type GokapiFile struct {
 	ID                           string `json:"Id"`
 	Name                         string `json:"Name"`

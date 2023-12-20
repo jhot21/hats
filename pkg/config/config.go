@@ -3,71 +3,168 @@ package config
 import (
 	"fmt"
 	"log/slog"
+	"os"
+	"reflect"
 	"strconv"
 	"strings"
 
-	"code.jhot.me/jhot/hats/internal/util"
+	"code.jhot.me/jhot/hats/pkg/infisical"
 )
 
 type HatsConfig struct {
-	LogLevl string
+	LogLevl string `config:"LOG_LEVEL" default:"INFO"`
 
-	HomeAssistantHost   string
-	HomeAssistantPort   string
-	HomeAssistantSecure bool
-	HomeAssistantToken  string
+	InfisicalHost         string `config:"INFISICAL_HOST" default:"http://infisical:8080"`
+	InfisicalClientID     string `config:"INFISICAL_CLIENT" default:""`
+	InfisicalClientSecret string `config:"INFISICAL_SECRET" default:""`
+	InfisicalProjectID    string `config:"INFISICAL_PROJECT" default:""`
+	InfisicalEnvironment  string `config:"INFISICAL_ENVIRONMENT" default:"prod"`
 
-	NatsHost       string
-	NatsPort       string
-	NatsToken      string
-	NatsClientName string
+	HomeAssistantHost   string `config:"HASS_HOST" default:"127.0.0.1"`
+	HomeAssistantPort   string `config:"HASS_PORT" default:"8123"`
+	HomeAssistantSecure bool   `config:"HASS_SECURE" default:"false"`
+	HomeAssistantToken  string `config:"HASS_TOKEN" default:""`
 
-	HatsHost   string
-	HatsPort   string
-	HatsToken  string
-	HatsSecure bool
+	NatsHost       string `config:"NATS_HOST" default:"127.0.0.1"`
+	NatsPort       string `config:"NATS_PORT" default:"4222"`
+	NatsToken      string `config:"NATS_TOKEN" default:""`
+	NatsClientName string `config:"NATS_CLIENT_NAME" default:"hats"`
 
-	NtfyHost  string
-	NtfyToken string
+	HatsHost   string `config:"HATS_HOST" default:"hats"`
+	HatsPort   string `config:"HATS_PORT" default:"8888"`
+	HatsToken  string `config:"HATS_TOKEN" default:""`
+	HatsSecure bool   `config:"HATS_SECURE" default:"false"`
 
-	ConfigDir string
+	NtfyHost  string `config:"NTFY_HOST" default:"https://ntfy.sh"`
+	NtfyToken string `config:"NTFY_TOKEN" default:""`
+
+	SyncthingHost  string `config:"SYNCTHING_HOST" default:"http://127.0.0.1:8384"`
+	SyncthingToken string `config:"SYNCTHING_TOKEN" default:""`
+
+	GokapiHost  string `config:"GOKAPI_HOST" default:"http://gokapi:53842"`
+	GokapiToken string `config:"GOKAPI_TOKEN" default:""`
+
+	QbittorrentHost     string `config:"QBITTORRENT_HOST" default:"http://qbittorrent:8080"`
+	QbittorrentUser     string `config:"QBITTORRENT_USER" default:""`
+	QbittorrentPassword string `config:"QBITTORRENT_PASS" default:""`
+
+	ConfigDir string `config:"CONFIG_DIR" default:"/config"`
+
+	infisicalClient        *infisical.InfisicalClient
+	infisicalRetrievalOpts *infisical.RetrieveSecretOptions
 }
 
-func FromEnvironment() *HatsConfig {
-	config := &HatsConfig{
-		LogLevl: util.GetEnvWithDefault("LOG_LEVEL", "INFO"),
+func New() (*HatsConfig, error) {
+	cfg := &HatsConfig{}
+	cfg.SetValues(ConfigValueSourceDefault).SetValues(ConfigValueSourceEnv)
 
-		HomeAssistantHost:  util.GetEnvWithDefault("HASS_HOST", "127.0.0.1"),
-		HomeAssistantPort:  util.GetEnvWithDefault("HASS_PORT", "8123"),
-		HomeAssistantToken: util.GetEnvWithDefault("HASS_TOKEN", ""),
+	if cfg.InfisicalConfigured() {
+		cfg.infisicalClient = infisical.New(cfg.InfisicalHost, cfg.InfisicalClientID, cfg.InfisicalClientSecret)
 
-		NatsHost:       util.GetEnvWithDefault("NATS_HOST", "127.0.0.1"),
-		NatsPort:       util.GetEnvWithDefault("NATS_PORT", "4222"),
-		NatsToken:      util.GetEnvWithDefault("NATS_TOKEN", ""),
-		NatsClientName: util.GetEnvWithDefault("NATS_CLIENT_NAME", "hats"),
+		err := cfg.infisicalClient.Login()
+		if err != nil {
+			cfg.infisicalClient = nil
+			return cfg, fmt.Errorf("error logging in to Infisical: %w", err)
+		}
 
-		HatsHost:  util.GetEnvWithDefault("HATS_HOST", "hats"),
-		HatsPort:  util.GetEnvWithDefault("HATS_PORT", "8888"),
-		HatsToken: util.GetEnvWithDefault("HATS_TOKEN", ""),
+		cfg.infisicalRetrievalOpts = &infisical.RetrieveSecretOptions{
+			WorkspaceID:    cfg.InfisicalProjectID,
+			Environment:    cfg.InfisicalEnvironment,
+			SecretPath:     "/",
+			IncludeImports: false,
+		}
 
-		NtfyHost:  util.GetEnvWithDefault("NTFY_HOST", "https://ntfy.sh"),
-		NtfyToken: util.GetEnvWithDefault("NTFY_TOKEN", ""),
+		secrets, err := cfg.infisicalClient.ListSecrets(cfg.infisicalRetrievalOpts)
+		if err != nil {
+			return cfg, fmt.Errorf("error getting Infisical secrets: %w", err)
+		}
 
-		ConfigDir: util.GetEnvWithDefault("CONFIG_DIR", "/config"),
+		secretsMap := make(map[string]string)
+		for _, secret := range secrets {
+			secretsMap[secret.SecretKey] = secret.SecretValue
+		}
+
+		cfg.SetValues(ConfigValueSourceInfisical, secretsMap)
 	}
 
-	config.HomeAssistantSecure, _ = strconv.ParseBool(util.GetEnvWithDefault("HASS_SECURE", "false"))
-	config.HatsSecure, _ = strconv.ParseBool(util.GetEnvWithDefault("HATS_SECURE", "false"))
+	return cfg, nil
+}
 
-	return config
+type ConfigValueSource string
+
+const ConfigValueSourceEnv ConfigValueSource = "env"
+const ConfigValueSourceDefault ConfigValueSource = "default"
+const ConfigValueSourceInfisical ConfigValueSource = "infisical"
+
+func (c *HatsConfig) SetValues(source ConfigValueSource, inputs ...map[string]string) *HatsConfig {
+	fields := reflect.VisibleFields(reflect.TypeOf(*c))
+
+	for _, field := range fields {
+		envName := field.Tag.Get("config")
+		if envName == "" {
+			continue
+		}
+
+		var envValue string
+		switch source {
+		case ConfigValueSourceDefault:
+			envValue = field.Tag.Get("default")
+		case ConfigValueSourceEnv:
+			envValue = os.Getenv(envName)
+		case ConfigValueSourceInfisical:
+			if len(inputs) == 0 {
+				break
+			}
+			if val, found := inputs[0][envName]; found {
+				envValue = val
+			}
+		}
+
+		if envValue == "" {
+			continue
+		}
+
+		f := reflect.ValueOf(c).Elem().FieldByName(field.Name)
+		switch field.Type.Kind() {
+		case reflect.Bool:
+			f.SetBool(strings.EqualFold(envValue, "true"))
+		case reflect.Int:
+			parsed, err := strconv.ParseInt(envValue, 10, 64)
+			if err == nil {
+				f.SetInt(parsed)
+			}
+		case reflect.String:
+			f.SetString(envValue)
+		}
+	}
+
+	return c
+}
+
+func (c *HatsConfig) GetCustomSetting(name string, defaultValue string) string {
+	returnValue := defaultValue
+
+	envValue := os.Getenv(name)
+	if envValue != "" {
+		returnValue = envValue
+	}
+
+	if c.InfisicalConfigured() {
+		secret, _ := c.infisicalClient.GetSecret(name, c.infisicalRetrievalOpts)
+		if secret.SecretValue != "" {
+			returnValue = secret.SecretValue
+		}
+	}
+
+	return returnValue
 }
 
 func (c *HatsConfig) GetHomeAssistantBaseUrl() string {
-	hassProtocol := "http"
+	protocol := "http"
 	if c.HomeAssistantSecure {
-		hassProtocol += "s"
+		protocol += "s"
 	}
-	return fmt.Sprintf("%s://%s:%s", hassProtocol, c.HomeAssistantHost, c.HomeAssistantPort)
+	return fmt.Sprintf("%s://%s:%s", protocol, c.HomeAssistantHost, c.HomeAssistantPort)
 }
 
 func (c *HatsConfig) GetHomeAssistantWebsocketUrl() string {
@@ -101,4 +198,12 @@ func (c *HatsConfig) GetLogLevel() slog.Level {
 	default:
 		return slog.LevelInfo
 	}
+}
+
+func (c *HatsConfig) InfisicalConfigured() bool {
+	return c.InfisicalHost != "" &&
+		c.InfisicalClientID != "" &&
+		c.InfisicalClientSecret != "" &&
+		c.InfisicalProjectID != "" &&
+		c.InfisicalEnvironment != ""
 }

@@ -2,7 +2,6 @@ package syncthing
 
 import (
 	"fmt"
-	"os"
 
 	"code.jhot.me/jhot/hats/internal/util"
 	"github.com/go-resty/resty/v2"
@@ -18,10 +17,6 @@ func New(host string, token string) *SyncthingClient {
 			SetBaseURL(fmt.Sprintf("%s/rest", host)).
 			SetHeader("X-API-Key", token),
 	}
-}
-
-func NewFromEnv() *SyncthingClient {
-	return New(os.Getenv("SYNCTHING_HOST"), os.Getenv("SYNCTHING_TOKEN"))
 }
 
 func (c *SyncthingClient) GetVersion() (VersionInfo, error) {

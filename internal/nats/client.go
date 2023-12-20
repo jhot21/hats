@@ -25,10 +25,10 @@ func Close() {
 	client.Close()
 }
 
-func JetstreamConnect(parentContext context.Context, parentLogger *slog.Logger) error {
+func JetstreamConnect(parentContext context.Context, parentLogger *slog.Logger, parentConfig *config.HatsConfig) error {
 	ctx = parentContext
 	logger = parentLogger
-	cfg = config.FromEnvironment()
+	cfg = parentConfig
 	var err error
 
 	client = n.DefaultNatsConnection().WithHostName(cfg.NatsHost).WithPort(cfg.NatsPort).WithConnectionOption(nats.Name(cfg.NatsClientName))

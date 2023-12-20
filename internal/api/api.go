@@ -34,15 +34,15 @@ const (
 	HA_STATE_PREFIX = "homeassistant.states"
 )
 
-func Listen(parentLogger *slog.Logger, readme []byte) {
+func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme []byte) {
 	logger = parentLogger
+	cfg = parentConfig
 
 	// render readme to HTML
 	p := parser.NewWithExtensions(parser.CommonExtensions | parser.AutoHeadingIDs | parser.NoEmptyLineBeforeBlock)
 	doc := p.Parse(readme)
 	homepage = string(markdown.Render(doc, html.NewRenderer(html.RendererOptions{Flags: html.CommonFlags | html.HrefTargetBlank})))
 
-	cfg = config.FromEnvironment()
 	haClient = homeassistant.NewRestClient(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
 	router := chi.NewRouter()
 

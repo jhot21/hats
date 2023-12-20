@@ -3,7 +3,6 @@ package qbittorrent
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -19,12 +18,6 @@ func New(host string) *QbittorrentClient {
 	return &QbittorrentClient{
 		restClient: resty.New().SetTimeout(30 * time.Second).SetBaseURL(fmt.Sprintf("%s/api/v2", host)),
 	}
-}
-
-func NewFromEnv() (*QbittorrentClient, error) {
-	c := New(os.Getenv("QBITTORRENT_HOST"))
-	err := c.Login(os.Getenv("QBITTORRENT_USER"), os.Getenv("QBITTORRENT_PASS"))
-	return c, err
 }
 
 func (c *QbittorrentClient) Login(user string, pass string) error {

@@ -41,9 +41,9 @@ func CloseSubscription() error {
 	return nil
 }
 
-func Subscribe(parentLogger *slog.Logger) error {
+func Subscribe(parentLogger *slog.Logger, parentConfig *config.HatsConfig) error {
 	logger = parentLogger
-	cfg = config.FromEnvironment()
+	cfg = parentConfig
 	var err error
 
 	url := cfg.GetHomeAssistantWebsocketUrl()
@@ -72,7 +72,7 @@ func reconnect() {
 		time.Sleep(time.Duration(attempts) * 5 * time.Second)
 		logger.Info("Trying to reconnect to Home Assistant", "attempt", attempts)
 
-		err := Subscribe(logger)
+		err := Subscribe(logger, cfg)
 		if err == nil {
 			break
 		}

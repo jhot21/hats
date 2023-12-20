@@ -12,6 +12,8 @@
     - [qBittorrent](https://github.com/qbittorrent/qBittorrent)
     - [Syncthing](https://github.com/syncthing/syncthing)
     - [National Weather Service](https://www.weather.gov/)
+		- [Amcrest Cameras](https://amcrest.com/)
+		- [Infisical](https://infisical.com/)
 
 ## NATS Topics
 

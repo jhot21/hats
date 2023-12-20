@@ -26,15 +26,21 @@ var (
 )
 
 func main() {
-	cfg = config.FromEnvironment()
+	var err error
+	cfg, err = config.New()
 	ctx, cancel = context.WithCancel(context.Background())
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: cfg.GetLogLevel(),
 	}))
+
+	if err != nil {
+		logger.Error("Error during config initialization", "error", err)
+	}
+
 	interrupt = make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	err := nats.JetstreamConnect(ctx, logger)
+	err = nats.JetstreamConnect(ctx, logger, cfg)
 	if err != nil {
 		panic(err)
 	}
@@ -52,7 +58,7 @@ func main() {
 	nats.GetExistingSchedules()
 	defer nats.StopSchedules()
 
-	err = homeassistant.Subscribe(logger)
+	err = homeassistant.Subscribe(logger, cfg)
 	if err != nil {
 		panic(err)
 	}
@@ -60,7 +66,7 @@ func main() {
 
 	ntfy.InitClient(cfg)
 
-	api.Listen(logger, readme)
+	api.Listen(logger, cfg, readme)
 	defer api.Close()
 
 	for sig := range interrupt {
