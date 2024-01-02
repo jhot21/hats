@@ -23,6 +23,8 @@ type PointProps struct {
 type Point struct {
 	ID         string     `json:"id"`
 	Properties PointProps `json:"properties"`
+	Lat        float64
+	Lon        float64
 }
 
 type HourlyPeriod struct {
@@ -40,6 +42,31 @@ type HourlyProps struct {
 	Updated time.Time      `json:"updated"`
 	Units   string         `json:"units"`
 	Periods []HourlyPeriod `json:"periods"`
+}
+
+type DailyPeriod struct {
+	Number                     int                `json:"number,omitempty"`
+	Name                       string             `json:"name,omitempty"`
+	StartTime                  string             `json:"startTime,omitempty"`
+	EndTime                    string             `json:"endTime,omitempty"`
+	IsDaytime                  bool               `json:"isDaytime,omitempty"`
+	Temperature                int                `json:"temperature,omitempty"`
+	TemperatureUnit            string             `json:"temperatureUnit,omitempty"`
+	TemperatureTrend           string             `json:"temperatureTrend,omitempty"`
+	ProbabilityOfPrecipitation UnitValue[int]     `json:"probabilityOfPrecipitation,omitempty"`
+	Dewpoint                   UnitValue[float64] `json:"dewpoint,omitempty"`
+	RelativeHumidity           UnitValue[int]     `json:"relativeHumidity,omitempty"`
+	WindSpeed                  string             `json:"windSpeed,omitempty"`
+	WindDirection              string             `json:"windDirection,omitempty"`
+	Icon                       string             `json:"icon,omitempty"`
+	ShortForecast              string             `json:"shortForecast,omitempty"`
+	DetailedForecast           string             `json:"detailedForecast,omitempty"`
+}
+
+type DailyProps struct {
+	Updated time.Time     `json:"updated"`
+	Units   string        `json:"units"`
+	Periods []DailyPeriod `json:"periods"`
 }
 
 type Observations struct {

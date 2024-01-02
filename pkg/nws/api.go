@@ -29,7 +29,13 @@ func New() *NwsClient {
 func (c *NwsClient) CoordinatesToPoint(lat float64, lon float64) (Point, error) {
 	var p Point
 	_, err := c.restClient.R().SetResult(&p).Get(fmt.Sprintf("points/%f,%f", lat, lon))
+	p.Lat = lat
+	p.Lon = lon
 	return p, err
+}
+
+func (p Point) GetWebURL() string {
+	return fmt.Sprintf("https://forecast.weather.gov/MapClick.php?lat=%f&lon=%f", p.Lat, p.Lon)
 }
 
 func (c *NwsClient) GetHourlyForecast(p Point) (HourlyProps, error) {
@@ -40,6 +46,19 @@ func (c *NwsClient) GetHourlyForecast(p Point) (HourlyProps, error) {
 		Get(removeBase(p.Properties.ForecastHourly)))
 	if err != nil {
 		return HourlyProps{}, nil
+	}
+
+	return data.Properties, nil
+}
+
+func (c *NwsClient) GetDailyForecast(p Point) (DailyProps, error) {
+	var data struct {
+		Properties DailyProps `json:"properties"`
+	}
+	_, err := util.CheckSuccess(c.restClient.R().SetResult(&data).
+		Get(removeBase(p.Properties.Forecast)))
+	if err != nil {
+		return DailyProps{}, nil
 	}
 
 	return data.Properties, nil
