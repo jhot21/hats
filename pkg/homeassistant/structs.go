@@ -48,39 +48,43 @@ var Domains = struct {
 
 // Home Assistant services
 var Services = struct {
-	TurnOn         string
-	TurnOff        string
-	Toggle         string
-	Reload         string
-	Lock           string
-	Unlock         string
-	OpenCover      string
-	CloseCover     string
-	SelectOption   string
-	SetHvacMode    string
-	SetFanMode     string
-	SetTemperature string
-	SetValue       string
-	Start          string
-	Change         string
-	Cancel         string
+	TurnOn           string
+	TurnOff          string
+	Toggle           string
+	Reload           string
+	Lock             string
+	Unlock           string
+	OpenCover        string
+	CloseCover       string
+	StopCover        string
+	SelectOption     string
+	SetHvacMode      string
+	SetFanMode       string
+	SetTemperature   string
+	SetValue         string
+	Start            string
+	Change           string
+	Cancel           string
+	SetCoverPosition string
 }{
-	TurnOn:         "turn_on",
-	TurnOff:        "turn_off",
-	Toggle:         "toggle",
-	Reload:         "reload",
-	Lock:           "lock",
-	Unlock:         "unlock",
-	OpenCover:      "open_cover",
-	CloseCover:     "close_cover",
-	SelectOption:   "select_option",
-	SetHvacMode:    "set_hvac_mode",
-	SetFanMode:     "set_fan_mode",
-	SetTemperature: "set_temperature",
-	SetValue:       "set_value",
-	Start:          "start",
-	Change:         "change",
-	Cancel:         "cancel",
+	TurnOn:           "turn_on",
+	TurnOff:          "turn_off",
+	Toggle:           "toggle",
+	Reload:           "reload",
+	Lock:             "lock",
+	Unlock:           "unlock",
+	OpenCover:        "open_cover",
+	CloseCover:       "close_cover",
+	StopCover:        "stop_cover",
+	SelectOption:     "select_option",
+	SetHvacMode:      "set_hvac_mode",
+	SetFanMode:       "set_fan_mode",
+	SetTemperature:   "set_temperature",
+	SetValue:         "set_value",
+	Start:            "start",
+	Change:           "change",
+	Cancel:           "cancel",
+	SetCoverPosition: "set_cover_position",
 }
 
 // Extra props that can be sent when calling a Home Assistant service
@@ -96,6 +100,7 @@ var ExtraProps = struct {
 	TargetTempLow         string
 	Duration              string
 	Value                 string
+	Position              string
 }{
 	Transition:            "transition",
 	Brightness:            "brightness",
@@ -108,6 +113,7 @@ var ExtraProps = struct {
 	TargetTempLow:         "target_temp_low",
 	Duration:              "duration",
 	Value:                 "value",
+	Position:              "position",
 }
 
 type ResultContext struct {

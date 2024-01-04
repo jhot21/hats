@@ -30,28 +30,55 @@ func DefaultNatsConnection() *NatsConnection {
 	}
 }
 
-func (n *NatsConnection) WithHostName(hostname string) *NatsConnection {
-	n.HostName = hostname
-	return n
+type NatsConnectionOption func(*NatsConnection)
+
+func WithHostName(hostname string) NatsConnectionOption {
+	return func(nc *NatsConnection) {
+		nc.HostName = hostname
+	}
 }
 
-func (n *NatsConnection) WithPort(port string) *NatsConnection {
-	n.Port = port
-	return n
+func WithPort(port string) NatsConnectionOption {
+	return func(nc *NatsConnection) {
+		nc.Port = port
+	}
 }
 
-func (n *NatsConnection) WithJetstream(jetstream bool) *NatsConnection {
-	n.UseJetstream = jetstream
-	return n
+func WithoutJetstream(nc *NatsConnection) {
+	nc.UseJetstream = false
 }
 
-func (n *NatsConnection) WithConnectionOption(opt nats.Option) *NatsConnection {
-	n.connOpts = append(n.connOpts, opt)
-	return n
+func WithClientName(name string) NatsConnectionOption {
+	return func(nc *NatsConnection) {
+		nc.connOpts = append(nc.connOpts, nats.Name(name))
+	}
 }
 
-func (n *NatsConnection) WithJetstreamOption(opt jetstream.JetStreamOpt) *NatsConnection {
-	n.jetOpts = append(n.jetOpts, opt)
+func WithToken(token string) NatsConnectionOption {
+	return func(nc *NatsConnection) {
+		if token != "" {
+			nc.connOpts = append(nc.connOpts, nats.Token(token))
+		}
+	}
+}
+
+func WithConnectionOption(opt nats.Option) NatsConnectionOption {
+	return func(nc *NatsConnection) {
+		nc.connOpts = append(nc.connOpts, opt)
+	}
+}
+
+func WithJetstreamnOption(opt jetstream.JetStreamOpt) NatsConnectionOption {
+	return func(nc *NatsConnection) {
+		nc.jetOpts = append(nc.jetOpts, opt)
+	}
+}
+
+func New(optFuncs ...NatsConnectionOption) *NatsConnection {
+	n := DefaultNatsConnection()
+	for _, optFn := range optFuncs {
+		optFn(n)
+	}
 	return n
 }
 

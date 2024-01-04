@@ -9,7 +9,6 @@ import (
 
 	"code.jhot.me/jhot/hats/pkg/config"
 	n "code.jhot.me/jhot/hats/pkg/nats"
-	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
@@ -31,11 +30,7 @@ func JetstreamConnect(parentContext context.Context, parentLogger *slog.Logger, 
 	cfg = parentConfig
 	var err error
 
-	client = n.DefaultNatsConnection().WithHostName(cfg.NatsHost).WithPort(cfg.NatsPort).WithConnectionOption(nats.Name(cfg.NatsClientName))
-
-	if cfg.NatsToken != "" {
-		client.WithConnectionOption(nats.Token(cfg.NatsToken))
-	}
+	client = n.New(n.WithHostName(cfg.NatsHost), n.WithPort(cfg.NatsPort), n.WithClientName(cfg.NatsClientName), n.WithToken(cfg.NatsToken))
 
 	logger.Debug("Connecting to nats")
 	err = client.Connect()

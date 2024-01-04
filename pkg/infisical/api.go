@@ -70,7 +70,12 @@ func (c *InfisicalClient) CheckToken() error {
 	return nil
 }
 
-func (c *InfisicalClient) ListSecrets(opts *RetrieveSecretOptions) ([]Secret, error) {
+func (c *InfisicalClient) ListSecrets(optFuncs ...RetrieveSecretOptionFunc) ([]Secret, error) {
+	opts := DefaultRetrieveSecretOptions()
+	for _, f := range optFuncs {
+		f(opts)
+	}
+
 	err := c.CheckToken()
 	if err != nil {
 		return []Secret{}, err

@@ -23,24 +23,28 @@ func DefaultRetrieveSecretOptions() *RetrieveSecretOptions {
 	}
 }
 
-func (o *RetrieveSecretOptions) WithWorkspaceID(workspaceId string) *RetrieveSecretOptions {
-	o.WorkspaceID = workspaceId
-	return o
+type RetrieveSecretOptionFunc func(*RetrieveSecretOptions)
+
+func WithWorkspaceID(workspaceId string) RetrieveSecretOptionFunc {
+	return func(rso *RetrieveSecretOptions) {
+		rso.WorkspaceID = workspaceId
+	}
 }
 
-func (o *RetrieveSecretOptions) WithEnvironment(environment string) *RetrieveSecretOptions {
-	o.Environment = environment
-	return o
+func WithEnvironment(environment string) RetrieveSecretOptionFunc {
+	return func(rso *RetrieveSecretOptions) {
+		rso.Environment = environment
+	}
 }
 
-func (o *RetrieveSecretOptions) WithSecretPath(secretPath string) *RetrieveSecretOptions {
-	o.SecretPath = secretPath
-	return o
+func WithSecretPath(secretPath string) RetrieveSecretOptionFunc {
+	return func(rso *RetrieveSecretOptions) {
+		rso.SecretPath = secretPath
+	}
 }
 
-func (o *RetrieveSecretOptions) WithImports(includeImports bool) *RetrieveSecretOptions {
-	o.IncludeImports = includeImports
-	return o
+func WithImports(rso *RetrieveSecretOptions) {
+	rso.IncludeImports = true
 }
 
 type Secret struct {

@@ -67,14 +67,9 @@ func New() (*HatsConfig, error) {
 			return cfg, fmt.Errorf("error logging in to Infisical: %w", err)
 		}
 
-		cfg.infisicalRetrievalOpts = &infisical.RetrieveSecretOptions{
-			WorkspaceID:    cfg.InfisicalProjectID,
-			Environment:    cfg.InfisicalEnvironment,
-			SecretPath:     "/",
-			IncludeImports: false,
-		}
-
-		secrets, err := cfg.infisicalClient.ListSecrets(cfg.infisicalRetrievalOpts)
+		secrets, err := cfg.infisicalClient.ListSecrets(
+			infisical.WithWorkspaceID(cfg.InfisicalProjectID),
+			infisical.WithEnvironment(cfg.InfisicalEnvironment))
 		if err != nil {
 			return cfg, fmt.Errorf("error getting Infisical secrets: %w", err)
 		}
