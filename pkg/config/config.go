@@ -50,8 +50,7 @@ type HatsConfig struct {
 
 	ConfigDir string `config:"CONFIG_DIR" default:"/config"`
 
-	infisicalClient        *infisical.InfisicalClient
-	infisicalRetrievalOpts *infisical.RetrieveSecretOptions
+	infisicalClient *infisical.InfisicalClient
 }
 
 func New() (*HatsConfig, error) {
@@ -67,9 +66,7 @@ func New() (*HatsConfig, error) {
 			return cfg, fmt.Errorf("error logging in to Infisical: %w", err)
 		}
 
-		secrets, err := cfg.infisicalClient.ListSecrets(
-			infisical.WithWorkspaceID(cfg.InfisicalProjectID),
-			infisical.WithEnvironment(cfg.InfisicalEnvironment))
+		secrets, err := cfg.infisicalClient.ListSecrets(cfg.InfisicalProjectID, cfg.InfisicalEnvironment)
 		if err != nil {
 			return cfg, fmt.Errorf("error getting Infisical secrets: %w", err)
 		}
@@ -145,7 +142,7 @@ func (c *HatsConfig) GetCustomSetting(name string, defaultValue string) string {
 	}
 
 	if c.InfisicalConfigured() {
-		secret, _ := c.infisicalClient.GetSecret(name, c.infisicalRetrievalOpts)
+		secret, _ := c.infisicalClient.GetSecret(name, c.InfisicalProjectID, c.InfisicalEnvironment)
 		if secret.SecretValue != "" {
 			returnValue = secret.SecretValue
 		}

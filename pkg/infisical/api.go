@@ -70,8 +70,9 @@ func (c *InfisicalClient) CheckToken() error {
 	return nil
 }
 
-func (c *InfisicalClient) ListSecrets(optFuncs ...RetrieveSecretOptionFunc) ([]Secret, error) {
+func (c *InfisicalClient) ListSecrets(workspaceId string, environment string, optFuncs ...RetrieveSecretOptionFunc) ([]Secret, error) {
 	opts := DefaultRetrieveSecretOptions()
+	optFuncs = append(optFuncs, WithWorkspaceID(workspaceId), WithEnvironment(environment))
 	for _, f := range optFuncs {
 		f(opts)
 	}
@@ -96,7 +97,13 @@ func (c *InfisicalClient) ListSecrets(optFuncs ...RetrieveSecretOptionFunc) ([]S
 	return result.Secrets, nil
 }
 
-func (c *InfisicalClient) GetSecret(name string, opts *RetrieveSecretOptions) (Secret, error) {
+func (c *InfisicalClient) GetSecret(name string, workspaceId string, environment string, optFuncs ...RetrieveSecretOptionFunc) (Secret, error) {
+	opts := DefaultRetrieveSecretOptions()
+	optFuncs = append(optFuncs, WithWorkspaceID(workspaceId), WithEnvironment(environment))
+	for _, f := range optFuncs {
+		f(opts)
+	}
+
 	err := c.CheckToken()
 	if err != nil {
 		return Secret{}, err
