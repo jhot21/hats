@@ -34,7 +34,20 @@ const (
 	HA_STATE_PREFIX = "homeassistant.states"
 )
 
-func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme []byte) {
+func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme []byte) {
+	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme []byte) {
+		for {
+			err := Listen(parentLogger, parentConfig, readme)
+			if err == nil {
+				break
+			}
+			parentLogger.Error("An error occurred with the API. Restarting now.", "error", err)
+			Close()
+		}
+	}(parentLogger, parentConfig, readme)
+}
+
+func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme []byte) error {
 	logger = parentLogger
 	cfg = parentConfig
 
@@ -82,7 +95,7 @@ func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme [
 		Handler: router,
 	}
 
-	go server.ListenAndServe()
+	return server.ListenAndServe()
 }
 
 func Close() {

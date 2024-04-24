@@ -66,7 +66,7 @@ func main() {
 
 	ntfy.InitClient(cfg)
 
-	api.Listen(logger, cfg, readme)
+	api.InitAPI(logger, cfg, readme)
 	defer api.Close()
 
 	for sig := range interrupt {
