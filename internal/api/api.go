@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"code.jhot.me/jhot/hats/pkg/config"
 	"code.jhot.me/jhot/hats/pkg/homeassistant"
 	ntfyPkg "code.jhot.me/jhot/hats/pkg/ntfy"
+	"code.jhot.me/jhot/hats/pkg/passgen"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -70,6 +72,35 @@ func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme [
 	})
 	router.Get("/status", func(w http.ResponseWriter, r *http.Request) {
 		render.PlainText(w, r, "OK")
+	})
+
+	router.Get("/passgen", func(w http.ResponseWriter, r *http.Request) {
+		versionString := r.URL.Query().Get("version")
+		salt := r.URL.Query().Get("salt")
+		passphrase := r.URL.Query().Get("passphrase")
+		lengthString := r.URL.Query().Get("length")
+
+		length, err := strconv.ParseInt(lengthString, 10, 64)
+		if err != nil {
+			length = 40
+		}
+
+		version := 2
+		if versionString == "1" {
+			version = 1
+		}
+
+		pg := passgen.NewPasswordGenerator(
+			passgen.WithVersion(version),
+			passgen.WithSalt(salt),
+			passgen.WithPassphrase(passphrase),
+			passgen.WithLength(int(length)))
+
+		if customSpecials := r.URL.Query().Get("specials"); customSpecials != "" {
+			pg.CustomSpecials = customSpecials
+		}
+
+		render.PlainText(w, r, pg.Generate())
 	})
 
 	router.Route("/api", func(r chi.Router) {
