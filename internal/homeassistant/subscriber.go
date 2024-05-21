@@ -147,7 +147,7 @@ func handleMessages() {
 						cleanedState := stateReplacer.Replace(message.Event.Data.NewState.State)
 						if message.Event.Data.NewState.State == message.Event.Data.OldState.State {
 							logger.Debug("State unchanged, publishing to attributes topic")
-							nats.Publish(fmt.Sprintf("homeassistant.attributes.%s.%s", message.Event.Data.EntityId, cleanedState), data)
+							nats.PublishRequest(fmt.Sprintf("homeassistant.attributes.%s.%s", message.Event.Data.EntityId, cleanedState), data, defaultTimeout, 1)
 						} else {
 							nats.PublishRequest(fmt.Sprintf("homeassistant.states.%s.%s", message.Event.Data.EntityId, cleanedState), data, defaultTimeout, 2)
 						}
