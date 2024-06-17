@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/nats-io/nats.go"
@@ -18,6 +19,7 @@ type NatsConnection struct {
 	jetOpts      []jetstream.JetStreamOpt
 	Conn         *nats.Conn
 	JS           jetstream.JetStream
+	logger       *slog.Logger
 }
 
 func DefaultNatsConnection() *NatsConnection {
@@ -27,6 +29,7 @@ func DefaultNatsConnection() *NatsConnection {
 		UseJetstream: true,
 		connOpts:     []nats.Option{},
 		jetOpts:      []jetstream.JetStreamOpt{},
+		logger:       slog.Default(),
 	}
 }
 
@@ -71,6 +74,12 @@ func WithConnectionOption(opt nats.Option) NatsConnectionOption {
 func WithJetstreamnOption(opt jetstream.JetStreamOpt) NatsConnectionOption {
 	return func(nc *NatsConnection) {
 		nc.jetOpts = append(nc.jetOpts, opt)
+	}
+}
+
+func WithLogger(logger *slog.Logger) NatsConnectionOption {
+	return func(nc *NatsConnection) {
+		nc.logger = logger
 	}
 }
 

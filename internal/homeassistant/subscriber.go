@@ -161,7 +161,7 @@ func handleMessages() {
 						data, _ := json.Marshal(message.Event.Data)
 						nats.Publish(fmt.Sprintf("homeassistant.zwave-scene.%s", message.Event.Data.DeviceId), data)
 					case timerFinishedEventId:
-						nats.PublishRequest(fmt.Sprintf("homeassistant.%s.finished", message.Event.Data.EntityId), []byte("finished"), defaultTimeout, 3)
+						nats.PublishRequest(fmt.Sprintf("homeassistant.timers.%s.finished", message.Event.Data.EntityId), []byte("finished"), defaultTimeout, 3)
 					}
 				}()
 			}
