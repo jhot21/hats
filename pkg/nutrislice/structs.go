@@ -94,7 +94,7 @@ type MenuItem struct {
 			Calories      float64 `json:"calories,omitempty"`
 			GFat          float64 `json:"g_fat,omitempty"`
 			GSaturatedFat float64 `json:"g_saturated_fat,omitempty"`
-			GTransFat     int     `json:"g_trans_fat,omitempty"`
+			GTransFat     float64 `json:"g_trans_fat,omitempty"`
 			MgCholesterol float64 `json:"mg_cholesterol,omitempty"`
 			GCarbs        float64 `json:"g_carbs,omitempty"`
 			GSugar        any     `json:"g_sugar,omitempty"`
