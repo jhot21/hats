@@ -11,6 +11,7 @@ import (
 type TopicType string
 
 const StateTopicType TopicType = "states"
+const AttributeTopicType TopicType = "attributes"
 const TimerTopicType TopicType = "timers"
 const ScheduleTopicType TopicType = "schedules"
 const CommandTopicType TopicType = "command"
@@ -22,6 +23,8 @@ const ZwaveSceneTopicType TopicType = "zwave-scene"
 func (t TopicType) GetTopic(id string) string {
 	switch t {
 	case StateTopicType:
+		return fmt.Sprintf("homeassistant.%s.%s.>", t, id)
+	case AttributeTopicType:
 		return fmt.Sprintf("homeassistant.%s.%s.>", t, id)
 	case TimerTopicType:
 		return fmt.Sprintf("homeassistant.%s.%s.finished", t, id)

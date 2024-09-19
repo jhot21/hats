@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  tag:
+    cmds:
+      - git tag {{.VERSION}}
+      - git push origin {{.VERSION}}
+    requires:
+      vars: [VERSION]
+  tags:
+    cmds:
+      - git --no-pager tag --list
