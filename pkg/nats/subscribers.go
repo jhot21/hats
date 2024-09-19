@@ -49,6 +49,7 @@ func parseEvent(msg *nats.Msg, sendResponse bool) (ha.EventData, error) {
 	return data, err
 }
 
+// AddEventSub: Add a subscriber to the NATS client that receives the full event payload
 func (n *NatsConnection) AddEventSub(t TopicType, entityId string, handler func(ha.EventData) error) (*nats.Subscription, error) {
 	if t == "" || entityId == "" {
 		panic("TopicType and entityId cannot be empty")
@@ -73,6 +74,7 @@ func (n *NatsConnection) AddEventSub(t TopicType, entityId string, handler func(
 	})
 }
 
+// AddStateSub: Add a subscriber to the NATS client that receives the new state payload from an event
 func (n *NatsConnection) AddStateSub(t TopicType, entityId string, handler func(ha.StateData) error) (*nats.Subscription, error) {
 	if t == "" || entityId == "" {
 		panic("TopicType and entityId cannot be empty")
@@ -90,6 +92,26 @@ func (n *NatsConnection) AddStateSub(t TopicType, entityId string, handler func(
 		}
 		l.Debug(fmt.Sprintf("%s state event fired", t), "newState", data.NewState.State)
 		err = handler(data.NewState)
+		if err != nil {
+			l.Error(fmt.Sprintf("Error handling %s event", t), "error", err)
+			return
+		}
+	})
+}
+
+// AddSub: Add a subscriber to the NATS client that doesn't receive any data from the event
+func (n *NatsConnection) AddSub(t TopicType, entityId string, handler func() error) (*nats.Subscription, error) {
+	if t == "" || entityId == "" {
+		panic("TopicType and entityId cannot be empty")
+	}
+
+	topic := t.GetTopic(entityId)
+	l := n.logger.With("topic", topic, "entity_id", entityId)
+	l.Debug("Subscribing to topic")
+
+	return n.addSub(topic, func(msg *nats.Msg) {
+		l.Debug(fmt.Sprintf("%s event fired", t))
+		err := handler()
 		if err != nil {
 			l.Error(fmt.Sprintf("Error handling %s event", t), "error", err)
 			return
