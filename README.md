@@ -28,6 +28,6 @@ I have been running this at home for over a year, but should be considered alpha
 - `schedules.{schedule name}` - HATS schedule finished: payload is simply `"finished"`
 - `command.{command name}` - Command called via HATS API: payload is a byte array of the HTTP Post body
 
-## Examples
+## Examples (work in progress)
 
 See the example directory for an example Docker Compose and client implementation.
