@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"code.jhot.me/jhot/hats/pkg/infisical"
+	"codeberg.org/jhot/hats/pkg/infisical"
 )
 
 type HatsConfig struct {

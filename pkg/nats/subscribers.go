@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	ha "code.jhot.me/jhot/hats/pkg/homeassistant"
+	ha "codeberg.org/jhot/hats/pkg/homeassistant"
 	"github.com/nats-io/nats.go"
 )
 
@@ -86,7 +86,7 @@ func (n *NatsConnection) AddEventSub(t TopicType, entityId string, handler func(
 			l.Error("Error parsing message", "error", err)
 			return
 		}
-		l.Debug(fmt.Sprintf("%s data event fired", t))
+		l.Debug(fmt.Sprintf("%s event fired", t))
 		err = handler(data)
 		if err != nil {
 			l.Error(fmt.Sprintf("Error handling %s event", t), "error", err)
@@ -111,7 +111,7 @@ func (n *NatsConnection) AddStateSub(t TopicType, entityId string, handler func(
 			l.Error("Error parsing message", "error", err, "message", string(msg.Data))
 			return
 		}
-		l.Debug(fmt.Sprintf("%s state event fired", t), "newState", data.NewState.State)
+		l.Debug(fmt.Sprintf("%s event fired", t), "newState", data.NewState.State)
 		err = handler(data.NewState)
 		if err != nil {
 			l.Error(fmt.Sprintf("Error handling %s event", t), "error", err)

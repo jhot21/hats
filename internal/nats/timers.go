@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"code.jhot.me/jhot/hats/pkg/homeassistant"
+	"codeberg.org/jhot/hats/pkg/homeassistant"
 )
 
 var (

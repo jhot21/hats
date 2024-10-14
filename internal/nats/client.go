@@ -7,8 +7,8 @@ import (
 	"log/slog"
 	"time"
 
-	"code.jhot.me/jhot/hats/pkg/config"
-	n "code.jhot.me/jhot/hats/pkg/nats"
+	"codeberg.org/jhot/hats/pkg/config"
+	n "codeberg.org/jhot/hats/pkg/nats"
 	"github.com/nats-io/nats.go/jetstream"
 )
 

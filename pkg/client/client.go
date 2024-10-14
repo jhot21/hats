@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"code.jhot.me/jhot/hats/internal/api"
-	ha "code.jhot.me/jhot/hats/pkg/homeassistant"
-	"code.jhot.me/jhot/hats/pkg/ntfy"
+	"codeberg.org/jhot/hats/internal/api"
+	ha "codeberg.org/jhot/hats/pkg/homeassistant"
+	"codeberg.org/jhot/hats/pkg/ntfy"
 	"github.com/go-resty/resty/v2"
 )
 

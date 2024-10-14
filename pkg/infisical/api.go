@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"code.jhot.me/jhot/hats/internal/util"
+	"codeberg.org/jhot/hats/internal/util"
 	"github.com/go-resty/resty/v2"
 )
 

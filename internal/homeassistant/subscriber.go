@@ -9,9 +9,9 @@ import (
 
 	"log/slog"
 
-	"code.jhot.me/jhot/hats/internal/nats"
-	"code.jhot.me/jhot/hats/pkg/config"
-	ha "code.jhot.me/jhot/hats/pkg/homeassistant"
+	"codeberg.org/jhot/hats/internal/nats"
+	"codeberg.org/jhot/hats/pkg/config"
+	ha "codeberg.org/jhot/hats/pkg/homeassistant"
 	"github.com/gorilla/websocket"
 )
 

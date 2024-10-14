@@ -3,8 +3,8 @@ package ntfy
 import (
 	"fmt"
 
-	"code.jhot.me/jhot/hats/pkg/config"
-	ntfyPkg "code.jhot.me/jhot/hats/pkg/ntfy"
+	"codeberg.org/jhot/hats/pkg/config"
+	ntfyPkg "codeberg.org/jhot/hats/pkg/ntfy"
 	"github.com/go-resty/resty/v2"
 )
 

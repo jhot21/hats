@@ -1,0 +1,24 @@
+services:
+  nats:
+    image: nats:2
+    command: -c /config/server.conf
+    restart: always
+    networks:
+      - internal
+    ports:
+      - 4222:4222
+      # - 6222:6222 # clustering
+      - 8222:8222 # http management
+      # - 1883:1883 # mqtt
+    volumes:
+      - ../apps/nats:/config
+      - nats_data:/data/jetstream
+    environment:
+      - SERVER_NAME=nats1
+      - CLUSTER_PASSWORD=changeme
+    
+  # More coming soon
+
+
+volumes:
+  nats_data: {}

@@ -1,4 +1,4 @@
-module code.jhot.me/jhot/hats
+module codeberg.org/jhot/hats
 
 go 1.21.1
 

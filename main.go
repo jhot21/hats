@@ -7,11 +7,11 @@ import (
 	"os"
 	"os/signal"
 
-	"code.jhot.me/jhot/hats/internal/api"
-	"code.jhot.me/jhot/hats/internal/homeassistant"
-	"code.jhot.me/jhot/hats/internal/nats"
-	"code.jhot.me/jhot/hats/internal/ntfy"
-	"code.jhot.me/jhot/hats/pkg/config"
+	"codeberg.org/jhot/hats/internal/api"
+	"codeberg.org/jhot/hats/internal/homeassistant"
+	"codeberg.org/jhot/hats/internal/nats"
+	"codeberg.org/jhot/hats/internal/ntfy"
+	"codeberg.org/jhot/hats/pkg/config"
 )
 
 //go:embed README.md

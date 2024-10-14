@@ -10,12 +10,12 @@ import (
 
 	"log/slog"
 
-	"code.jhot.me/jhot/hats/internal/nats"
-	"code.jhot.me/jhot/hats/internal/ntfy"
-	"code.jhot.me/jhot/hats/pkg/config"
-	"code.jhot.me/jhot/hats/pkg/homeassistant"
-	ntfyPkg "code.jhot.me/jhot/hats/pkg/ntfy"
-	"code.jhot.me/jhot/hats/pkg/passgen"
+	"codeberg.org/jhot/hats/internal/nats"
+	"codeberg.org/jhot/hats/internal/ntfy"
+	"codeberg.org/jhot/hats/pkg/config"
+	"codeberg.org/jhot/hats/pkg/homeassistant"
+	ntfyPkg "codeberg.org/jhot/hats/pkg/ntfy"
+	"codeberg.org/jhot/hats/pkg/passgen"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
