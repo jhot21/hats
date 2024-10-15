@@ -1,12 +1,33 @@
 version: '3'
 
+includes:
+  build:
+    taskfile: ./Taskfile_{{OS}}.yml
+    flatten: true
+    optional: true
+
+vars:
+  REPO: codeberg.org/jhot/hats
+
 tasks:
   tag:
+    desc: Tag the latest commit to VERSION and push to origin
     cmds:
       - git tag {{.VERSION}}
       - git push origin {{.VERSION}}
     requires:
       vars: [VERSION]
+    status:
+      - task tags | grep {{.VERSION}}
   tags:
+    desc: List git tags
     cmds:
       - git --no-pager tag --list
+    silent: true
+  docker-login:
+    desc: Login to the {{.REPO}} repo
+    cmds:
+      - docker login {{.REPO}}
+    status:
+      - cat ~/.docker/config.json | jq -e '.auths."codeberg.org".auth'
+

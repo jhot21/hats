@@ -1,0 +1,51 @@
+version: '3'
+
+vars:
+  REPO: codeberg.org/jhot/hats
+
+tasks:
+  colima-start:
+    desc: Start two colima instances, one for arm64 and another for amd64
+    cmds:
+      - colima start --profile amd --arch amd --cpu 4 --memory 8 --disk 100 --runtime docker
+      - colima start --profile arm --arch arm --cpu 4 --memory 8 --disk 100 --runtime docker
+    status:
+      - docker context ls | grep 'colima-amd'
+      - docker context ls | grep 'colima-arm'
+  colima-stop:
+    desc: Stop the colima instances
+    cmds:
+      - colima stop -p amd
+      - colima stop -p arm
+  colima-multiplatform-builders:
+    desc: Create a buildx builder that uses the arm64 and amd64 colima instances
+    deps: [colima-start]
+    cmds:
+      - docker buildx create --use --name multiplatform colima-amd
+      - docker buildx create --append --name multiplatform colima-arm
+    status:
+      - docker buildx ls | grep 'multiplatform0'
+      - docker buildx ls | grep 'multiplatform1'
+  buildx-use-colima:
+    desc: Tell buildx to use the multiplatform builder
+    deps: [colima-multiplatform-builders]
+    cmds:
+      - docker buildx use multiplatform
+    status:
+      - docker buildx ls | grep 'multiplatform\*'
+  docker-build:
+    desc: Build and optionally push the multiplatform docker image
+    deps: [buildx-use-colima]
+    cmds:
+      - >
+        docker buildx build
+        {{ if (eq .MAIN "true") }}-t {{.REPO}}:main{{ end }}
+        {{ if (ne .VERSION "") }}-t {{.REPO}}:{{.VERSION}}{{ end }}
+        {{ if (eq .LATEST "true") }}-t {{.REPO}}:latest{{ end }}
+        {{ if (eq .PUSH "true") }}--push{{ end }}
+        --platform=linux/amd64,linux/arm64 .
+    vars:
+      LATEST: '{{ .LATEST | default "false" }}'
+      MAIN: '{{ .MAIN | default "false" }}'
+      VERSION: '{{ .VERSION | default "" }}'
+      PUSH: '{{ .PUSH | default "true" }}'
