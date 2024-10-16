@@ -16,9 +16,41 @@ services:
     environment:
       - SERVER_NAME=nats1
       - CLUSTER_PASSWORD=changeme
-    
-  # More coming soon
 
+  homeassistant:
+    image: homeassistant/home-assistant:stable
+    restart: always
+    volumes:
+      - homeassistant_data:/config
+    # devices:
+    #   - /dev/ttyUSB1:/dev/ttyUSB1
+    environment:
+      - TZ=${TZ}
+    network_mode: host
+  
+  hats:
+    image: codeberg.org/jhot/hats:latest
+    restart: always
+    ports:
+      - 8888:8888
+    networks:
+      - internal
+    environment:
+      - HATS_TOKEN=changeme # the token that will be used by clients to make api calls to HATS
+      - HASS_HOST=192.168.1.100 # the ip address of the home assistant host
+      - HASS_TOKEN=a.jwt.from.home.assistant
+      - NATS_HOST=nats
+      - NTFY_HOST=https://ntfy.sh
+      #- NTFY_TOKEN=my.ntfy.token # if self-hosting ntfy with auth
+      - LOG_LEVEL=DEBUG
+      - TZ=${TZ}
+    depends_on:
+      homeassistant:
+        condition: service_started
+
+networks:
+  internal: {}
 
 volumes:
   nats_data: {}
+  homeassistant_data: {}

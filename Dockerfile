@@ -16,3 +16,5 @@ FROM debian:12-slim
 COPY --from=builder --chmod=755 /hats /hats
 COPY --from=builder --chmod=755 /healthcheck /healthcheck
 ENTRYPOINT [ "/hats" ]
+
+HEALTHCHECK --interval=10s --timeout=10s --start-period=15s --retries=5 CMD [ "/healthcheck" ]
