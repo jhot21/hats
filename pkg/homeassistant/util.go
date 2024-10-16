@@ -1,6 +1,7 @@
 package homeassistant
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -81,3 +82,37 @@ func ParseDuration(d string) (time.Duration, error) {
 // 	seconds := math.Floor(d.Seconds() - (hours * 60 * 60) - (minutes * 60))
 // 	return fmt.Sprintf("%02.f:%02.f:%02.f", hours, minutes, seconds)
 // }
+
+func castAttribute[T any](state StateData, attributeName string) (T, error) {
+	var val T
+
+	attrInterface, attrExists := state.Attributes[attributeName]
+	if !attrExists {
+		return val, errors.New("attribute not found")
+	}
+
+	if val, ok := attrInterface.(T); ok {
+		return val, nil
+	} else {
+		return val, errors.New("attribute couldn't be cast")
+	}
+}
+
+func timeAttribute(state StateData, attributeName string) (time.Time, bool, error) {
+	var t time.Time
+	attrValue, err := castAttribute[string](state, attributeName)
+	if err != nil {
+		return t, false, err
+	}
+
+	t, err = time.Parse(time.RFC3339, attrValue)
+	if err != nil {
+		return t, false, err
+	}
+
+	local := t.Local()
+	now := time.Now()
+	today := local.Day() == now.Day() && local.Month() == now.Month() && local.Year() == now.Year()
+
+	return local, today, nil
+}

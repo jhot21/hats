@@ -1,7 +1,6 @@
 package homeassistant
 
 import (
-	"errors"
 	"time"
 )
 
@@ -31,7 +30,7 @@ type Sun struct {
 	Azimuth   float64 // The angle is shown clockwise from north
 }
 
-func New(sunState StateData) (Sun, error) {
+func NewSun(sunState StateData) (Sun, error) {
 	var err error
 	sun := Sun{
 		AboveHorizon: StateToBool(sunState.State),
@@ -83,38 +82,4 @@ func New(sunState StateData) (Sun, error) {
 	}
 
 	return sun, nil
-}
-
-func castAttribute[T any](state StateData, attributeName string) (T, error) {
-	var val T
-
-	attrInterface, attrExists := state.Attributes[attributeName]
-	if !attrExists {
-		return val, errors.New("attribute not found")
-	}
-
-	if val, ok := attrInterface.(T); ok {
-		return val, nil
-	} else {
-		return val, errors.New("attribute couldn't be cast")
-	}
-}
-
-func timeAttribute(state StateData, attributeName string) (time.Time, bool, error) {
-	var t time.Time
-	attrValue, err := castAttribute[string](state, attributeName)
-	if err != nil {
-		return t, false, err
-	}
-
-	t, err = time.Parse(time.RFC3339, attrValue)
-	if err != nil {
-		return t, false, err
-	}
-
-	local := t.Local()
-	now := time.Now()
-	today := local.Day() == now.Day() && local.Month() == now.Month() && local.Year() == now.Year()
-
-	return local, today, nil
 }
