@@ -9,7 +9,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /healthcheck ./cmd/healthcheck/main.go
 
 FROM builder AS tester
 
-RUN go test -v
+RUN go test -v ./...
 
 FROM debian:12-slim
 

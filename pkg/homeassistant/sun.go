@@ -1,6 +1,7 @@
 package homeassistant
 
 import (
+	"math"
 	"time"
 )
 
@@ -82,4 +83,31 @@ func NewSun(sunState StateData) (Sun, error) {
 	}
 
 	return sun, nil
+}
+
+// How direct is the sun compared to a window with a certain azimuth.
+// I don't know how to find the true angle because I took trig 20+ years ago, so we'll just use the greater between elevation and azimuth.
+//   - If the sun is straight on (elevation 0, sun azimuth equal to window azimuth), return 1.0
+//   - If the sun is at a 90 degree angle, return 0.0
+//   - In-between will return a value between 0.0 and 1.0
+//   - If the sun is below the horizon or the azimuth difference is greater than 90 degrees, return -1.0
+func (s Sun) DirectnessToWindow(windowAzimuth float64) float64 {
+	if s.Elevation < 0 {
+		return -1.0
+	}
+
+	azimuthDiff := s.Azimuth - windowAzimuth
+
+	if azimuthDiff > 90.0 || azimuthDiff < -90.0 {
+		return -1.0
+	}
+
+	absAzimuth := math.Abs(azimuthDiff)
+
+	max := s.Elevation
+	if absAzimuth > s.Elevation {
+		max = absAzimuth
+	}
+
+	return (90.0 - max) / 90.0
 }
