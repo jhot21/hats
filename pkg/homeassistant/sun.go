@@ -96,13 +96,11 @@ func (s Sun) DirectnessToWindow(windowAzimuth float64) float64 {
 		return -1.0
 	}
 
-	azimuthDiff := s.Azimuth - windowAzimuth
+	absAzimuth := math.Abs(s.Azimuth - windowAzimuth)
 
-	if azimuthDiff > 90.0 || azimuthDiff < -90.0 {
+	if absAzimuth > 90.0 {
 		return -1.0
 	}
-
-	absAzimuth := math.Abs(azimuthDiff)
 
 	max := s.Elevation
 	if absAzimuth > s.Elevation {
