@@ -17,11 +17,11 @@ func StateToBool(state string) bool {
 	switch state {
 	// truthy
 	case "on", "home", "open", "opening", "unlocked", "playing", "active", "good",
-		"walking", "charging", "alive", "heat", "heat_cool", "cool", "above_horizon":
+		"walking", "charging", "alive", "heat", "heat_cool", "cool", "above_horizon", "detected", "wet":
 		return true
 	// falsey
 	case "off", "away", "closed", "closing", "locked", "paused", "inactive", "bad",
-		"discharging", "dead", "below_horizon", "0", "0.0":
+		"discharging", "dead", "below_horizon", "0", "0.0", "clear", "dry":
 		return false
 	}
 
