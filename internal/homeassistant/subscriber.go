@@ -150,6 +150,7 @@ func handleMessages() {
 							nats.PublishRequest(fmt.Sprintf("homeassistant.attributes.%s.%s", message.Event.Data.EntityId, cleanedState), data, defaultTimeout, 1)
 						} else {
 							nats.PublishRequest(fmt.Sprintf("homeassistant.states.%s.%s", message.Event.Data.EntityId, cleanedState), data, defaultTimeout, 2)
+							nats.PublishRequest(fmt.Sprintf("homeassistant.attributes.%s.%s", message.Event.Data.EntityId, cleanedState), data, defaultTimeout, 1)
 						}
 					case zhaEventId:
 						data, _ := json.Marshal(message.Event.Data)

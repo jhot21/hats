@@ -132,6 +132,20 @@ type StateData struct {
 	Context     interface{}            `json:"context,omitempty"`
 }
 
+func (data StateData) GetStringAttribute(name string) string {
+	if val, exists := data.Attributes[name]; exists {
+		if value, isString := val.(string); isString {
+			return value
+		}
+	}
+
+	return ""
+}
+
+func (data StateData) GetFriendlyName() string {
+	return data.GetStringAttribute("friendly_name")
+}
+
 type EventData struct {
 	EntityId string    `json:"entity_id,omitempty"`
 	NewState StateData `json:"new_state,omitempty"`
@@ -160,6 +174,16 @@ type EventData struct {
 	PropertyKeyName  string `json:"property_key_name,omitempty"`
 	Value            string `json:"value,omitempty"`
 	ValueRaw         int    `json:"value_raw,omitempty"`
+}
+
+func (data EventData) GetDeviceFriendlyName() string {
+	val := data.NewState.GetFriendlyName()
+
+	if val == "" {
+		return data.EntityId
+	}
+
+	return val
 }
 
 type Event struct {

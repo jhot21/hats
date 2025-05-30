@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"codeberg.org/jhot/hats/internal/util"
+	rsty "codeberg.org/jhot/hats/pkg/resty"
 	"github.com/go-resty/resty/v2"
 	"github.com/samber/lo"
 )
@@ -24,6 +25,15 @@ func New() *NwsClient {
 			SetHeader("Accept", "application/geo+json").
 			SetHeader("User-Agent", util.GetEnvWithDefault("NWS_USER_AGENT", "(HATS-client, hats@jhot.me)")),
 	}
+}
+
+func Limit(value int) rsty.RestyOption {
+	if value > 0 {
+		return func(r *resty.Request) {
+			r.SetQueryParam("limit", fmt.Sprintf("%d", value))
+		}
+	}
+	return func(r *resty.Request) {}
 }
 
 func (c *NwsClient) CoordinatesToPoint(lat float64, lon float64) (Point, error) {
@@ -76,12 +86,18 @@ func (p HourlyProps) GetHighLow(hours int) (high int, low int) {
 	return lo.Max(temps), lo.Min(temps)
 }
 
-func (c *NwsClient) GetStations(p Point) ([]string, error) {
+func (c *NwsClient) GetStations(p Point, opts ...rsty.RestyOption) ([]string, error) {
 	var data struct {
 		ObservationStations []string `json:"observationStations"`
 	}
-	_, err := util.CheckSuccess(c.restClient.R().SetResult(&data).
-		Get(removeBase(p.Properties.ObservationStations)))
+
+	req := c.restClient.R().SetResult(&data)
+
+	for _, opt := range opts {
+		opt(req)
+	}
+
+	_, err := util.CheckSuccess(req.Get(removeBase(p.Properties.ObservationStations)))
 	if err != nil {
 		return []string{}, err
 	}
@@ -89,8 +105,39 @@ func (c *NwsClient) GetStations(p Point) ([]string, error) {
 	return data.ObservationStations, nil
 }
 
+func (c *NwsClient) GetObservations(p Point, opts ...rsty.RestyOption) ([]Observations, error) {
+	stations, err := c.GetStations(p, Limit(1))
+	if err != nil {
+		return []Observations{}, fmt.Errorf("%w: error getting stations", err)
+	}
+
+	var data struct {
+		Features []struct {
+			Properties Observations `json:"properties"`
+		} `json:"features"`
+	}
+
+	req := c.restClient.R().SetResult(&data)
+
+	for _, opt := range opts {
+		opt(req)
+	}
+
+	_, err = util.CheckSuccess(req.Get(removeBase(stations[0] + "/observations")))
+	if err != nil {
+		return []Observations{}, err
+	}
+
+	var output []Observations
+	for _, feat := range data.Features {
+		output = append(output, feat.Properties)
+	}
+
+	return output, nil
+}
+
 func (c *NwsClient) GetLatestObservations(p Point) (Observations, error) {
-	stations, err := c.GetStations(p)
+	stations, err := c.GetStations(p, Limit(1))
 	if err != nil {
 		return Observations{}, fmt.Errorf("%w: error getting stations", err)
 	}

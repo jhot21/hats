@@ -70,9 +70,10 @@ type DailyProps struct {
 }
 
 type Observations struct {
-	Timestamp     time.Time          `json:"timestamp"`
-	Temperature   UnitValue[float64] `json:"temperature"`
-	DewPoint      UnitValue[float64] `json:"dewpoint"`
-	WindDirection UnitValue[int]     `json:"windDirection"`
-	WindSpeed     UnitValue[float64] `json:"windSpeed"`
+	Timestamp             time.Time          `json:"timestamp"`
+	Temperature           UnitValue[float64] `json:"temperature"`
+	DewPoint              UnitValue[float64] `json:"dewpoint"`
+	WindDirection         UnitValue[int]     `json:"windDirection"`
+	WindSpeed             UnitValue[float64] `json:"windSpeed"`
+	PrecipitationLastHour UnitValue[float64] `json:"precipitationLastHour"`
 }
