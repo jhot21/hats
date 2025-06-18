@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
+	rsty "codeberg.org/jhot/hats/pkg/resty"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -86,4 +88,65 @@ func (c *RestClient) CallServices(inputs ...*CallServiceInput) error {
 		returnErrors = append(returnErrors, err)
 	}
 	return errors.Join(returnErrors...)
+}
+
+// Start time of history results. If not set, API defaults to 1 day before now
+func HistoryStartTimestamp(value time.Time) rsty.RestyOption {
+	return func(r *resty.Request) {
+		// YYYY-MM-DDThh:mm:ssTZD
+		r.SetPathParam("timestamp", value.Format(time.RFC3339))
+	}
+}
+
+// End time of history results. If not set, API defaults to 1 day after start
+func HistoryEndTimestamp(value time.Time) rsty.RestyOption {
+	return func(r *resty.Request) {
+		// YYYY-MM-DDThh:mm:ssTZD
+		r.SetQueryParam("end_time", value.Format(time.RFC3339))
+	}
+}
+
+func HistoryEntityFilter(entityIds ...string) rsty.RestyOption {
+	return func(r *resty.Request) {
+		r.SetQueryParam("filter_entity_id", strings.Join(entityIds, ","))
+	}
+}
+
+func HistoryMinimalResponse() rsty.RestyOption {
+	return func(r *resty.Request) {
+		r.SetQueryParam("minimal_response", "true")
+	}
+}
+
+func HistoryNoAttributes() rsty.RestyOption {
+	return func(r *resty.Request) {
+		r.SetQueryParam("no_attributes", "true")
+	}
+}
+
+func HistorySignificantOnly() rsty.RestyOption {
+	return func(r *resty.Request) {
+		r.SetQueryParam("significant_changes_only", "true")
+	}
+}
+
+func (c *RestClient) GetHistory(opts ...rsty.RestyOption) (HistoryResponse, error) {
+	req := c.client.R()
+	urlPath := "/api/history/period"
+
+	for _, opt := range opts {
+		opt(req)
+	}
+
+	if _, isSet := req.PathParams["timestamp"]; isSet {
+		urlPath += "/{timestamp}"
+	}
+
+	var data HistoryResponse
+
+	resp, err := req.SetResult(&data).Get(urlPath)
+	if err == nil && !resp.IsSuccess() {
+		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
+	}
+	return data, err
 }

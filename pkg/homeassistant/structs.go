@@ -1,5 +1,11 @@
 package homeassistant
 
+import (
+	"errors"
+	"fmt"
+	"time"
+)
+
 // Message types that can be returned from Home Assistants websocket API
 var MessageType = struct {
 	AuthRequired    string
@@ -146,6 +152,10 @@ func (data StateData) GetFriendlyName() string {
 	return data.GetStringAttribute("friendly_name")
 }
 
+func (data StateData) GetLastChanged() (time.Time, error) {
+	return time.Parse(time.RFC3339, data.LastChanged)
+}
+
 type EventData struct {
 	EntityId string    `json:"entity_id,omitempty"`
 	NewState StateData `json:"new_state,omitempty"`
@@ -214,4 +224,41 @@ type SubscribeEventsMessage struct {
 	Type      string `json:"type"`
 	EventType string `json:"event_type"`
 	Id        int    `json:"id"`
+}
+
+type HistoryEntry struct {
+	EntityId string `json:"entity_id,omitempty"`
+	StateData
+}
+
+type HistoryResponse [][]HistoryEntry
+
+func (r HistoryResponse) GetOnDuration(onState, offState string) (time.Duration, error) {
+	var total time.Duration = 0
+	if len(r) == 0 {
+		return total, errors.New("empty history response")
+	}
+
+	entityHistory := r[0]
+	var previousTime *time.Time
+
+	for i, hist := range entityHistory {
+		if hist.State == onState {
+			previousTimeVal, err := hist.GetLastChanged()
+			if err != nil {
+				return total, fmt.Errorf("error parsing last changed timestamp for on-state: %w", err)
+			}
+			previousTime = &previousTimeVal
+			continue
+		}
+		if i != 0 && previousTime != nil && hist.State == offState {
+			currentTime, err := hist.GetLastChanged()
+			if err != nil {
+				return total, fmt.Errorf("error parsing last changed timestamp for off-state: %w", err)
+			}
+			total += currentTime.Sub(*previousTime)
+		}
+	}
+
+	return total, nil
 }
