@@ -1,56 +1,88 @@
+# Example Docker Compose for HATS
+#
+# Services:
+#   nats     - NATS message broker with JetStream enabled (required by HATS)
+#   hats     - The HATS bridge (streams HA events to NATS, provides HTTP API)
+#   your-app - Placeholder for your subscriber service
+#
+# Home Assistant is assumed to be running separately (e.g. on the host or another compose stack).
+# Set HASS_HOST to its IP address below.
+#
+# Usage:
+#   1. Copy this file and server.conf to your project
+#   2. Fill in HASS_HOST, HASS_TOKEN, and HATS_TOKEN
+#   3. Run: docker compose up
+
 services:
   nats:
     image: nats:2
+    # server.conf enables JetStream (required) and the HTTP monitoring port.
+    # Copy example/server.conf to ./nats/server.conf before starting.
     command: -c /config/server.conf
     restart: always
     networks:
       - internal
     ports:
-      - 4222:4222
-      # - 6222:6222 # clustering
-      - 8222:8222 # http management
-      # - 1883:1883 # mqtt
+      - "4222:4222"
+      - "8222:8222"   # NATS monitoring UI at http://localhost:8222
+      # - "6222:6222" # clustering port (uncomment for multi-node)
     volumes:
-      - ../apps/nats:/config
+      - ./nats:/config
       - nats_data:/data/jetstream
     environment:
       - SERVER_NAME=nats1
-      - CLUSTER_PASSWORD=changeme
 
-  homeassistant:
-    image: homeassistant/home-assistant:stable
-    restart: always
-    volumes:
-      - homeassistant_data:/config
-    # devices:
-    #   - /dev/ttyUSB1:/dev/ttyUSB1
-    environment:
-      - TZ=${TZ}
-    network_mode: host
-  
   hats:
     image: codeberg.org/jhot/hats:latest
     restart: always
     ports:
-      - 8888:8888
+      - "8888:8888"   # HATS API — check http://localhost:8888 for the rendered README
     networks:
       - internal
     environment:
-      - HATS_TOKEN=changeme # the token that will be used by clients to make api calls to HATS
-      - HASS_HOST=192.168.1.100 # the ip address of the home assistant host
-      - HASS_TOKEN=a.jwt.from.home.assistant
-      - NATS_HOST=nats
+      # --- Home Assistant (required) ---
+      - HASS_HOST=192.168.1.100        # IP or hostname of your HA instance
+      - HASS_TOKEN=your-ha-token       # long-lived access token from HA profile → security → tokens
+      # - HASS_PORT=8123               # default
+      # - HASS_SECURE=false            # set to true for HTTPS/WSS
+
+      # --- NATS ---
+      - NATS_HOST=nats                 # service name above
+      # - NATS_PORT=4222               # default
+      # - NATS_TOKEN=                  # if your NATS server requires a token
+
+      # --- HATS API ---
+      - HATS_TOKEN=changeme            # clients must send this as a Bearer token
+      # - HATS_PORT=8888               # default
+
+      # --- ntfy (optional) ---
       - NTFY_HOST=https://ntfy.sh
-      #- NTFY_TOKEN=my.ntfy.token # if self-hosting ntfy with auth
-      - LOG_LEVEL=DEBUG
+      # - NTFY_TOKEN=my-ntfy-token     # only needed for self-hosted ntfy with auth
+
+      # --- Misc ---
+      - LOG_LEVEL=INFO                 # DEBUG, INFO, WARN, ERROR
       - TZ=${TZ}
     depends_on:
-      homeassistant:
-        condition: service_started
+      - nats
+
+  # Replace this with your actual subscriber service.
+  # Your subscriber connects to NATS (port 4222) and optionally to the HATS API (port 8888).
+  your-app:
+    image: your-subscriber-image:latest
+    restart: always
+    networks:
+      - internal
+    environment:
+      - NATS_HOST=nats
+      - HATS_HOST=hats
+      - HATS_TOKEN=changeme            # must match HATS_TOKEN above
+      - TZ=${TZ}
+    depends_on:
+      - nats
+      - hats
 
 networks:
   internal: {}
 
 volumes:
   nats_data: {}
-  homeassistant_data: {}

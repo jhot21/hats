@@ -83,7 +83,7 @@ func ParseDuration(d string) (time.Duration, error) {
 // 	return fmt.Sprintf("%02.f:%02.f:%02.f", hours, minutes, seconds)
 // }
 
-func castAttribute[T any](state StateData, attributeName string) (T, error) {
+func CastAttribute[T any](state StateData, attributeName string) (T, error) {
 	var val T
 
 	attrInterface, attrExists := state.Attributes[attributeName]
@@ -100,7 +100,7 @@ func castAttribute[T any](state StateData, attributeName string) (T, error) {
 
 func timeAttribute(state StateData, attributeName string) (time.Time, bool, error) {
 	var t time.Time
-	attrValue, err := castAttribute[string](state, attributeName)
+	attrValue, err := CastAttribute[string](state, attributeName)
 	if err != nil {
 		return t, false, err
 	}
