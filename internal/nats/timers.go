@@ -35,14 +35,20 @@ func GetTimer(name string) (*HatsTimer, error) {
 		return nil, err
 	}
 
-	d, err := homeassistant.ParseDuration(state.Attributes["duration"].(string))
+	durStr, err := homeassistant.CastAttribute[string](state, "duration")
+	if err != nil {
+		return nil, err
+	}
+	d, err := homeassistant.ParseDuration(durStr)
 	if err != nil {
 		return nil, err
 	}
 
 	var finishTime time.Time
 	if finishesAt, ok := state.Attributes["finishes_at"]; ok {
-		finishTime, _ = time.Parse(time.RFC3339, finishesAt.(string))
+		if finishesAtStr, ok := finishesAt.(string); ok {
+			finishTime, _ = time.Parse(time.RFC3339, finishesAtStr)
+		}
 	}
 
 	return &HatsTimer{

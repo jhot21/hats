@@ -82,8 +82,9 @@ func reconnect() {
 }
 
 func handleMessages() {
+	ch := done
 	go func() {
-		defer close(done)
+		defer close(ch)
 		for {
 			_, rawMessage, err := haWebsocketConn.ReadMessage()
 			if err != nil {
@@ -127,6 +128,9 @@ func handleMessages() {
 					Type:      ha.MessageType.SubscribeEvents,
 					EventType: ha.MessageType.TimerFinished,
 					Id:        timerFinishedEventId})
+			case ha.MessageType.AuthInvalid:
+				logger.Error("Home Assistant authentication failed, check token")
+				return
 			case ha.MessageType.Result:
 				if !message.Success {
 					logger.Error("Non-Success Result:", "message", message)

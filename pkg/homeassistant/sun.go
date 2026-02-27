@@ -37,7 +37,7 @@ func NewSun(sunState StateData) (Sun, error) {
 		AboveHorizon: StateToBool(sunState.State),
 	}
 
-	sun.Rising, err = castAttribute[bool](sunState, "rising")
+	sun.Rising, err = CastAttribute[bool](sunState, "rising")
 	if err != nil {
 		return sun, err
 	}
@@ -72,12 +72,12 @@ func NewSun(sunState StateData) (Sun, error) {
 		return sun, err
 	}
 
-	sun.Elevation, err = castAttribute[float64](sunState, "elevation")
+	sun.Elevation, err = CastAttribute[float64](sunState, "elevation")
 	if err != nil {
 		return sun, err
 	}
 
-	sun.Azimuth, err = castAttribute[float64](sunState, "azimuth")
+	sun.Azimuth, err = CastAttribute[float64](sunState, "azimuth")
 	if err != nil {
 		return sun, err
 	}
