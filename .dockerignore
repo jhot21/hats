@@ -1,0 +1,24 @@
+# Version control
+.git/
+.gitignore
+
+# Documentation
+docs/
+example/
+LICENSE
+
+# IDE and tooling
+.vscode/
+.claude/
+Taskfile.yml
+Taskfile_darwin.yml
+
+# Environment / secrets
+.envrc
+
+# Temp files
+temp/
+
+# Docker files (not needed inside container)
+Dockerfile
+.dockerignore
