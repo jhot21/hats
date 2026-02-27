@@ -25,7 +25,7 @@ Fires whenever a Home Assistant entity changes state. The `{state}` segment in t
 | ` ` (space) | `_` |
 | `*` | `_` |
 | `>` | `_` |
-| `.` | `,` |
+| `.` | `_` |
 
 **Payload:** JSON-encoded `EventData`
 

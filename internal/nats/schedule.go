@@ -14,7 +14,9 @@ var (
 	schedules     = map[string]*gocron.Job{}
 
 	fireSchedule = func(name string) {
-		PublishRequest("schedules."+name, []byte("fired"), 500*time.Millisecond, 3)
+		if err := PublishRequest("schedules."+name, []byte("fired"), 500*time.Millisecond, 3); err != nil {
+			logger.Warn("Failed to fire schedule", "schedule", name, "error", err)
+		}
 	}
 )
 

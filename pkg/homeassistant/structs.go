@@ -13,6 +13,8 @@ var MessageType = struct {
 	AuthInvalid     string
 	Result          string
 	Event           string
+	Ping            string
+	Pong            string
 	ZhaEvent        string
 	ZwaveEvent      string
 	SubscribeEvents string
@@ -26,6 +28,8 @@ var MessageType = struct {
 	AuthInvalid:     "auth_invalid",
 	Result:          "result",
 	Event:           "event",
+	Ping:            "ping",
+	Pong:            "pong",
 	ZhaEvent:        "zha_event",
 	ZwaveEvent:      "zwave_js_value_notification",
 	SubscribeEvents: "subscribe_events",
@@ -224,6 +228,11 @@ type SubscribeEventsMessage struct {
 	Type      string `json:"type"`
 	EventType string `json:"event_type"`
 	Id        int    `json:"id"`
+}
+
+type PingMessage struct {
+	Type string `json:"type"`
+	Id   int    `json:"id"`
 }
 
 type HistoryEntry struct {
