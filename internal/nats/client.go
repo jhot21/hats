@@ -46,27 +46,16 @@ func KvConnect() error {
 		return errors.New("jetstream must be connected first")
 	}
 
-	logger.Debug("Looking for KV store")
-	listener := client.JS.KeyValueStoreNames(ctx)
-	found := false
-	for name := range listener.Name() {
-		if name == "KV_hats" {
-			found = true
-		}
-	}
-
 	var err error
-	if found {
-		logger.Debug("Connecting to KV store")
-		kv, err = client.JS.KeyValue(ctx, "hats")
-	} else {
+	logger.Debug("Connecting to KV store")
+	kv, err = client.JS.KeyValue(ctx, "hats")
+	if errors.Is(err, jetstream.ErrBucketNotFound) {
 		logger.Debug("Creating KV store")
 		kv, err = client.JS.CreateKeyValue(ctx, jetstream.KeyValueConfig{
 			Bucket: "hats",
 			TTL:    2 * time.Hour,
 		})
 	}
-
 	return err
 }
 
