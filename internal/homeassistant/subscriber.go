@@ -74,7 +74,11 @@ func Subscribe(parentLogger *slog.Logger, parentConfig *config.HatsConfig) error
 func reconnect() {
 	haWebsocketConn.Close()
 	for attempts := 1; attempts <= 10; attempts++ {
-		time.Sleep(time.Duration(attempts) * 5 * time.Second)
+		select {
+		case <-quit:
+			return
+		case <-time.After(time.Duration(attempts) * 5 * time.Second):
+		}
 		logger.Info("Trying to reconnect to Home Assistant", "attempt", attempts)
 		if err := connect(); err != nil {
 			logger.Error("Failed to reconnect to Home Assistant", "attempt", attempts, "error", err)

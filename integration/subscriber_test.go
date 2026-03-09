@@ -125,11 +125,10 @@ func TestPingKeepalive(t *testing.T) {
 	t.Cleanup(server.Close)
 	setupSubscriber(t, server)
 
+	// Check both conditions atomically to avoid TOCTOU between PingsReceived and ConnectionCount.
 	require.Eventually(t, func() bool {
-		return server.PingsReceived() >= 2
-	}, 5*time.Second, 100*time.Millisecond, "expected at least 2 pings")
-
-	assert.Equal(t, 1, server.ConnectionCount(), "connection should remain stable during keepalive")
+		return server.PingsReceived() >= 2 && server.ConnectionCount() == 1
+	}, 5*time.Second, 100*time.Millisecond, "expected at least 2 pings with connection remaining stable")
 }
 
 // TestPingFailureTriggerReconnect verifies that when the server closes the connection on a
