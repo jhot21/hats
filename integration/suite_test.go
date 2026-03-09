@@ -28,12 +28,16 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	storeDir, err := os.MkdirTemp("", "hats-nats-*")
+	if err != nil {
+		log.Fatalf("failed to create temp dir for NATS store: %v", err)
+	}
 	opts := &natsserver.Options{
 		JetStream: true,
 		Port:      -1,
 		NoLog:     true,
 		NoSigs:    true,
-		StoreDir:  os.TempDir(),
+		StoreDir:  storeDir,
 	}
 	ns, err := natsserver.NewServer(opts)
 	if err != nil {
@@ -44,11 +48,15 @@ func TestMain(m *testing.M) {
 		log.Fatal("embedded NATS server did not become ready")
 	}
 	natsURL = ns.ClientURL()
-	u, _ := url.Parse(natsURL)
+	u, err := url.Parse(natsURL)
+	if err != nil {
+		log.Fatalf("failed to parse NATS URL %q: %v", natsURL, err)
+	}
 	natsPort = u.Port()
 
 	code := m.Run()
 	ns.Shutdown()
+	os.RemoveAll(storeDir)
 	os.Exit(code)
 }
 
