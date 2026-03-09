@@ -1,0 +1,35 @@
+services:
+  nats:
+    image: nats:2
+    command: -c /config/server.conf
+    volumes:
+      - ./nats:/config
+    networks: [test]
+
+  mockha:
+    build:
+      context: ../
+      dockerfile: docker/mockha/Dockerfile
+    environment:
+      - MOCK_HA_TOKEN=test-token
+      - MOCK_HA_PORT=8123
+    networks: [test]
+
+  hats:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    environment:
+      - HASS_HOST=mockha
+      - HASS_PORT=8123
+      - HASS_TOKEN=test-token
+      - NATS_HOST=nats
+      - HATS_TOKEN=test-hats-token
+      - LOG_LEVEL=DEBUG
+    depends_on: [nats, mockha]
+    networks: [test]
+    ports:
+      - "8888:8888"
+
+networks:
+  test: {}
