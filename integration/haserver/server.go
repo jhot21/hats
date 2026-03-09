@@ -52,6 +52,8 @@ func (s *MockHAServer) Close() {
 }
 
 // DropConnection forcibly closes the active WebSocket connection.
+// Note: calling Close() concurrently with an in-progress WriteJSON in the handler goroutine
+// is a known limitation; safe in practice for test use.
 func (s *MockHAServer) DropConnection() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -140,7 +142,11 @@ func (s *MockHAServer) InjectZWaveEvent(deviceId string) {
 
 func (s *MockHAServer) inject(msg ha.HassMessage) {
 	data, _ := json.Marshal(msg)
-	s.eventQueue <- data
+	select {
+	case s.eventQueue <- data:
+	default:
+		slog.Warn("haserver: event queue full, dropping event")
+	}
 }
 
 func (s *MockHAServer) handle(w http.ResponseWriter, r *http.Request) {
@@ -166,7 +172,10 @@ func (s *MockHAServer) handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var authMsg ha.HassMessage
-	json.Unmarshal(data, &authMsg)
+	if err := json.Unmarshal(data, &authMsg); err != nil {
+		slog.Error("haserver: failed to unmarshal auth message", "error", err)
+		return
+	}
 
 	if s.RejectAuth || authMsg.AccessToken != s.Token {
 		conn.WriteJSON(ha.HassMessage{Type: ha.MessageType.AuthInvalid})
@@ -199,20 +208,27 @@ func (s *MockHAServer) handle(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			var msg ha.HassMessage
-			json.Unmarshal(result.data, &msg)
-			switch msg.Type {
-			case ha.MessageType.SubscribeEvents:
-				conn.WriteJSON(ha.HassMessage{Type: ha.MessageType.Result, Id: msg.Id, Success: true})
-			case ha.MessageType.Ping:
-				s.mu.Lock()
-				s.pingsReceived++
-				dropIt := s.DropOnPing
-				s.mu.Unlock()
-				if dropIt {
-					conn.Close()
-					return
+			if err := json.Unmarshal(result.data, &msg); err != nil {
+				slog.Warn("haserver: failed to unmarshal message", "error", err)
+			} else {
+				switch msg.Type {
+				case ha.MessageType.SubscribeEvents:
+					if err := conn.WriteJSON(ha.HassMessage{Type: ha.MessageType.Result, Id: msg.Id, Success: true}); err != nil {
+						return
+					}
+				case ha.MessageType.Ping:
+					s.mu.Lock()
+					s.pingsReceived++
+					dropIt := s.DropOnPing
+					s.mu.Unlock()
+					if dropIt {
+						conn.Close()
+						return
+					}
+					if err := conn.WriteJSON(ha.HassMessage{Type: ha.MessageType.Pong, Id: msg.Id}); err != nil {
+						return
+					}
 				}
-				conn.WriteJSON(ha.HassMessage{Type: ha.MessageType.Pong, Id: msg.Id})
 			}
 		case eventData := <-s.eventQueue:
 			if err := conn.WriteMessage(websocket.TextMessage, eventData); err != nil {
