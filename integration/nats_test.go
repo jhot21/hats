@@ -8,6 +8,7 @@ import (
 
 	internalnats "codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/integration/haserver"
+	"github.com/nats-io/nats.go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,12 +34,12 @@ func TestPublishRequestRetryExhausted(t *testing.T) {
 	_ = setupSubscriber(t, server)
 
 	err := internalnats.PublishRequest("test.subject.nobody", []byte("hello"), 100*time.Millisecond, 3)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "request retries exceeded")
 }
 
 // TestPublishRequestBackoffTiming verifies that linear backoff is applied between retries.
-// 3 retries × 100ms timeout + (1+2)×100ms sleep = at least 300ms total sleep.
+// 3 retries × 50ms timeout + (1+2)×100ms sleep = at least 450ms total; threshold is 300ms.
 func TestPublishRequestBackoffTiming(t *testing.T) {
 	server := haserver.New("test-token")
 	t.Cleanup(server.Close)
@@ -59,12 +60,22 @@ func TestPublishRequestSucceedsOnRetry(t *testing.T) {
 	t.Cleanup(server.Close)
 	nc := setupSubscriber(t, server)
 
-	// Start listener 200ms after PublishRequest begins.
+	// Subscribe before launching the goroutine to avoid calling require from a non-test goroutine.
+	// Unsubscribe immediately so the subject has no listener yet, then re-subscribe after 200ms.
+	sub, err := nc.Subscribe("test.subject.late", func(msg *nats.Msg) {
+		msg.Respond([]byte("got it"))
+	})
+	require.NoError(t, err)
+	sub.Unsubscribe()
+
+	// Re-register the listener after a 200ms delay.
 	go func() {
 		time.Sleep(200 * time.Millisecond)
-		listenAndReply(t, nc, "test.subject.late")
+		nc.Subscribe("test.subject.late", func(msg *nats.Msg) { //nolint:errcheck
+			msg.Respond([]byte("got it"))
+		})
 	}()
 
-	err := internalnats.PublishRequest("test.subject.late", []byte("hello"), 100*time.Millisecond, 5)
+	err = internalnats.PublishRequest("test.subject.late", []byte("hello"), 100*time.Millisecond, 5)
 	require.NoError(t, err)
 }
