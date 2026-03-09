@@ -32,6 +32,8 @@ const (
 	pingBaseId           = 9000
 )
 
+// PingInterval is the interval between WebSocket ping messages sent to Home Assistant.
+// It is a var (not a const) to allow integration tests to reduce it for faster keepalive testing.
 var PingInterval = 30 * time.Second
 
 func CloseSubscription() error {
