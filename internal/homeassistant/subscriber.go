@@ -29,9 +29,10 @@ const (
 	zwaveEventId         = 1004
 	timerFinishedEventId = 1005
 	defaultTimeout       = 250 * time.Millisecond
-	pingInterval         = 30 * time.Second
 	pingBaseId           = 9000
 )
+
+var PingInterval = 30 * time.Second
 
 func CloseSubscription() error {
 	if haWebsocketConn != nil {
@@ -108,7 +109,7 @@ func handleMessages() {
 			}
 		}()
 
-		pingTicker := time.NewTicker(pingInterval)
+		pingTicker := time.NewTicker(PingInterval)
 		defer pingTicker.Stop()
 		pingId := pingBaseId
 
