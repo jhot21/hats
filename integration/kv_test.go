@@ -34,7 +34,7 @@ func TestKVStateCache(t *testing.T) {
 func TestKVRoundTrip(t *testing.T) {
 	server := haserver.New("test-token")
 	t.Cleanup(server.Close)
-	_ = setupSubscriber(t, server)
+	_ = setupSubscriber(t, server) // initializes KvConnect(); nc not needed for this test
 
 	key := "test.kv.roundtrip"
 	value := []byte(`{"hello":"world"}`)
