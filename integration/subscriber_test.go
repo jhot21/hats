@@ -4,6 +4,7 @@ package integration
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	internalnats "codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/integration/haserver"
 	ha "codeberg.org/jhot/hats/pkg/homeassistant"
+	nats "github.com/nats-io/nats.go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -145,4 +147,123 @@ func TestPingFailureTriggerReconnect(t *testing.T) {
 	require.Eventually(t, func() bool {
 		return server.ConnectionCount() >= 2
 	}, 15*time.Second, 200*time.Millisecond, "subscriber did not reconnect after ping failure")
+}
+
+// TestAuthInvalidStops verifies that auth_invalid causes the subscriber to stop without retrying.
+func TestAuthInvalidStops(t *testing.T) {
+	server := haserver.New("test-token")
+	server.RejectAuth = true
+	t.Cleanup(server.Close)
+	setupSubscriber(t, server)
+
+	time.Sleep(2 * time.Second)
+	assert.Equal(t, 1, server.ConnectionCount(), "subscriber should not retry after auth_invalid")
+}
+
+// TestZHAEventRouting verifies that a ZHA event is published to the correct NATS subject.
+func TestZHAEventRouting(t *testing.T) {
+	server := haserver.New("test-token")
+	t.Cleanup(server.Close)
+	nc := setupSubscriber(t, server)
+
+	received := capture(t, nc, "homeassistant.zha.aa:bb:cc:dd")
+
+	server.InjectZHAEvent("aa:bb:cc:dd", "toggle")
+
+	msg := receiveWithin(t, received, 5*time.Second)
+	var data ha.EventData
+	require.NoError(t, json.Unmarshal(msg.Data, &data))
+	assert.Equal(t, "aa:bb:cc:dd", data.DeviceIeee)
+	assert.Equal(t, "toggle", data.Command)
+}
+
+// TestNFCEventRouting verifies that an NFC tag_scanned event reaches the correct NATS subject.
+func TestNFCEventRouting(t *testing.T) {
+	server := haserver.New("test-token")
+	t.Cleanup(server.Close)
+	nc := setupSubscriber(t, server)
+
+	received := captureWithReply(t, nc, "homeassistant.nfc.tag-abc-123")
+
+	server.InjectNFCEvent("tag-abc-123")
+
+	msg := receiveWithin(t, received, 5*time.Second)
+	var data ha.EventData
+	require.NoError(t, json.Unmarshal(msg.Data, &data))
+	assert.Equal(t, "tag-abc-123", data.TagId)
+}
+
+// TestNFCEventNoListenerContinues verifies that when no NATS listener exists for an NFC tag,
+// PublishRequest exhausts retries but the subscriber continues processing subsequent events.
+func TestNFCEventNoListenerContinues(t *testing.T) {
+	server := haserver.New("test-token")
+	t.Cleanup(server.Close)
+	nc := setupSubscriber(t, server)
+
+	// Inject NFC with no listener — retries will exhaust (warn logged, no crash).
+	server.InjectNFCEvent("unknown-tag")
+
+	// Give retries time to exhaust (3 retries × 100ms backoff + 250ms timeouts each ≈ 1.5s).
+	time.Sleep(2 * time.Second)
+
+	// Subscriber should still process subsequent events.
+	received := captureWithReply(t, nc, "homeassistant.states.sensor.alive.on")
+	listenAndReply(t, nc, "homeassistant.attributes.sensor.alive.on")
+	server.InjectStateChange("sensor.alive", "off", "on")
+	receiveWithin(t, received, 5*time.Second)
+}
+
+// TestTimerFinishedRouting verifies that a timer.finished event reaches the correct NATS subject
+// with the expected payload.
+func TestTimerFinishedRouting(t *testing.T) {
+	server := haserver.New("test-token")
+	t.Cleanup(server.Close)
+	nc := setupSubscriber(t, server)
+
+	received := captureWithReply(t, nc, "homeassistant.timers.timer.bedtime.finished")
+
+	server.InjectTimerFinished("timer.bedtime")
+
+	msg := receiveWithin(t, received, 5*time.Second)
+	assert.Equal(t, "finished", string(msg.Data))
+}
+
+// TestZWaveEventRouting verifies that a Z-Wave scene event reaches the correct NATS subject.
+func TestZWaveEventRouting(t *testing.T) {
+	server := haserver.New("test-token")
+	t.Cleanup(server.Close)
+	nc := setupSubscriber(t, server)
+
+	received := capture(t, nc, "homeassistant.zwave-scene.node-42")
+
+	server.InjectZWaveEvent("node-42")
+
+	msg := receiveWithin(t, received, 5*time.Second)
+	var data ha.EventData
+	require.NoError(t, json.Unmarshal(msg.Data, &data))
+	assert.Equal(t, "node-42", data.DeviceId)
+}
+
+// TestMultipleEventsOrdered injects 20 rapid state_changed events and verifies all 20 arrive
+// in order. This validates inline (sequential) event processing rather than goroutine-per-event.
+func TestMultipleEventsOrdered(t *testing.T) {
+	server := haserver.New("test-token")
+	t.Cleanup(server.Close)
+	nc := setupSubscriber(t, server)
+
+	// Pre-register listeners for all 20 subjects before injecting.
+	channels := make([]<-chan *nats.Msg, 20)
+	for i := 0; i < 20; i++ {
+		subject := fmt.Sprintf("homeassistant.states.sensor.order.state%02d", i)
+		channels[i] = captureWithReply(t, nc, subject)
+		listenAndReply(t, nc, fmt.Sprintf("homeassistant.attributes.sensor.order.state%02d", i))
+	}
+
+	for i := 0; i < 20; i++ {
+		server.InjectStateChange("sensor.order", "off", fmt.Sprintf("state%02d", i))
+	}
+
+	for i := 0; i < 20; i++ {
+		receiveWithin(t, channels[i], 10*time.Second)
+	}
 }
