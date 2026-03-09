@@ -29,26 +29,48 @@ type MockHAServer struct {
 	eventQueue    chan []byte
 }
 
-// New creates and starts a MockHAServer. Call Close() when done.
+// New creates and starts a MockHAServer backed by httptest.Server. Call Close() when done.
 func New(token string) *MockHAServer {
-	s := &MockHAServer{
-		Token:      token,
-		eventQueue: make(chan []byte, 64),
-	}
+	s := newBare(token)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/websocket", s.handle)
+	s.RegisterRoutes(mux)
 	s.Server = httptest.NewServer(mux)
 	return s
 }
 
+// NewBare creates a MockHAServer without starting any HTTP server.
+// Call RegisterRoutes to attach the WebSocket handler to an existing mux,
+// then start your own http.Server. Addr() returns "" and Close() is a no-op.
+func NewBare(token string) *MockHAServer {
+	return newBare(token)
+}
+
+func newBare(token string) *MockHAServer {
+	return &MockHAServer{
+		Token:      token,
+		eventQueue: make(chan []byte, 64),
+	}
+}
+
+// RegisterRoutes registers the /api/websocket handler on mux.
+func (s *MockHAServer) RegisterRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("/api/websocket", s.handle)
+}
+
 // Addr returns "127.0.0.1:PORT" (no scheme) for use in HatsConfig.HomeAssistantHost/Port.
+// Returns "" for bare servers created with NewBare.
 func (s *MockHAServer) Addr() string {
+	if s.Server == nil {
+		return ""
+	}
 	return s.Server.Listener.Addr().String()
 }
 
-// Close shuts down the underlying httptest.Server.
+// Close shuts down the underlying httptest.Server. No-op for bare servers.
 func (s *MockHAServer) Close() {
-	s.Server.Close()
+	if s.Server != nil {
+		s.Server.Close()
+	}
 }
 
 // DropConnection forcibly closes the active WebSocket connection.

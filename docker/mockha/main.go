@@ -26,10 +26,15 @@ func main() {
 		log.Fatalf("invalid MOCK_HA_PORT: %v", err)
 	}
 
-	server := haserver.New(token)
+	// NewBare creates the server without starting httptest.Server so we can
+	// host everything — WebSocket and admin endpoints — on a single known port.
+	server := haserver.NewBare(token)
+
+	mux := http.NewServeMux()
+	server.RegisterRoutes(mux) // registers /api/websocket
 
 	// Admin HTTP endpoints for event injection (used by E2E test scripts)
-	http.HandleFunc("/inject/state", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/inject/state", func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			EntityId string `json:"entity_id"`
 			OldState string `json:"old_state"`
@@ -42,7 +47,7 @@ func main() {
 		server.InjectStateChange(req.EntityId, req.OldState, req.NewState)
 		w.WriteHeader(204)
 	})
-	http.HandleFunc("/inject/zha", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/inject/zha", func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			DeviceIeee string `json:"device_ieee"`
 			Command    string `json:"command"`
@@ -51,19 +56,25 @@ func main() {
 		server.InjectZHAEvent(req.DeviceIeee, req.Command)
 		w.WriteHeader(204)
 	})
-	http.HandleFunc("/inject/nfc", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/inject/nfc", func(w http.ResponseWriter, r *http.Request) {
 		var req struct{ TagId string `json:"tag_id"` }
 		json.NewDecoder(r.Body).Decode(&req)
 		server.InjectNFCEvent(req.TagId)
 		w.WriteHeader(204)
 	})
-	http.HandleFunc("/inject/timer", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/inject/timer", func(w http.ResponseWriter, r *http.Request) {
 		var req struct{ EntityId string `json:"entity_id"` }
 		json.NewDecoder(r.Body).Decode(&req)
 		server.InjectTimerFinished(req.EntityId)
 		w.WriteHeader(204)
 	})
-	http.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/inject/zwave", func(w http.ResponseWriter, r *http.Request) {
+		var req struct{ DeviceId string `json:"device_id"` }
+		json.NewDecoder(r.Body).Decode(&req)
+		server.InjectZWaveEvent(req.DeviceId)
+		w.WriteHeader(204)
+	})
+	mux.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]int{
 			"connections": server.ConnectionCount(),
@@ -71,8 +82,9 @@ func main() {
 		})
 	})
 
-	slog.Info("mockha listening", "port", port, "ha_port", server.Addr())
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil); err != nil {
+	addr := fmt.Sprintf(":%d", port)
+	slog.Info("mockha listening", "addr", addr)
+	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Fatal(err)
 	}
 }

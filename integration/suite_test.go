@@ -63,6 +63,11 @@ func TestMain(m *testing.M) {
 // setupSubscriber wires the internal HA subscriber and NATS client to a mock HA server.
 // It returns a plain *nats.Conn for test-side subscriptions and message assertions.
 // Cleanup (CloseSubscription, NATS close) is registered automatically.
+//
+// NOTE: internal/homeassistant and internal/nats use package-level vars representing
+// exactly one active connection. Tests must NOT call t.Parallel() — they must run
+// sequentially so that each test's t.Cleanup fully tears down before the next test
+// calls setupSubscriber.
 func setupSubscriber(t *testing.T, ha *haserver.MockHAServer) *nats.Conn {
 	t.Helper()
 

@@ -20,7 +20,6 @@ var (
 	logger          *slog.Logger
 	haWebsocketConn *websocket.Conn
 	connMu          sync.Mutex // protects haWebsocketConn
-	done            chan struct{}
 	quit            chan struct{}
 	subscriberWg    sync.WaitGroup
 )
@@ -74,7 +73,6 @@ func Subscribe(parentLogger *slog.Logger, parentConfig *config.HatsConfig) error
 	}
 
 	quit = make(chan struct{})
-	done = make(chan struct{})
 	handleMessages()
 	return nil
 }
@@ -94,7 +92,6 @@ func reconnect() {
 			logger.Error("Failed to reconnect to Home Assistant", "attempt", attempts, "error", err)
 			continue
 		}
-		done = make(chan struct{})
 		handleMessages()
 		return
 	}
@@ -102,13 +99,13 @@ func reconnect() {
 }
 
 func handleMessages() {
-	ch := done
+	connMu.Lock()
 	conn := haWebsocketConn
+	connMu.Unlock()
 	q := quit
 	subscriberWg.Add(1)
 	go func() {
 		defer subscriberWg.Done()
-		defer close(ch)
 
 		type readResult struct {
 			data []byte
