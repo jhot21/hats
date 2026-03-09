@@ -31,3 +31,41 @@ tasks:
     status:
       - cat ~/.docker/config.json | jq -e '.auths."codeberg.org".auth'
 
+  test:
+    desc: Run unit tests
+    cmds:
+      - go test ./...
+
+  test:all:
+    desc: Run unit tests and integration tests with race detector
+    cmds:
+      - task: test
+      - task: test:integration:race
+
+  test:integration:
+    desc: Run in-process integration tests (no Docker required)
+    cmds:
+      - go test -tags integration -timeout 120s -v ./integration/...
+
+  test:integration:race:
+    desc: Run integration tests with race detector
+    cmds:
+      - go test -tags integration -race -timeout 180s -v ./integration/...
+
+  test:e2e:up:
+    desc: Start Docker Compose E2E environment
+    dir: docker
+    cmds:
+      - docker compose -f compose.test.yml up --build -d
+
+  test:e2e:down:
+    desc: Tear down Docker Compose E2E environment
+    dir: docker
+    cmds:
+      - docker compose -f compose.test.yml down -v
+
+  test:e2e:logs:
+    desc: Follow logs from E2E environment
+    dir: docker
+    cmds:
+      - docker compose -f compose.test.yml logs -f
