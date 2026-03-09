@@ -41,6 +41,7 @@ tasks:
     cmds:
       - task: test
       - task: test:integration:race
+      - task: test:e2e
 
   test:integration:
     desc: Run in-process integration tests (no Docker required)
@@ -52,20 +53,8 @@ tasks:
     cmds:
       - go test -tags integration -race -timeout 180s -v ./integration/...
 
-  test:e2e:up:
-    desc: Start Docker Compose E2E environment
+  test:e2e:
+    desc: Build stack, run E2E assertions, tear down (requires Docker)
     dir: docker
     cmds:
-      - docker compose -f compose.test.yml up --build -d
-
-  test:e2e:down:
-    desc: Tear down Docker Compose E2E environment
-    dir: docker
-    cmds:
-      - docker compose -f compose.test.yml down -v
-
-  test:e2e:logs:
-    desc: Follow logs from E2E environment
-    dir: docker
-    cmds:
-      - docker compose -f compose.test.yml logs -f
+      - bash e2e_test.sh

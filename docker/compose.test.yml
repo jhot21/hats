@@ -14,6 +14,8 @@ services:
       - MOCK_HA_TOKEN=test-token
       - MOCK_HA_PORT=8123
     networks: [test]
+    ports:
+      - "8123:8123"
 
   hats:
     build:
