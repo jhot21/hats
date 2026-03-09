@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"log/slog"
@@ -18,8 +19,10 @@ var (
 	cfg             *config.HatsConfig
 	logger          *slog.Logger
 	haWebsocketConn *websocket.Conn
+	connMu          sync.Mutex // protects haWebsocketConn
 	done            chan struct{}
 	quit            chan struct{}
+	subscriberWg    sync.WaitGroup
 )
 
 const (
@@ -37,11 +40,14 @@ const (
 var PingInterval = 30 * time.Second
 
 func CloseSubscription() error {
-	if haWebsocketConn != nil {
+	connMu.Lock()
+	conn := haWebsocketConn
+	connMu.Unlock()
+	if conn != nil {
 		logger.Debug("Closing Home Assistant subscription")
-		haWebsocketConn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 		close(quit)
-		return haWebsocketConn.Close()
+		conn.Close()        // safe to call concurrently per gorilla docs; triggers read error in handler
+		subscriberWg.Wait() // wait for handleMessages goroutine to fully exit before returning
 	}
 	return nil
 }
@@ -49,11 +55,13 @@ func CloseSubscription() error {
 func connect() error {
 	url := cfg.GetHomeAssistantWebsocketUrl()
 	logger.Debug("Dialing Home Assistant websocket API", "url", url)
-	var err error
-	haWebsocketConn, _, err = websocket.DefaultDialer.Dial(url, nil)
+	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
 		return fmt.Errorf("error dialing Home Assistant websocket: %w", err)
 	}
+	connMu.Lock()
+	haWebsocketConn = conn
+	connMu.Unlock()
 	return nil
 }
 
@@ -72,7 +80,9 @@ func Subscribe(parentLogger *slog.Logger, parentConfig *config.HatsConfig) error
 }
 
 func reconnect() {
+	connMu.Lock()
 	haWebsocketConn.Close()
+	connMu.Unlock()
 	for attempts := 1; attempts <= 10; attempts++ {
 		select {
 		case <-quit:
@@ -95,7 +105,9 @@ func handleMessages() {
 	ch := done
 	conn := haWebsocketConn
 	q := quit
+	subscriberWg.Add(1)
 	go func() {
+		defer subscriberWg.Done()
 		defer close(ch)
 
 		type readResult struct {
