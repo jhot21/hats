@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	internalha "codeberg.org/jhot/hats/internal/homeassistant"
 	internalnats "codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/integration/haserver"
 	ha "codeberg.org/jhot/hats/pkg/homeassistant"
@@ -89,4 +90,60 @@ func TestStateUnchangedPublishesAttributesOnly(t *testing.T) {
 	case <-time.After(100 * time.Millisecond):
 		// correct: no message
 	}
+}
+
+// TestReconnectAfterConnectionDrop verifies that after the HA server drops the WebSocket
+// connection, the subscriber reconnects, re-authenticates, and events flow again.
+// NOTE: reconnect() sleeps 5s before the first retry; allow 15s total.
+func TestReconnectAfterConnectionDrop(t *testing.T) {
+	server := haserver.New("test-token")
+	t.Cleanup(server.Close)
+	nc := setupSubscriber(t, server)
+
+	// First connection is established by setupSubscriber.
+	server.DropConnection()
+
+	// Wait for reconnect (second connection).
+	require.Eventually(t, func() bool {
+		return server.ConnectionCount() >= 2
+	}, 15*time.Second, 200*time.Millisecond, "subscriber did not reconnect after connection drop")
+
+	// Events should flow on the new connection.
+	received := captureWithReply(t, nc, "homeassistant.states.sensor.reconnect.on")
+	listenAndReply(t, nc, "homeassistant.attributes.sensor.reconnect.on")
+	server.InjectStateChange("sensor.reconnect", "off", "on")
+	receiveWithin(t, received, 5*time.Second)
+}
+
+// TestPingKeepalive verifies that the subscriber sends pings at PingInterval and the
+// connection stays alive.
+func TestPingKeepalive(t *testing.T) {
+	internalha.PingInterval = 500 * time.Millisecond
+	t.Cleanup(func() { internalha.PingInterval = 30 * time.Second })
+
+	server := haserver.New("test-token")
+	t.Cleanup(server.Close)
+	setupSubscriber(t, server)
+
+	require.Eventually(t, func() bool {
+		return server.PingsReceived() >= 2
+	}, 5*time.Second, 100*time.Millisecond, "expected at least 2 pings")
+
+	assert.Equal(t, 1, server.ConnectionCount(), "connection should remain stable during keepalive")
+}
+
+// TestPingFailureTriggerReconnect verifies that when the server closes the connection on a
+// ping, the subscriber detects the failure and reconnects.
+func TestPingFailureTriggerReconnect(t *testing.T) {
+	internalha.PingInterval = 500 * time.Millisecond
+	t.Cleanup(func() { internalha.PingInterval = 30 * time.Second })
+
+	server := haserver.New("test-token")
+	server.DropOnPing = true
+	t.Cleanup(server.Close)
+	setupSubscriber(t, server)
+
+	require.Eventually(t, func() bool {
+		return server.ConnectionCount() >= 2
+	}, 15*time.Second, 200*time.Millisecond, "subscriber did not reconnect after ping failure")
 }
