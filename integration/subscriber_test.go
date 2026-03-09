@@ -156,8 +156,9 @@ func TestAuthInvalidStops(t *testing.T) {
 	t.Cleanup(server.Close)
 	setupSubscriber(t, server)
 
-	time.Sleep(2 * time.Second)
-	assert.Equal(t, 1, server.ConnectionCount(), "subscriber should not retry after auth_invalid")
+	assert.Never(t, func() bool {
+		return server.ConnectionCount() > 1
+	}, 2*time.Second, 100*time.Millisecond, "subscriber should not retry after auth_invalid")
 }
 
 // TestZHAEventRouting verifies that a ZHA event is published to the correct NATS subject.
