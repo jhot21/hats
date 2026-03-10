@@ -7,11 +7,11 @@ tasks:
   colima-start:
     desc: Start two colima instances, one for arm64 and another for amd64
     cmds:
-      - colima start --profile amd --arch amd --cpu 4 --memory 8 --disk 100 --runtime docker
-      - colima start --profile arm --arch arm --cpu 4 --memory 8 --disk 100 --runtime docker
+      - colima start --profile amd --arch amd --cpu 4 --memory 8 --disk 20 --runtime docker
+      - colima start --profile arm --arch arm --cpu 4 --memory 8 --disk 20 --runtime docker
     status:
-      - docker context ls | grep 'colima-amd'
-      - docker context ls | grep 'colima-arm'
+      - colima list | awk '$1=="amd" && $2=="Running"'| grep .
+      - colima list | awk '$1=="arm" && $2=="Running"'| grep .
   colima-stop:
     desc: Stop the colima instances
     cmds:
