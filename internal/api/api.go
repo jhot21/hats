@@ -84,7 +84,7 @@ func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme [
 		versionString := r.URL.Query().Get("version")
 
 		length, err := strconv.ParseInt(lengthString, 10, 64)
-		if err != nil {
+		if err != nil || length < 1 {
 			length = 40
 		}
 
