@@ -3,19 +3,21 @@ package nats
 import (
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"codeberg.org/jhot/hats/pkg/homeassistant"
 )
 
 var (
-	haClient *homeassistant.RestClient
+	haClient     *homeassistant.RestClient
+	haClientOnce sync.Once
 )
 
 func initHomeAssistantClient() {
-	if haClient == nil {
+	haClientOnce.Do(func() {
 		haClient = homeassistant.NewRestClient(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
-	}
+	})
 }
 
 type HatsTimer struct {

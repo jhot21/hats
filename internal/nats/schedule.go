@@ -14,7 +14,9 @@ var (
 	schedules     = map[string]*gocron.Job{}
 
 	fireSchedule = func(name string) {
-		PublishRequest("schedules."+name, []byte("fired"), 500*time.Millisecond, 3)
+		if err := PublishRequest("schedules."+name, []byte("fired"), 500*time.Millisecond, 3); err != nil {
+			logger.Warn("Failed to fire schedule", "schedule", name, "error", err)
+		}
 	}
 )
 
@@ -23,26 +25,14 @@ func ScheduleStoreConnect() error {
 		return errors.New("jetstream must be connected first")
 	}
 
-	logger.Debug("Looking for schedule KV store")
-	listener := client.JS.KeyValueStoreNames(ctx)
-	found := false
-	for name := range listener.Name() {
-		if name == "KV_hats_schedules" {
-			found = true
-		}
-	}
-
 	var err error
-	if found {
-		logger.Debug("Connecting to Schedules KV store")
-		scheduleStore, err = client.JS.KeyValue(ctx, "hats_schedules")
-	} else {
+	scheduleStore, err = client.JS.KeyValue(ctx, "hats_schedules")
+	if errors.Is(err, jetstream.ErrBucketNotFound) {
 		logger.Debug("Creating Schedules KV store")
 		scheduleStore, err = client.JS.CreateKeyValue(ctx, jetstream.KeyValueConfig{
 			Bucket: "hats_schedules",
 		})
 	}
-
 	return err
 }
 

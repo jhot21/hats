@@ -46,27 +46,16 @@ func KvConnect() error {
 		return errors.New("jetstream must be connected first")
 	}
 
-	logger.Debug("Looking for KV store")
-	listener := client.JS.KeyValueStoreNames(ctx)
-	found := false
-	for name := range listener.Name() {
-		if name == "KV_hats" {
-			found = true
-		}
-	}
-
 	var err error
-	if found {
-		logger.Debug("Connecting to KV store")
-		kv, err = client.JS.KeyValue(ctx, "hats")
-	} else {
+	logger.Debug("Connecting to KV store")
+	kv, err = client.JS.KeyValue(ctx, "hats")
+	if errors.Is(err, jetstream.ErrBucketNotFound) {
 		logger.Debug("Creating KV store")
 		kv, err = client.JS.CreateKeyValue(ctx, jetstream.KeyValueConfig{
 			Bucket: "hats",
 			TTL:    2 * time.Hour,
 		})
 	}
-
 	return err
 }
 
@@ -78,21 +67,20 @@ func PublishString(subject, message string) {
 	Publish(subject, []byte(message))
 }
 
-func PublishRequest(subject string, message []byte, timeout time.Duration, retries int) {
-	attempts := 0
-	for {
-		attempts += 1
-		if attempts > retries {
-			logger.Warn("Request retries exceeded", "subject", subject)
-			return
-		}
+func PublishRequest(subject string, message []byte, timeout time.Duration, retries int) error {
+	for attempt := 1; attempt <= retries; attempt++ {
 		resp, err := client.Conn.Request(subject, message, timeout)
-
 		if err == nil {
-			logger.Debug("Request response received", "response", string(resp.Data), "attempts", attempts, "subject", subject)
-			return
+			logger.Debug("Request response received", "response", string(resp.Data), "attempts", attempt, "subject", subject)
+			return nil
+		}
+		logger.Warn("Request failed", "subject", subject, "attempt", attempt, "error", err)
+		if attempt < retries {
+			time.Sleep(time.Duration(attempt) * 100 * time.Millisecond)
 		}
 	}
+	logger.Warn("Request retries exceeded", "subject", subject)
+	return errors.New("request retries exceeded")
 }
 
 func GetKeyValue(key string) ([]byte, error) {
