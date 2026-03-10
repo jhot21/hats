@@ -41,7 +41,7 @@ func Send(data *ntfyPkg.Message) error {
 	return err
 }
 
-func Delete(data ntfyPkg.Message) error {
+func Delete(data *ntfyPkg.Message) error {
 	if data.ID == "" || data.Topic == "" {
 		return fmt.Errorf("ntfy: id and topic are required to delete a message")
 	}
@@ -52,7 +52,7 @@ func Delete(data ntfyPkg.Message) error {
 	return err
 }
 
-func Clear(data ntfyPkg.Message) error {
+func Clear(data *ntfyPkg.Message) error {
 	if data.ID == "" || data.Topic == "" {
 		return fmt.Errorf("ntfy: id and topic are required to clear a message")
 	}

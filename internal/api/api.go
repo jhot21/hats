@@ -381,7 +381,7 @@ func postNtfyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := ntfy.Send(data); err != nil {
-		http.Error(w, "Unable to send message", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -394,7 +394,7 @@ func deleteNtfyHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to parse message data", http.StatusNotAcceptable)
 		return
 	}
-	if err := ntfy.Delete(*data); err != nil {
+	if err := ntfy.Delete(data); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -407,7 +407,7 @@ func clearNtfyHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to parse message data", http.StatusNotAcceptable)
 		return
 	}
-	if err := ntfy.Clear(*data); err != nil {
+	if err := ntfy.Clear(data); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

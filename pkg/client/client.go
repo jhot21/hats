@@ -207,7 +207,7 @@ func (c *HatsClient) SendNtfyMessage(data *ntfy.Message) error {
 	return err
 }
 
-func (c *HatsClient) DeleteNtfyMessage(data ntfy.Message) error {
+func (c *HatsClient) DeleteNtfyMessage(data *ntfy.Message) error {
 	resp, err := c.client.R().SetBody(data).Delete("api/ntfy")
 	if err == nil && !resp.IsSuccess() {
 		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
@@ -215,7 +215,7 @@ func (c *HatsClient) DeleteNtfyMessage(data ntfy.Message) error {
 	return err
 }
 
-func (c *HatsClient) ClearNtfyMessage(data ntfy.Message) error {
+func (c *HatsClient) ClearNtfyMessage(data *ntfy.Message) error {
 	resp, err := c.client.R().SetBody(data).Put("api/ntfy/clear")
 	if err == nil && !resp.IsSuccess() {
 		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
