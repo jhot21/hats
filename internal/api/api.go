@@ -10,10 +10,13 @@ import (
 
 	"log/slog"
 
+	"encoding/json"
+
 	"codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/internal/ntfy"
 	"codeberg.org/jhot/hats/pkg/config"
 	"codeberg.org/jhot/hats/pkg/homeassistant"
+	pkgnats "codeberg.org/jhot/hats/pkg/nats"
 	ntfyPkg "codeberg.org/jhot/hats/pkg/ntfy"
 	"codeberg.org/jhot/hats/pkg/passgen"
 	"github.com/go-chi/chi/middleware"
@@ -118,7 +121,7 @@ func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme [
 
 		r.Post("/ntfy", postNtfyHandler)
 
-		r.Post("/command/{commandName}", postCommandHandler)
+		r.Handle("/command/{commandName}", http.HandlerFunc(postCommandHandler))
 	})
 
 	server = http.Server{
@@ -376,6 +379,15 @@ func postNtfyHandler(w http.ResponseWriter, r *http.Request) {
 
 // Command
 
+// commandPublish is a swappable publish function used for testing.
+var commandPublish = func(subject string, data []byte) { nats.Publish(subject, data) }
+
+var strippedHeaders = map[string]struct{}{
+	http.CanonicalHeaderKey("Authorization"):       {},
+	http.CanonicalHeaderKey("Cookie"):              {},
+	http.CanonicalHeaderKey("Proxy-Authorization"): {},
+}
+
 func postCommandHandler(w http.ResponseWriter, r *http.Request) {
 	commandName := chi.URLParam(r, "commandName")
 
@@ -383,6 +395,34 @@ func postCommandHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error("Error reading request body", "error", err, "url", r.URL.String())
 	}
-	nats.Publish(fmt.Sprintf("command.%s", commandName), body)
+
+	headers := make(map[string]string, len(r.Header))
+	for k, v := range r.Header {
+		if _, skip := strippedHeaders[k]; skip {
+			continue
+		}
+		headers[k] = v[0]
+	}
+
+	query := make(map[string]string, len(r.URL.Query()))
+	for k, v := range r.URL.Query() {
+		query[k] = v[0]
+	}
+
+	payload := pkgnats.CommandPayload{
+		Method:  r.Method,
+		Headers: headers,
+		Query:   query,
+		Body:    body,
+	}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		logger.Error("Error marshaling command payload", "error", err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	commandPublish(fmt.Sprintf("command.%s", commandName), data)
 	render.PlainText(w, r, "OK")
 }
