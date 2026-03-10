@@ -47,17 +47,17 @@ Fires whenever a Home Assistant entity changes state. The `{state}` segment in t
 }
 ```
 
-**Subscribe with:** `AddStateSub` (receives `NewState` only) or `AddEventSub` (receives both old and new state).
+**Subscribe with:** `SubscribeState` (receives `NewState` only) or `SubscribeAttributes` (receives both old and new state).
 
 ```go
 // Most common — just the new state
-natsClient.AddStateSub(nats.StateTopicType, "binary_sensor.front_door", func(state ha.StateData) error {
+natsClient.SubscribeState("binary_sensor.front_door", func(state ha.StateData) error {
     if state.State == "on" { /* door opened */ }
     return nil
 })
 
 // When you need to compare old vs new
-natsClient.AddEventSub(nats.StateTopicType, "binary_sensor.front_door", func(event ha.EventData) error {
+natsClient.SubscribeAttributes("binary_sensor.front_door", func(event ha.EventData) error {
     logger.Info("State changed", "from", event.OldState.State, "to", event.NewState.State)
     return nil
 })
@@ -81,10 +81,10 @@ Fires when an entity's attributes change but the state string stays the same. Co
 
 **Payload:** JSON-encoded `EventData` (same structure as state changes)
 
-**Subscribe with:** `AddEventSub` with `AttributeTopicType`.
+**Subscribe with:** `SubscribeAttributes`.
 
 ```go
-natsClient.AddEventSub(nats.AttributeTopicType, "cover.office_blinds", func(event ha.EventData) error {
+natsClient.SubscribeAttributes("cover.office_blinds", func(event ha.EventData) error {
     pos := event.NewState.Attributes["current_position"]
     logger.Info("Blind position", "position", pos)
     return nil
@@ -118,10 +118,10 @@ Fires when a ZHA (Zigbee Home Automation) device sends an event — button press
 }
 ```
 
-**Subscribe with:** `AddEventSub` with `ZhaTopicType`.
+**Subscribe with:** `SubscribeZHA`.
 
 ```go
-natsClient.AddEventSub(nats.ZhaTopicType, "00:11:22:33:44:55:66:77", func(event ha.EventData) error {
+natsClient.SubscribeZHA("00:11:22:33:44:55:66:77", func(event ha.EventData) error {
     switch event.Command {
     case "toggle":
         return hatsClient.CallService("light.bedroom", ha.Services.Toggle)
@@ -169,10 +169,10 @@ Fires when a Z-Wave JS device sends a scene/value notification — typically but
 
 See the [Home Assistant Z-Wave JS integration docs](https://www.home-assistant.io/integrations/zwave_js/#scene-events-value-notification) for field descriptions.
 
-**Subscribe with:** `AddEventSub` with `ZwaveSceneTopicType`.
+**Subscribe with:** `SubscribeZwaveScene`.
 
 ```go
-natsClient.AddEventSub(nats.ZwaveSceneTopicType, "my-zwave-device-id", func(event ha.EventData) error {
+natsClient.SubscribeZwaveScene("my-zwave-device-id", func(event ha.EventData) error {
     if event.PropertyKeyName == "001" && event.Value == "KeyPressed" {
         return hatsClient.CallService("light.hallway", ha.Services.Toggle)
     }
@@ -203,11 +203,10 @@ Fires when an NFC tag is scanned by a Home Assistant companion app. The `{tag_id
 }
 ```
 
-**Subscribe with:** `AddSub` (no payload needed) or `AddEventSub` (if you need the tag ID in the handler).
+**Subscribe with:** `SubscribeNFC`.
 
 ```go
-// Most NFC handlers just react to the scan, no data needed
-natsClient.AddSub(nats.NfcTopicType, "my-nfc-tag-id", func() error {
+natsClient.SubscribeNFC("my-nfc-tag-id", func(event ha.EventData) error {
     return hatsClient.CallService("lock.front_door", ha.Services.Unlock)
 })
 ```
@@ -229,10 +228,10 @@ Fires when a HATS timer expires. See [timers-and-schedules.md](timers-and-schedu
 
 **Payload:** `"finished"` (plain text)
 
-**Subscribe with:** `AddSub` with `TimerTopicType`.
+**Subscribe with:** `SubscribeTimer`.
 
 ```go
-natsClient.AddSub(nats.TimerTopicType, "motion_off", func() error {
+natsClient.SubscribeTimer("motion_off", func() error {
     return hatsClient.CallService("light.living_room", ha.Services.TurnOff)
 })
 ```
@@ -254,10 +253,10 @@ Fires when a HATS cron schedule triggers. See [timers-and-schedules.md](timers-a
 
 **Payload:** `"finished"` (plain text)
 
-**Subscribe with:** `AddSub` with `ScheduleTopicType`.
+**Subscribe with:** `SubscribeSchedule`.
 
 ```go
-natsClient.AddSub(nats.ScheduleTopicType, "hourly", func() error {
+natsClient.SubscribeSchedule("hourly", func() error {
     logger.Info("Hourly tick")
     return nil
 })
@@ -276,15 +275,18 @@ nats sub "schedules.>"
 
 **Subject:** `command.{name}`
 
-Fires when an HTTP POST is made to `/api/command/{name}` on the HATS API. The POST body is forwarded verbatim as the message payload. See [commands.md](commands.md) for details.
+Fires when an HTTP request (any method) is made to `/api/command/{name}` on the HATS API. The request is forwarded as a structured JSON payload. See [commands.md](commands.md) for details.
 
-**Payload:** raw bytes of the HTTP POST body (any format)
+**Payload:** JSON-encoded `CommandPayload` with HTTP method, headers, query params, and body.
 
-**Subscribe with:** `AddRawSub` with `CommandTopicType`.
+**Subscribe with:** `SubscribeCommand`.
 
 ```go
-natsClient.AddRawSub(nats.CommandTopicType, "bedtime", func(body []byte) error {
-    // body is whatever was POSTed to /api/command/bedtime
+natsClient.SubscribeCommand("bedtime", func(payload nats.CommandPayload) error {
+    // payload.Method — the HTTP method used (GET, POST, etc.)
+    // payload.BodyString() — body as string
+    // payload.BodyJSON(&v) — unmarshal body as JSON
+    // payload.BodyBytes() — raw body bytes
     return runBedtimeRoutine()
 })
 ```

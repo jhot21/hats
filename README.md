@@ -77,7 +77,7 @@ func main() {
     defer natsClient.Close()
 
     // React when the sun rises
-    natsClient.AddStateSub(nats.StateTopicType, "sun.sun", func(state homeassistant.StateData) error {
+    natsClient.SubscribeState("sun.sun", func(state homeassistant.StateData) error {
         if state.State == "above_horizon" {
             if motionOn, _ := hatsClient.GetStateBool("binary_sensor.living_room_motion"); !motionOn {
                 return hatsClient.CallService("light.living_room", homeassistant.Services.TurnOff)
@@ -105,7 +105,7 @@ See the [subscriber guide](docs/subscriber-guide.md) for a full walkthrough.
 | `homeassistant.nfc.{tag_id}` | NFC tag scanned | NFC tag data |
 | `homeassistant.timers.{name}.finished` | HATS timer expired | `"finished"` |
 | `schedules.{name}` | HATS cron schedule fired | `"finished"` |
-| `command.{name}` | HTTP POST to `/api/command/{name}` | Raw POST body bytes |
+| `command.{name}` | HTTP request (any method) to `/api/command/{name}` | JSON `CommandPayload` |
 
 See [docs/nats-topics.md](docs/nats-topics.md) for full payload shapes and NATS CLI examples.
 
@@ -129,7 +129,7 @@ See [docs/getting-started.md](docs/getting-started.md) for the full variable ref
 - Server-side countdown timers with NATS notifications on expiry
 - Cron-based schedules with second-level precision
 - HTTP → NATS command bridge for triggering subscriber logic from webhooks
-- Generic NATS subscriber helpers (`AddStateSub`, `AddEventSub`, `AddSub`, `AddRawSub`)
+- Domain-specific NATS subscriber helpers (`SubscribeState`, `SubscribeZHA`, `SubscribeCommand`, etc.)
 - Direct Home Assistant REST client with concurrent service calls and history API
 - Third-party clients: [ntfy](https://ntfy.sh), [Gokapi](https://github.com/Forceu/Gokapi), [qBittorrent](https://github.com/qbittorrent/qBittorrent), [Syncthing](https://github.com/syncthing/syncthing), [National Weather Service](https://www.weather.gov/), [Amcrest cameras](https://amcrest.com/), [Infisical](https://infisical.com/)
 

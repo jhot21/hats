@@ -29,10 +29,10 @@ status, err := hatsClient.GetTimer("motion_off")
 
 ### Subscribing to timer expiry
 
-Use `AddSub` with `TimerTopicType` — the topic carries no useful payload, just the fact that it fired:
+Use `SubscribeTimer` — the topic carries no useful payload, just the fact that it fired:
 
 ```go
-natsClient.AddSub(nats.TimerTopicType, "motion_off", func() error {
+natsClient.SubscribeTimer("motion_off", func() error {
     return hatsClient.CallService("light.living_room", homeassistant.Services.TurnOff)
 })
 ```
@@ -45,7 +45,7 @@ The most common timer use case: start a countdown when motion stops, turn off li
 
 ```go
 // When motion state changes
-natsClient.AddStateSub(nats.StateTopicType, "binary_sensor.living_room_motion",
+natsClient.SubscribeState("binary_sensor.living_room_motion",
     func(state homeassistant.StateData) error {
         if state.State == "on" {
             // Motion detected — cancel any pending off-timer
@@ -58,7 +58,7 @@ natsClient.AddStateSub(nats.StateTopicType, "binary_sensor.living_room_motion",
     })
 
 // When timer expires — turn off lights
-natsClient.AddSub(nats.TimerTopicType, "living_room_off", func() error {
+natsClient.SubscribeTimer("living_room_off", func() error {
     // Confirm motion is actually still off before acting
     if motionOn, _ := hatsClient.GetStateBool("binary_sensor.living_room_motion"); !motionOn {
         return hatsClient.CallService("light.living_room", homeassistant.Services.TurnOff)
@@ -111,7 +111,7 @@ nextTime, err := hatsClient.GetSchedule("hourly")
 hatsClient.SetSchedule("hourly", "0 0 * * * *")
 
 // Then subscribe
-natsClient.AddSub(nats.ScheduleTopicType, "hourly", func() error {
+natsClient.SubscribeSchedule("hourly", func() error {
     logger.Info("Hourly task running")
     return doHourlyWork()
 })
@@ -131,12 +131,12 @@ hatsClient.SetSchedule("night_weekend", "0 0 23 * * SAT,SUN")
 hatsClient.SetSchedule("every_15min",   "0 */15 * * * *")
 
 // Subscribe to each
-natsClient.AddSub(nats.ScheduleTopicType, "minutely",      minutelyHandler)
-natsClient.AddSub(nats.ScheduleTopicType, "hourly",        hourlyHandler)
-natsClient.AddSub(nats.ScheduleTopicType, "morning",       morningHandler)
-natsClient.AddSub(nats.ScheduleTopicType, "night_weekday", nightHandler)
-natsClient.AddSub(nats.ScheduleTopicType, "night_weekend", nightHandler)
-natsClient.AddSub(nats.ScheduleTopicType, "every_15min",   everyFifteenHandler)
+natsClient.SubscribeSchedule("minutely",      minutelyHandler)
+natsClient.SubscribeSchedule("hourly",        hourlyHandler)
+natsClient.SubscribeSchedule("morning",       morningHandler)
+natsClient.SubscribeSchedule("night_weekday", nightHandler)
+natsClient.SubscribeSchedule("night_weekend", nightHandler)
+natsClient.SubscribeSchedule("every_15min",   everyFifteenHandler)
 ```
 
 ### Seasonal schedules
