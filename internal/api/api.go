@@ -129,6 +129,8 @@ func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme [
 		r.Delete("/schedule/{scheduleName}", deleteScheduleHandler)
 
 		r.Post("/ntfy", postNtfyHandler)
+		r.Delete("/ntfy", deleteNtfyHandler)
+		r.Put("/ntfy/clear", clearNtfyHandler)
 
 		r.Handle("/command/{commandName}", http.HandlerFunc(postCommandHandler))
 	})
@@ -378,11 +380,37 @@ func postNtfyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := ntfy.Send(*data); err != nil {
+	if err := ntfy.Send(data); err != nil {
 		http.Error(w, "Unable to send message", http.StatusBadRequest)
 		return
 	}
 
+	render.PlainText(w, r, "OK")
+}
+
+func deleteNtfyHandler(w http.ResponseWriter, r *http.Request) {
+	data := &ntfyPkg.Message{}
+	if err := render.DecodeJSON(r.Body, data); err != nil {
+		http.Error(w, "Unable to parse message data", http.StatusNotAcceptable)
+		return
+	}
+	if err := ntfy.Delete(*data); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	render.PlainText(w, r, "OK")
+}
+
+func clearNtfyHandler(w http.ResponseWriter, r *http.Request) {
+	data := &ntfyPkg.Message{}
+	if err := render.DecodeJSON(r.Body, data); err != nil {
+		http.Error(w, "Unable to parse message data", http.StatusNotAcceptable)
+		return
+	}
+	if err := ntfy.Clear(*data); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	render.PlainText(w, r, "OK")
 }
 
