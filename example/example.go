@@ -39,7 +39,7 @@ func main() {
 	defer natsClient.Close()
 
 	// Add a subscriber for state change event
-	natsClient.AddStateSub(nats.StateTopicType, "sun.sun", func(state homeassistant.StateData) error {
+	natsClient.SubscribeState("sun.sun", func(state homeassistant.StateData) error {
 		if state.State == "above_horizon" {
 			if motionOn, _ := hatsClient.GetStateBool("binary_sensor.living_room_motion"); !motionOn {
 				logger.Info("Sun above horizon and motion off, turning off living room")
