@@ -18,7 +18,7 @@ import (
 	"codeberg.org/jhot/hats/pkg/homeassistant"
 	pkgnats "codeberg.org/jhot/hats/pkg/nats"
 	ntfyPkg "codeberg.org/jhot/hats/pkg/ntfy"
-	"codeberg.org/jhot/hats/pkg/passgen"
+	"codeberg.org/jhot/passgen"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -78,32 +78,41 @@ func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme [
 	})
 
 	router.Get("/passgen", func(w http.ResponseWriter, r *http.Request) {
-		versionString := r.URL.Query().Get("version")
-		salt := r.URL.Query().Get("salt")
 		passphrase := r.URL.Query().Get("passphrase")
+		salt := r.URL.Query().Get("salt")
 		lengthString := r.URL.Query().Get("length")
+		versionString := r.URL.Query().Get("version")
 
 		length, err := strconv.ParseInt(lengthString, 10, 64)
 		if err != nil {
 			length = 40
 		}
 
-		version := 2
-		if versionString == "1" {
+		version := 0 // 0 maps to v3 in upstream (zero value default)
+		switch versionString {
+		case "1":
 			version = 1
+		case "2":
+			version = 2
 		}
 
-		pg := passgen.NewPasswordGenerator(
-			passgen.WithVersion(version),
-			passgen.WithSalt(salt),
-			passgen.WithPassphrase(passphrase),
-			passgen.WithLength(int(length)))
+		b := passgen.New(passphrase).WithVersion(version).WithSalt(salt).WithLength(int(length))
 
-		if customSpecials := r.URL.Query().Get("specials"); customSpecials != "" {
-			pg.CustomSpecials = customSpecials
+		if specials := r.URL.Query().Get("specials"); specials != "" {
+			b = b.WithSpecials(specials)
+		}
+		if ambiguous := r.URL.Query().Get("ambiguous"); ambiguous != "" {
+			b = b.WithAmbiguousChars(ambiguous)
+		} else if r.URL.Query().Has("no-ambiguous") {
+			b = b.NoAmbiguous()
 		}
 
-		render.PlainText(w, r, pg.Generate())
+		pass, err := b.Generate()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		render.PlainText(w, r, pass)
 	})
 
 	router.Route("/api", func(r chi.Router) {
