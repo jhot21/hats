@@ -102,6 +102,12 @@ func (n *NatsConnection) SubscribeState(entityId string, handler func(ha.StateDa
 	return subscribe(n, StateTopicType.GetTopic(entityId), parseStateData, handler)
 }
 
+// SubscribeStateEvent subscribes to state change events for the given entity.
+// The handler receives the full EventData including both old and new state.
+func (n *NatsConnection) SubscribeStateEvent(entityId string, handler func(ha.EventData) error) (*nats.Subscription, error) {
+	return subscribe(n, StateTopicType.GetTopic(entityId), parseEventData, handler)
+}
+
 // SubscribeAttributes subscribes to attribute change events for the given entity.
 // The handler receives the full event (old and new state).
 func (n *NatsConnection) SubscribeAttributes(entityId string, handler func(ha.EventData) error) (*nats.Subscription, error) {
