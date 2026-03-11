@@ -195,16 +195,19 @@ func (c *HatsClient) DeleteSchedule(name string) error {
 	return err
 }
 
-// SendNtfyMessage sends a ntfy notification via the HATS proxy.
-// Note: data.ID is not populated after this call; the HATS API does not
-// return the ntfy message ID. Use the internal ntfy client directly if you
-// need the ID for subsequent update/delete/clear operations.
 func (c *HatsClient) SendNtfyMessage(data *ntfy.Message) error {
-	resp, err := c.client.R().SetBody(data).Post("api/ntfy")
+	var result struct {
+		ID string `json:"id"`
+	}
+	resp, err := c.client.R().SetBody(data).SetResult(&result).Post("api/ntfy")
 	if err == nil && !resp.IsSuccess() {
 		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
 	}
-	return err
+	if err != nil {
+		return err
+	}
+	data.ID = result.ID
+	return nil
 }
 
 func (c *HatsClient) DeleteNtfyMessage(data *ntfy.Message) error {
