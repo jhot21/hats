@@ -385,7 +385,7 @@ func postNtfyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	render.PlainText(w, r, "OK")
+	render.JSON(w, r, map[string]string{"id": data.ID})
 }
 
 func deleteNtfyHandler(w http.ResponseWriter, r *http.Request) {
