@@ -34,7 +34,7 @@ func Send(data *ntfyPkg.Message) error {
 		data.ID = result.ID
 		return nil
 	}
-	resp, err := ntfyClient.R().SetBody(data).Put(fmt.Sprintf("%s/%s", data.Topic, data.ID))
+	resp, err := ntfyClient.R().SetBody(data).Put("")
 	if err == nil && !resp.IsSuccess() {
 		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
 	}

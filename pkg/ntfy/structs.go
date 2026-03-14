@@ -3,8 +3,8 @@ package ntfy
 import "encoding/json"
 
 type Message struct {
-	ID       string   `json:"id,omitempty"` // populated by Send on new message; set to update existing
-	Topic    string   `json:"topic"` // Required
+	ID       string   `json:"sequence_id,omitempty"` // populated by Send on new message; set to update existing
+	Topic    string   `json:"topic"`                 // Required
 	Message  string   `json:"message,omitempty"`
 	Markdown bool     `json:"markdown"`
 	Title    string   `json:"title"`              // Required
