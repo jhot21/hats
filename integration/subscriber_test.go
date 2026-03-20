@@ -3,14 +3,19 @@
 package integration
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log/slog"
+	"net"
 	"testing"
 	"time"
 
 	internalha "codeberg.org/jhot/hats/internal/homeassistant"
 	internalnats "codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/integration/haserver"
+	"codeberg.org/jhot/hats/pkg/config"
 	ha "codeberg.org/jhot/hats/pkg/homeassistant"
 	nats "github.com/nats-io/nats.go"
 	"github.com/stretchr/testify/assert"
@@ -149,12 +154,33 @@ func TestPingFailureTriggerReconnect(t *testing.T) {
 	}, 15*time.Second, 200*time.Millisecond, "subscriber did not reconnect after ping failure")
 }
 
-// TestAuthInvalidStops verifies that auth_invalid causes the subscriber to stop without retrying.
+// TestAuthInvalidStops verifies that auth_invalid causes Subscribe to return an error
+// and the subscriber does not retry (no second connection attempt).
 func TestAuthInvalidStops(t *testing.T) {
 	server := haserver.New("test-token")
 	server.RejectAuth = true
 	t.Cleanup(server.Close)
-	setupSubscriber(t, server)
+
+	host, port, err := net.SplitHostPort(server.Addr())
+	require.NoError(t, err)
+
+	testCfg := &config.HatsConfig{
+		HomeAssistantHost:  host,
+		HomeAssistantPort:  port,
+		HomeAssistantToken: "test-token",
+		NatsHost:           "127.0.0.1",
+		NatsPort:           natsPort,
+		NatsClientName:     "test-hats",
+	}
+
+	ctx := context.Background()
+	testLogger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	require.NoError(t, internalnats.JetstreamConnect(ctx, testLogger, testCfg))
+	require.NoError(t, internalnats.KvConnect())
+	t.Cleanup(func() { internalnats.Close() })
+
+	err = internalha.Subscribe(testLogger, testCfg)
+	require.Error(t, err, "Subscribe should return an error when auth is rejected")
 
 	assert.Never(t, func() bool {
 		return server.ConnectionCount() > 1

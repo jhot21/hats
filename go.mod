@@ -3,6 +3,7 @@ module codeberg.org/jhot/hats
 go 1.24.0
 
 require (
+	codeberg.org/jhot/go-ha-sdk v0.1.0-b2
 	codeberg.org/jhot/passgen v0.0.0-20260310191203-c0cce4aeabf3
 	github.com/gorilla/websocket v1.5.3
 	github.com/nats-io/nats-server/v2 v2.12.4
@@ -11,7 +12,6 @@ require (
 )
 
 require (
-	codeberg.org/jhot/go-ha-sdk v0.1.0-b2 // indirect
 	codeberg.org/jhot/go-sdk-base v0.1.0-b2 // indirect
 	ekyu.moe/base91 v0.2.3 // indirect
 	github.com/aead/skein v0.0.0-20160722084837-9365ae6e95d2 // indirect
