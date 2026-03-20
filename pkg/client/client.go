@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"codeberg.org/jhot/hats/internal/api"
-	ha "codeberg.org/jhot/hats/pkg/homeassistant"
+	ha "codeberg.org/jhot/go-ha-sdk"
 	"codeberg.org/jhot/hats/pkg/ntfy"
 	"github.com/go-resty/resty/v2"
 )
@@ -60,13 +60,13 @@ func (c *HatsClient) GetStateWithDefault(entityId string, defaultValue string) s
 }
 
 func (c *HatsClient) GetStateBool(entityId string) (bool, error) {
-	stateString, err := c.GetState(entityId)
+	stateData, err := c.GetStateFull(entityId)
 
 	if err != nil {
 		return false, err
 	}
 
-	return ha.StateToBool(stateString), nil
+	return ha.StateToBool(stateData), nil
 }
 
 func (c *HatsClient) GetStateFloat(entityId string) (float64, error) {

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	ha "codeberg.org/jhot/hats/pkg/homeassistant"
+	ha "codeberg.org/jhot/go-ha-sdk"
 	"github.com/nats-io/nats.go"
 )
 
@@ -18,21 +18,21 @@ func makeMsg(t *testing.T, v any) *nats.Msg {
 }
 
 func TestParseEventData(t *testing.T) {
-	event := ha.EventData{EntityId: "light.living_room"}
+	event := ha.EventData{EntityID: "light.living_room"}
 	msg := makeMsg(t, event)
 
 	got, err := parseEventData(msg)
 	if err != nil {
 		t.Fatalf("parseEventData() error = %v", err)
 	}
-	if got.EntityId != "light.living_room" {
-		t.Errorf("EntityId = %q, want %q", got.EntityId, "light.living_room")
+	if got.EntityID != "light.living_room" {
+		t.Errorf("EntityID = %q, want %q", got.EntityID, "light.living_room")
 	}
 }
 
 func TestParseStateData(t *testing.T) {
 	event := ha.EventData{
-		EntityId: "binary_sensor.door",
+		EntityID: "binary_sensor.door",
 		NewState: ha.StateData{State: "on"},
 		OldState: ha.StateData{State: "off"},
 	}

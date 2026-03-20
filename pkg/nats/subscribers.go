@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	ha "codeberg.org/jhot/hats/pkg/homeassistant"
+	ha "codeberg.org/jhot/go-ha-sdk"
 	"github.com/nats-io/nats.go"
 )
 

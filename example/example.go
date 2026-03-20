@@ -6,9 +6,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	ha "codeberg.org/jhot/go-ha-sdk"
 	"codeberg.org/jhot/hats/pkg/client"
 	"codeberg.org/jhot/hats/pkg/config"
-	"codeberg.org/jhot/hats/pkg/homeassistant"
 	"codeberg.org/jhot/hats/pkg/nats"
 )
 
@@ -39,11 +39,11 @@ func main() {
 	defer natsClient.Close()
 
 	// Add a subscriber for state change event
-	natsClient.SubscribeState("sun.sun", func(state homeassistant.StateData) error {
+	natsClient.SubscribeState("sun.sun", func(state ha.StateData) error {
 		if state.State == "above_horizon" {
 			if motionOn, _ := hatsClient.GetStateBool("binary_sensor.living_room_motion"); !motionOn {
 				logger.Info("Sun above horizon and motion off, turning off living room")
-				return hatsClient.CallService("light.living_room", homeassistant.Services.TurnOff)
+				return hatsClient.CallService("light.living_room", string(ha.ActionTurnOff))
 			}
 		}
 

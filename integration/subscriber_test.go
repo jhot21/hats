@@ -16,7 +16,7 @@ import (
 	internalnats "codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/integration/haserver"
 	"codeberg.org/jhot/hats/pkg/config"
-	ha "codeberg.org/jhot/hats/pkg/homeassistant"
+	ha "codeberg.org/jhot/go-ha-sdk"
 	nats "github.com/nats-io/nats.go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -39,7 +39,7 @@ func TestStateChangeRouting(t *testing.T) {
 	var data ha.EventData
 	require.NoError(t, json.Unmarshal(msg.Data, &data))
 	assert.Equal(t, "on", data.NewState.State)
-	assert.Equal(t, "sensor.temp", data.EntityId)
+	assert.Equal(t, "sensor.temp", data.EntityID)
 
 	require.Eventually(t, func() bool {
 		val, err := internalnats.GetKeyValue("homeassistant.states.sensor.temp")
@@ -200,7 +200,7 @@ func TestZHAEventRouting(t *testing.T) {
 	msg := receiveWithin(t, received, 5*time.Second)
 	var data ha.EventData
 	require.NoError(t, json.Unmarshal(msg.Data, &data))
-	assert.Equal(t, "aa:bb:cc:dd", data.DeviceIeee)
+	assert.Equal(t, "aa:bb:cc:dd", data.DeviceIEEE)
 	assert.Equal(t, "toggle", data.Command)
 }
 
@@ -217,7 +217,7 @@ func TestNFCEventRouting(t *testing.T) {
 	msg := receiveWithin(t, received, 5*time.Second)
 	var data ha.EventData
 	require.NoError(t, json.Unmarshal(msg.Data, &data))
-	assert.Equal(t, "tag-abc-123", data.TagId)
+	assert.Equal(t, "tag-abc-123", data.TagID)
 }
 
 // TestNFCEventNoListenerContinues verifies that when no NATS listener exists for an NFC tag,
@@ -268,7 +268,7 @@ func TestZWaveEventRouting(t *testing.T) {
 	msg := receiveWithin(t, received, 5*time.Second)
 	var data ha.EventData
 	require.NoError(t, json.Unmarshal(msg.Data, &data))
-	assert.Equal(t, "node-42", data.DeviceId)
+	assert.Equal(t, "node-42", data.DeviceID)
 }
 
 // TestMultipleEventsOrdered injects 20 rapid state_changed events and verifies all 20 arrive
