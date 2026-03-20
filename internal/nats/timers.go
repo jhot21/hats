@@ -6,17 +6,17 @@ import (
 	"sync"
 	"time"
 
-	"codeberg.org/jhot/hats/pkg/homeassistant"
+	ha "codeberg.org/jhot/go-ha-sdk"
 )
 
 var (
-	haClient     *homeassistant.RestClient
+	haClient     *ha.Client
 	haClientOnce sync.Once
 )
 
 func initHomeAssistantClient() {
 	haClientOnce.Do(func() {
-		haClient = homeassistant.NewRestClient(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
+		haClient = ha.New(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
 	})
 }
 
@@ -37,11 +37,11 @@ func GetTimer(name string) (*HatsTimer, error) {
 		return nil, err
 	}
 
-	durStr, err := homeassistant.CastAttribute[string](state, "duration")
+	durStr, err := ha.CastAttribute[string](state, "duration")
 	if err != nil {
 		return nil, err
 	}
-	d, err := homeassistant.ParseDuration(durStr)
+	d, err := ha.ParseDuration(durStr)
 	if err != nil {
 		return nil, err
 	}
@@ -72,8 +72,8 @@ func (t *HatsTimer) Activate(durationOverride string) {
 		}
 	}
 	logger.Debug("Starting timer", "name", t.Name, "duration", int(d.Seconds()))
-	err := haClient.CallService(t.Name, homeassistant.Services.Start, map[string]any{
-		homeassistant.ExtraProps.Duration: int(d.Seconds()),
+	err := haClient.CallAction(t.Name, ha.ActionTimerStart, map[string]any{
+		ha.PropDuration: int(d.Seconds()),
 	})
 	if err != nil {
 		logger.Error("Error starting timer", "name", t.Name, "error", err)
@@ -81,17 +81,17 @@ func (t *HatsTimer) Activate(durationOverride string) {
 }
 
 func (t *HatsTimer) ActivateIfNotAlready(durationOverride string) {
-	if state, err := haClient.GetState(t.Name); err == nil && !homeassistant.StateToBool(state.State) {
+	if state, err := haClient.GetState(t.Name); err == nil && !ha.StateToBool(state) {
 		t.Activate(durationOverride)
 	}
 }
 
 func (t *HatsTimer) Cancel() {
-	haClient.CallService(t.Name, homeassistant.Services.Cancel)
+	haClient.CallAction(t.Name, ha.ActionTimerCancel)
 }
 
 func (t *HatsTimer) ToString() string {
-	if homeassistant.StateToBool(t.State) {
+	if ha.StateToBool(ha.StateData{EntityID: t.Name, State: t.State}) {
 		time, _ := t.FinishTime.MarshalText()
 		return string(time)
 	}

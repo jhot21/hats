@@ -12,10 +12,10 @@ import (
 
 	"encoding/json"
 
+	ha "codeberg.org/jhot/go-ha-sdk"
 	"codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/internal/ntfy"
 	"codeberg.org/jhot/hats/pkg/config"
-	"codeberg.org/jhot/hats/pkg/homeassistant"
 	pkgnats "codeberg.org/jhot/hats/pkg/nats"
 	ntfyPkg "codeberg.org/jhot/hats/pkg/ntfy"
 	"codeberg.org/jhot/passgen"
@@ -31,7 +31,7 @@ var (
 	cfg      *config.HatsConfig
 	logger   *slog.Logger
 	server   http.Server
-	haClient *homeassistant.RestClient
+	haClient *ha.Client
 	homepage string
 )
 
@@ -61,7 +61,7 @@ func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme [
 	doc := p.Parse(readme)
 	homepage = string(markdown.Render(doc, html.NewRenderer(html.RendererOptions{Flags: html.CommonFlags | html.HrefTargetBlank})))
 
-	haClient = homeassistant.NewRestClient(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
+	haClient = ha.New(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
 	router := chi.NewRouter()
 
 	router.Use(middleware.RequestID)
@@ -235,18 +235,18 @@ func setEntityStateHandler(w http.ResponseWriter, r *http.Request) {
 	if err == nil && len(extras) > 0 {
 		if domain != "" {
 			l.Debug("Calling service manually", "extras", extras)
-			haErr = haClient.CallServiceManual(domain, entityId, service, extras)
+			haErr = haClient.CallActionManual(ha.Domain(domain), entityId, ha.Action(service), extras)
 		} else {
 			l.Debug("Calling service", "extras", extras)
-			haErr = haClient.CallService(entityId, service, extras)
+			haErr = haClient.CallAction(entityId, ha.Action(service), extras)
 		}
 	} else {
 		if domain != "" {
 			l.Debug("Calling service manually (without extras)")
-			haErr = haClient.CallServiceManual(domain, entityId, service)
+			haErr = haClient.CallActionManual(ha.Domain(domain), entityId, ha.Action(service))
 		} else {
 			l.Debug("Calling service (without extras)")
-			haErr = haClient.CallService(entityId, service)
+			haErr = haClient.CallAction(entityId, ha.Action(service))
 		}
 	}
 
