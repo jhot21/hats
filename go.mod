@@ -4,13 +4,15 @@ go 1.24.0
 
 require (
 	codeberg.org/jhot/passgen v0.0.0-20260310191203-c0cce4aeabf3
-	github.com/gorilla/websocket v1.5.0
+	github.com/gorilla/websocket v1.5.3
 	github.com/nats-io/nats-server/v2 v2.12.4
 	github.com/nats-io/nats.go v1.48.0
 	github.com/stretchr/testify v1.11.1
 )
 
 require (
+	codeberg.org/jhot/go-ha-sdk v0.1.0-b2 // indirect
+	codeberg.org/jhot/go-sdk-base v0.1.0-b2 // indirect
 	ekyu.moe/base91 v0.2.3 // indirect
 	github.com/aead/skein v0.0.0-20160722084837-9365ae6e95d2 // indirect
 	github.com/ajg/form v1.5.1 // indirect
@@ -36,7 +38,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/go-chi/render v1.0.3
 	github.com/go-co-op/gocron v1.35.2
-	github.com/go-resty/resty/v2 v2.9.1
+	github.com/go-resty/resty/v2 v2.17.2
 	github.com/gomarkdown/markdown v0.0.0-20231115200524-a660076da3fd
 	github.com/icholy/digest v0.1.22
 	github.com/klauspost/compress v1.18.3 // indirect
