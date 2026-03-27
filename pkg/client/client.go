@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"codeberg.org/jhot/hats/internal/api"
-	ha "codeberg.org/jhot/hats/pkg/homeassistant"
+	ha "codeberg.org/jhot/go-ha-sdk"
 	"codeberg.org/jhot/hats/pkg/ntfy"
 	"github.com/go-resty/resty/v2"
 )
@@ -60,13 +60,13 @@ func (c *HatsClient) GetStateWithDefault(entityId string, defaultValue string) s
 }
 
 func (c *HatsClient) GetStateBool(entityId string) (bool, error) {
-	stateString, err := c.GetState(entityId)
+	stateData, err := c.GetStateFull(entityId)
 
 	if err != nil {
 		return false, err
 	}
 
-	return ha.StateToBool(stateString), nil
+	return ha.StateToBool(stateData), nil
 }
 
 func (c *HatsClient) GetStateFloat(entityId string) (float64, error) {
@@ -195,8 +195,31 @@ func (c *HatsClient) DeleteSchedule(name string) error {
 	return err
 }
 
-func (c *HatsClient) SendNtfyMessage(data ntfy.Message) error {
-	resp, err := c.client.R().SetBody(data).Post("api/ntfy")
+func (c *HatsClient) SendNtfyMessage(data *ntfy.Message) error {
+	var result struct {
+		ID string `json:"id"`
+	}
+	resp, err := c.client.R().SetBody(data).SetResult(&result).Post("api/ntfy")
+	if err == nil && !resp.IsSuccess() {
+		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
+	}
+	if err != nil {
+		return err
+	}
+	data.ID = result.ID
+	return nil
+}
+
+func (c *HatsClient) DeleteNtfyMessage(data *ntfy.Message) error {
+	resp, err := c.client.R().SetBody(data).Delete("api/ntfy")
+	if err == nil && !resp.IsSuccess() {
+		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
+	}
+	return err
+}
+
+func (c *HatsClient) ClearNtfyMessage(data *ntfy.Message) error {
+	resp, err := c.client.R().SetBody(data).Put("api/ntfy/clear")
 	if err == nil && !resp.IsSuccess() {
 		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
 	}

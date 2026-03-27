@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	ha "codeberg.org/jhot/hats/pkg/homeassistant"
+	ha "codeberg.org/jhot/go-ha-sdk"
 	"github.com/nats-io/nats.go"
 )
 
@@ -40,103 +40,112 @@ func (n *NatsConnection) addSub(topic string, cb nats.MsgHandler) (*nats.Subscri
 	return n.Conn.Subscribe(topic, cb)
 }
 
-func parseEvent(msg *nats.Msg, sendResponse bool) (ha.EventData, error) {
-	if sendResponse {
-		go msg.Respond([]byte("got it"))
-	}
-	var data ha.EventData
-	err := json.Unmarshal(msg.Data, &data)
-	return data, err
-}
-
-// AddEventSub: Add a subscriber to the NATS client that receives the raw event payload in bytes
-func (n *NatsConnection) AddRawSub(t TopicType, entityId string, handler func([]byte) error) (*nats.Subscription, error) {
-	if t == "" || entityId == "" {
-		panic("TopicType and entityId cannot be empty")
-	}
-
-	topic := t.GetTopic(entityId)
-	l := n.logger.With("topic", topic, "entity_id", entityId)
+// subscribe is the internal generic helper for all typed subscribers.
+// It handles respond, parse, logging, and error handling.
+func subscribe[T any](
+	n *NatsConnection,
+	topic string,
+	parse func(*nats.Msg) (T, error),
+	handler func(T) error,
+) (*nats.Subscription, error) {
+	l := n.logger.With("topic", topic)
 	l.Debug("Subscribing to topic")
-
 	return n.addSub(topic, func(msg *nats.Msg) {
 		go msg.Respond([]byte("got it"))
-		l.Debug(fmt.Sprintf("%s event fired", t))
-		err := handler(msg.Data)
-		if err != nil {
-			l.Error(fmt.Sprintf("Error handling %s event", t), "error", err)
-			return
-		}
-	})
-}
-
-// AddEventSub: Add a subscriber to the NATS client that receives the full event payload
-func (n *NatsConnection) AddEventSub(t TopicType, entityId string, handler func(ha.EventData) error) (*nats.Subscription, error) {
-	if t == "" || entityId == "" {
-		panic("TopicType and entityId cannot be empty")
-	}
-
-	topic := t.GetTopic(entityId)
-	l := n.logger.With("topic", topic, "entity_id", entityId)
-	l.Debug("Subscribing to topic")
-
-	return n.addSub(topic, func(msg *nats.Msg) {
-		data, err := parseEvent(msg, true)
+		data, err := parse(msg)
 		if err != nil {
 			l.Error("Error parsing message", "error", err)
 			return
 		}
-		l.Debug(fmt.Sprintf("%s event fired", t))
-		err = handler(data)
-		if err != nil {
-			l.Error(fmt.Sprintf("Error handling %s event", t), "error", err)
-			return
+		if err := handler(data); err != nil {
+			l.Error("Error handling event", "error", err)
 		}
 	})
 }
 
-// AddStateSub: Add a subscriber to the NATS client that receives the new state payload from an event
-func (n *NatsConnection) AddStateSub(t TopicType, entityId string, handler func(ha.StateData) error) (*nats.Subscription, error) {
-	if t == "" || entityId == "" {
-		panic("TopicType and entityId cannot be empty")
-	}
-
-	topic := t.GetTopic(entityId)
-	l := n.logger.With("topic", topic, "entity_id", entityId)
+// subscribeNoData is the internal helper for subscribers with no payload (timers, schedules).
+func subscribeNoData(n *NatsConnection, topic string, handler func() error) (*nats.Subscription, error) {
+	l := n.logger.With("topic", topic)
 	l.Debug("Subscribing to topic")
-
-	return n.addSub(topic, func(msg *nats.Msg) {
-		data, err := parseEvent(msg, true)
-		if err != nil {
-			l.Error("Error parsing message", "error", err, "message", string(msg.Data))
-			return
-		}
-		l.Debug(fmt.Sprintf("%s event fired", t), "newState", data.NewState.State)
-		err = handler(data.NewState)
-		if err != nil {
-			l.Error(fmt.Sprintf("Error handling %s event", t), "error", err)
-			return
-		}
-	})
-}
-
-// AddSub: Add a subscriber to the NATS client that doesn't receive any data from the event
-func (n *NatsConnection) AddSub(t TopicType, entityId string, handler func() error) (*nats.Subscription, error) {
-	if t == "" || entityId == "" {
-		panic("TopicType and entityId cannot be empty")
-	}
-
-	topic := t.GetTopic(entityId)
-	l := n.logger.With("topic", topic, "entity_id", entityId)
-	l.Debug("Subscribing to topic")
-
 	return n.addSub(topic, func(msg *nats.Msg) {
 		go msg.Respond([]byte("got it"))
-		l.Debug(fmt.Sprintf("%s event fired", t))
-		err := handler()
-		if err != nil {
-			l.Error(fmt.Sprintf("Error handling %s event", t), "error", err)
-			return
+		if err := handler(); err != nil {
+			l.Error("Error handling event", "error", err)
 		}
 	})
+}
+
+// parseEventData parses a NATS message into ha.EventData.
+func parseEventData(msg *nats.Msg) (ha.EventData, error) {
+	var data ha.EventData
+	return data, json.Unmarshal(msg.Data, &data)
+}
+
+// parseStateData parses a NATS message into ha.StateData (new state only).
+func parseStateData(msg *nats.Msg) (ha.StateData, error) {
+	var event ha.EventData
+	if err := json.Unmarshal(msg.Data, &event); err != nil {
+		return ha.StateData{}, err
+	}
+	return event.NewState, nil
+}
+
+// parseCommandPayload parses a NATS message into a CommandPayload.
+func parseCommandPayload(msg *nats.Msg) (CommandPayload, error) {
+	var p CommandPayload
+	return p, json.Unmarshal(msg.Data, &p)
+}
+
+// SubscribeState subscribes to state change events for the given entity.
+// The handler receives only the new state.
+func (n *NatsConnection) SubscribeState(entityId string, handler func(ha.StateData) error) (*nats.Subscription, error) {
+	return subscribe(n, StateTopicType.GetTopic(entityId), parseStateData, handler)
+}
+
+// SubscribeStateEvent subscribes to state change events for the given entity.
+// The handler receives the full EventData including both old and new state.
+func (n *NatsConnection) SubscribeStateEvent(entityId string, handler func(ha.EventData) error) (*nats.Subscription, error) {
+	return subscribe(n, StateTopicType.GetTopic(entityId), parseEventData, handler)
+}
+
+// SubscribeAttributes subscribes to attribute change events for the given entity.
+// The handler receives the full event (old and new state).
+func (n *NatsConnection) SubscribeAttributes(entityId string, handler func(ha.EventData) error) (*nats.Subscription, error) {
+	return subscribe(n, AttributeTopicType.GetTopic(entityId), parseEventData, handler)
+}
+
+// SubscribeZHA subscribes to ZHA device events for the given IEEE address.
+func (n *NatsConnection) SubscribeZHA(deviceIeee string, handler func(ha.EventData) error) (*nats.Subscription, error) {
+	return subscribe(n, ZhaTopicType.GetTopic(deviceIeee), parseEventData, handler)
+}
+
+// SubscribeNFC subscribes to NFC tag scan events for the given tag ID.
+func (n *NatsConnection) SubscribeNFC(tagId string, handler func(ha.EventData) error) (*nats.Subscription, error) {
+	return subscribe(n, NfcTopicType.GetTopic(tagId), parseEventData, handler)
+}
+
+// SubscribeZwave subscribes to Z-Wave device events for the given device ID.
+func (n *NatsConnection) SubscribeZwave(deviceId string, handler func(ha.EventData) error) (*nats.Subscription, error) {
+	return subscribe(n, ZwaveTopicType.GetTopic(deviceId), parseEventData, handler)
+}
+
+// SubscribeZwaveScene subscribes to Z-Wave scene events for the given device ID.
+func (n *NatsConnection) SubscribeZwaveScene(deviceId string, handler func(ha.EventData) error) (*nats.Subscription, error) {
+	return subscribe(n, ZwaveSceneTopicType.GetTopic(deviceId), parseEventData, handler)
+}
+
+// SubscribeTimer subscribes to timer completion events for the given timer name.
+func (n *NatsConnection) SubscribeTimer(timerName string, handler func() error) (*nats.Subscription, error) {
+	return subscribeNoData(n, TimerTopicType.GetTopic(timerName), handler)
+}
+
+// SubscribeSchedule subscribes to schedule fire events for the given schedule name.
+func (n *NatsConnection) SubscribeSchedule(scheduleName string, handler func() error) (*nats.Subscription, error) {
+	return subscribeNoData(n, ScheduleTopicType.GetTopic(scheduleName), handler)
+}
+
+// SubscribeCommand subscribes to command events for the given command name.
+// The handler receives the full CommandPayload including HTTP method, headers, query, and body.
+func (n *NatsConnection) SubscribeCommand(commandName string, handler func(CommandPayload) error) (*nats.Subscription, error) {
+	return subscribe(n, CommandTopicType.GetTopic(commandName), parseCommandPayload, handler)
 }

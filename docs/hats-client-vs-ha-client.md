@@ -155,7 +155,7 @@ hatsClient := client.NewHatsClient(cfg.GetHatsBaseUrl(), cfg.HatsToken)
 haClient   := homeassistant.NewRestClient(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
 
 // In an hourly schedule handler: fetch history, then act
-natsClient.AddSub(nats.ScheduleTopicType, "hourly", func() error {
+natsClient.SubscribeSchedule("hourly", func() error {
     history, err := haClient.GetHistory(
         homeassistant.HistoryStartTimestamp(time.Now().Add(-1 * time.Hour)),
         homeassistant.HistoryEntityFilter("binary_sensor.motion"),

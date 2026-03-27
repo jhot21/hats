@@ -3,15 +3,20 @@
 package integration
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log/slog"
+	"net"
 	"testing"
 	"time"
 
 	internalha "codeberg.org/jhot/hats/internal/homeassistant"
 	internalnats "codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/integration/haserver"
-	ha "codeberg.org/jhot/hats/pkg/homeassistant"
+	"codeberg.org/jhot/hats/pkg/config"
+	ha "codeberg.org/jhot/go-ha-sdk"
 	nats "github.com/nats-io/nats.go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -34,7 +39,7 @@ func TestStateChangeRouting(t *testing.T) {
 	var data ha.EventData
 	require.NoError(t, json.Unmarshal(msg.Data, &data))
 	assert.Equal(t, "on", data.NewState.State)
-	assert.Equal(t, "sensor.temp", data.EntityId)
+	assert.Equal(t, "sensor.temp", data.EntityID)
 
 	require.Eventually(t, func() bool {
 		val, err := internalnats.GetKeyValue("homeassistant.states.sensor.temp")
@@ -149,12 +154,33 @@ func TestPingFailureTriggerReconnect(t *testing.T) {
 	}, 15*time.Second, 200*time.Millisecond, "subscriber did not reconnect after ping failure")
 }
 
-// TestAuthInvalidStops verifies that auth_invalid causes the subscriber to stop without retrying.
+// TestAuthInvalidStops verifies that auth_invalid causes Subscribe to return an error
+// and the subscriber does not retry (no second connection attempt).
 func TestAuthInvalidStops(t *testing.T) {
 	server := haserver.New("test-token")
 	server.RejectAuth = true
 	t.Cleanup(server.Close)
-	setupSubscriber(t, server)
+
+	host, port, err := net.SplitHostPort(server.Addr())
+	require.NoError(t, err)
+
+	testCfg := &config.HatsConfig{
+		HomeAssistantHost:  host,
+		HomeAssistantPort:  port,
+		HomeAssistantToken: "test-token",
+		NatsHost:           "127.0.0.1",
+		NatsPort:           natsPort,
+		NatsClientName:     "test-hats",
+	}
+
+	ctx := context.Background()
+	testLogger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	require.NoError(t, internalnats.JetstreamConnect(ctx, testLogger, testCfg))
+	require.NoError(t, internalnats.KvConnect())
+	t.Cleanup(func() { internalnats.Close() })
+
+	err = internalha.Subscribe(testLogger, testCfg)
+	require.Error(t, err, "Subscribe should return an error when auth is rejected")
 
 	assert.Never(t, func() bool {
 		return server.ConnectionCount() > 1
@@ -174,7 +200,7 @@ func TestZHAEventRouting(t *testing.T) {
 	msg := receiveWithin(t, received, 5*time.Second)
 	var data ha.EventData
 	require.NoError(t, json.Unmarshal(msg.Data, &data))
-	assert.Equal(t, "aa:bb:cc:dd", data.DeviceIeee)
+	assert.Equal(t, "aa:bb:cc:dd", data.DeviceIEEE)
 	assert.Equal(t, "toggle", data.Command)
 }
 
@@ -191,7 +217,7 @@ func TestNFCEventRouting(t *testing.T) {
 	msg := receiveWithin(t, received, 5*time.Second)
 	var data ha.EventData
 	require.NoError(t, json.Unmarshal(msg.Data, &data))
-	assert.Equal(t, "tag-abc-123", data.TagId)
+	assert.Equal(t, "tag-abc-123", data.TagID)
 }
 
 // TestNFCEventNoListenerContinues verifies that when no NATS listener exists for an NFC tag,
@@ -242,7 +268,7 @@ func TestZWaveEventRouting(t *testing.T) {
 	msg := receiveWithin(t, received, 5*time.Second)
 	var data ha.EventData
 	require.NoError(t, json.Unmarshal(msg.Data, &data))
-	assert.Equal(t, "node-42", data.DeviceId)
+	assert.Equal(t, "node-42", data.DeviceID)
 }
 
 // TestMultipleEventsOrdered injects 20 rapid state_changed events and verifies all 20 arrive

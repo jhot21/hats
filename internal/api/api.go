@@ -10,12 +10,15 @@ import (
 
 	"log/slog"
 
+	"encoding/json"
+
+	ha "codeberg.org/jhot/go-ha-sdk"
 	"codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/internal/ntfy"
 	"codeberg.org/jhot/hats/pkg/config"
-	"codeberg.org/jhot/hats/pkg/homeassistant"
+	pkgnats "codeberg.org/jhot/hats/pkg/nats"
 	ntfyPkg "codeberg.org/jhot/hats/pkg/ntfy"
-	"codeberg.org/jhot/hats/pkg/passgen"
+	"codeberg.org/jhot/passgen"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -28,7 +31,7 @@ var (
 	cfg      *config.HatsConfig
 	logger   *slog.Logger
 	server   http.Server
-	haClient *homeassistant.RestClient
+	haClient *ha.Client
 	homepage string
 )
 
@@ -58,7 +61,7 @@ func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme [
 	doc := p.Parse(readme)
 	homepage = string(markdown.Render(doc, html.NewRenderer(html.RendererOptions{Flags: html.CommonFlags | html.HrefTargetBlank})))
 
-	haClient = homeassistant.NewRestClient(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
+	haClient = ha.New(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
 	router := chi.NewRouter()
 
 	router.Use(middleware.RequestID)
@@ -75,32 +78,41 @@ func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme [
 	})
 
 	router.Get("/passgen", func(w http.ResponseWriter, r *http.Request) {
-		versionString := r.URL.Query().Get("version")
-		salt := r.URL.Query().Get("salt")
 		passphrase := r.URL.Query().Get("passphrase")
+		salt := r.URL.Query().Get("salt")
 		lengthString := r.URL.Query().Get("length")
+		versionString := r.URL.Query().Get("version")
 
 		length, err := strconv.ParseInt(lengthString, 10, 64)
-		if err != nil {
+		if err != nil || length < 1 {
 			length = 40
 		}
 
-		version := 2
-		if versionString == "1" {
+		version := 0 // 0 maps to v3 in upstream (zero value default)
+		switch versionString {
+		case "1":
 			version = 1
+		case "2":
+			version = 2
 		}
 
-		pg := passgen.NewPasswordGenerator(
-			passgen.WithVersion(version),
-			passgen.WithSalt(salt),
-			passgen.WithPassphrase(passphrase),
-			passgen.WithLength(int(length)))
+		b := passgen.New(passphrase).WithVersion(version).WithSalt(salt).WithLength(int(length))
 
-		if customSpecials := r.URL.Query().Get("specials"); customSpecials != "" {
-			pg.CustomSpecials = customSpecials
+		if specials := r.URL.Query().Get("specials"); specials != "" {
+			b = b.WithSpecials(specials)
+		}
+		if ambiguous := r.URL.Query().Get("ambiguous"); ambiguous != "" {
+			b = b.WithAmbiguousChars(ambiguous)
+		} else if r.URL.Query().Has("no-ambiguous") {
+			b = b.NoAmbiguous()
 		}
 
-		render.PlainText(w, r, pg.Generate())
+		pass, err := b.Generate()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		render.PlainText(w, r, pass)
 	})
 
 	router.Route("/api", func(r chi.Router) {
@@ -117,8 +129,10 @@ func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme [
 		r.Delete("/schedule/{scheduleName}", deleteScheduleHandler)
 
 		r.Post("/ntfy", postNtfyHandler)
+		r.Delete("/ntfy", deleteNtfyHandler)
+		r.Put("/ntfy/clear", clearNtfyHandler)
 
-		r.Post("/command/{commandName}", postCommandHandler)
+		r.Handle("/command/{commandName}", http.HandlerFunc(postCommandHandler))
 	})
 
 	server = http.Server{
@@ -221,18 +235,18 @@ func setEntityStateHandler(w http.ResponseWriter, r *http.Request) {
 	if err == nil && len(extras) > 0 {
 		if domain != "" {
 			l.Debug("Calling service manually", "extras", extras)
-			haErr = haClient.CallServiceManual(domain, entityId, service, extras)
+			haErr = haClient.CallActionManual(ha.Domain(domain), entityId, ha.Action(service), extras)
 		} else {
 			l.Debug("Calling service", "extras", extras)
-			haErr = haClient.CallService(entityId, service, extras)
+			haErr = haClient.CallAction(entityId, ha.Action(service), extras)
 		}
 	} else {
 		if domain != "" {
 			l.Debug("Calling service manually (without extras)")
-			haErr = haClient.CallServiceManual(domain, entityId, service)
+			haErr = haClient.CallActionManual(ha.Domain(domain), entityId, ha.Action(service))
 		} else {
 			l.Debug("Calling service (without extras)")
-			haErr = haClient.CallService(entityId, service)
+			haErr = haClient.CallAction(entityId, ha.Action(service))
 		}
 	}
 
@@ -366,15 +380,50 @@ func postNtfyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := ntfy.Send(*data); err != nil {
-		http.Error(w, "Unable to send message", http.StatusBadRequest)
+	if err := ntfy.Send(data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	render.JSON(w, r, map[string]string{"id": data.ID})
+}
+
+func deleteNtfyHandler(w http.ResponseWriter, r *http.Request) {
+	data := &ntfyPkg.Message{}
+	if err := render.DecodeJSON(r.Body, data); err != nil {
+		http.Error(w, "Unable to parse message data", http.StatusNotAcceptable)
+		return
+	}
+	if err := ntfy.Delete(data); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	render.PlainText(w, r, "OK")
+}
+
+func clearNtfyHandler(w http.ResponseWriter, r *http.Request) {
+	data := &ntfyPkg.Message{}
+	if err := render.DecodeJSON(r.Body, data); err != nil {
+		http.Error(w, "Unable to parse message data", http.StatusNotAcceptable)
+		return
+	}
+	if err := ntfy.Clear(data); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	render.PlainText(w, r, "OK")
 }
 
 // Command
+
+// commandPublish is a swappable publish function used for testing.
+var commandPublish = func(subject string, data []byte) { nats.Publish(subject, data) }
+
+var strippedHeaders = map[string]struct{}{
+	http.CanonicalHeaderKey("Authorization"):       {},
+	http.CanonicalHeaderKey("Cookie"):              {},
+	http.CanonicalHeaderKey("Proxy-Authorization"): {},
+}
 
 func postCommandHandler(w http.ResponseWriter, r *http.Request) {
 	commandName := chi.URLParam(r, "commandName")
@@ -383,6 +432,34 @@ func postCommandHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error("Error reading request body", "error", err, "url", r.URL.String())
 	}
-	nats.Publish(fmt.Sprintf("command.%s", commandName), body)
+
+	headers := make(map[string]string, len(r.Header))
+	for k, v := range r.Header {
+		if _, skip := strippedHeaders[k]; skip {
+			continue
+		}
+		headers[k] = v[0]
+	}
+
+	query := make(map[string]string, len(r.URL.Query()))
+	for k, v := range r.URL.Query() {
+		query[k] = v[0]
+	}
+
+	payload := pkgnats.CommandPayload{
+		Method:  r.Method,
+		Headers: headers,
+		Query:   query,
+		Body:    body,
+	}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		logger.Error("Error marshaling command payload", "error", err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	commandPublish(fmt.Sprintf("command.%s", commandName), data)
 	render.PlainText(w, r, "OK")
 }

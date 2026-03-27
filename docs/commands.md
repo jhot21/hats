@@ -2,42 +2,44 @@
 
 The command bridge lets external services — webhooks, Home Assistant automations, scripts, or other apps — trigger subscriber logic via HTTP without needing a direct NATS connection.
 
-**How it works:** An HTTP POST to `/api/command/{name}` on the HATS API publishes the raw POST body to the NATS subject `command.{name}`. Any subscriber listening on that subject receives the message immediately.
+**How it works:** An HTTP request (any method) to `/api/command/{name}` on the HATS API publishes a structured JSON payload to the NATS subject `command.{name}`. Any subscriber listening on that subject receives the message immediately.
 
 ```
-POST /api/command/bedtime   →   NATS: command.bedtime   →   subscriber handler
+ANY /api/command/bedtime   →   NATS: command.bedtime   →   subscriber handler
 ```
 
 ---
 
 ## Subscriber side
 
-Commands are registered using `AddRawSub` — see [subscriber-guide.md#subscription-methods](subscriber-guide.md#3-subscription-methods) for the full method table.
+Commands are registered using `SubscribeCommand` — see [subscriber-guide.md#subscription-methods](subscriber-guide.md#3-subscription-methods) for the full method table.
 
 ```go
-natsClient.AddRawSub(nats.CommandTopicType, "bedtime", func(body []byte) error {
-    // body contains the raw HTTP POST body bytes
-    // It can be empty, plain text, JSON, or any other format
+natsClient.SubscribeCommand("bedtime", func(payload nats.CommandPayload) error {
+    // payload.Method — the HTTP method used (GET, POST, etc.)
+    // payload.BodyString() — body as string
+    // payload.BodyJSON(&v) — unmarshal body as JSON
+    // payload.BodyBytes() — raw body bytes
     return runBedtimeRoutine()
 })
 ```
 
-If your command sends a JSON payload, decode it in the handler:
+If your command sends a JSON payload, use `BodyJSON` to decode it:
 
 ```go
 type SonarrPayload struct {
-    SeriesTitle string `json:"seriesTitle"`
+    SeriesTitle  string `json:"seriesTitle"`
     EpisodeTitle string `json:"episodeTitle"`
 }
 
-natsClient.AddRawSub(nats.CommandTopicType, "sonarr", func(body []byte) error {
-    var payload SonarrPayload
-    if err := json.Unmarshal(body, &payload); err != nil {
+natsClient.SubscribeCommand("sonarr", func(payload nats.CommandPayload) error {
+    var sonarrPayload SonarrPayload
+    if err := payload.BodyJSON(&sonarrPayload); err != nil {
         return err
     }
     return hatsClient.SendNtfyMessage(ntfy.Message{
         Topic:   "media",
-        Message: fmt.Sprintf("Downloaded: %s — %s", payload.SeriesTitle, payload.EpisodeTitle),
+        Message: fmt.Sprintf("Downloaded: %s — %s", sonarrPayload.SeriesTitle, sonarrPayload.EpisodeTitle),
     })
 })
 ```
@@ -48,9 +50,15 @@ natsClient.AddRawSub(nats.CommandTopicType, "sonarr", func(body []byte) error {
 
 **From curl:**
 
+Any HTTP method is accepted — the method is forwarded in the payload so subscribers can act on it if needed.
+
 ```sh
-# Empty body
+# Empty body (any method works — POST shown here)
 curl -X POST http://hats:8888/api/command/bedtime \
+  -H "Authorization: Bearer changeme"
+
+# GET with query params
+curl http://hats:8888/api/command/bedtime?mode=away \
   -H "Authorization: Bearer changeme"
 
 # JSON body

@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"sync"
 
-	ha "codeberg.org/jhot/hats/pkg/homeassistant"
+	ha "codeberg.org/jhot/go-ha-sdk"
 	"github.com/gorilla/websocket"
 )
 
@@ -101,12 +101,12 @@ func (s *MockHAServer) PingsReceived() int {
 // InjectStateChange queues a state_changed event for delivery to the subscriber.
 func (s *MockHAServer) InjectStateChange(entityId, oldState, newState string) {
 	s.inject(ha.HassMessage{
-		Type: ha.MessageType.Event,
-		Id:   1001,
+		Type: ha.MsgEvent,
+		ID:   1001,
 		Event: ha.Event{
-			EventType: ha.MessageType.StateChanged,
+			EventType: ha.EventStateChanged,
 			Data: ha.EventData{
-				EntityId: entityId,
+				EntityID: entityId,
 				NewState: ha.StateData{State: newState},
 				OldState: ha.StateData{State: oldState},
 			},
@@ -117,11 +117,11 @@ func (s *MockHAServer) InjectStateChange(entityId, oldState, newState string) {
 // InjectZHAEvent queues a zha_event for delivery to the subscriber.
 func (s *MockHAServer) InjectZHAEvent(deviceIeee, command string) {
 	s.inject(ha.HassMessage{
-		Type: ha.MessageType.Event,
-		Id:   1002,
+		Type: ha.MsgEvent,
+		ID:   1002,
 		Event: ha.Event{
-			EventType: ha.MessageType.ZhaEvent,
-			Data:      ha.EventData{DeviceIeee: deviceIeee, Command: command},
+			EventType: ha.EventZHA,
+			Data:      ha.EventData{DeviceIEEE: deviceIeee, Command: command},
 		},
 	})
 }
@@ -129,11 +129,11 @@ func (s *MockHAServer) InjectZHAEvent(deviceIeee, command string) {
 // InjectNFCEvent queues a tag_scanned event for delivery to the subscriber.
 func (s *MockHAServer) InjectNFCEvent(tagId string) {
 	s.inject(ha.HassMessage{
-		Type: ha.MessageType.Event,
-		Id:   1003,
+		Type: ha.MsgEvent,
+		ID:   1003,
 		Event: ha.Event{
-			EventType: ha.MessageType.TagScanned,
-			Data:      ha.EventData{TagId: tagId},
+			EventType: ha.EventTagScanned,
+			Data:      ha.EventData{TagID: tagId},
 		},
 	})
 }
@@ -141,11 +141,11 @@ func (s *MockHAServer) InjectNFCEvent(tagId string) {
 // InjectTimerFinished queues a timer.finished event for delivery to the subscriber.
 func (s *MockHAServer) InjectTimerFinished(entityId string) {
 	s.inject(ha.HassMessage{
-		Type: ha.MessageType.Event,
-		Id:   1005,
+		Type: ha.MsgEvent,
+		ID:   1005,
 		Event: ha.Event{
-			EventType: ha.MessageType.TimerFinished,
-			Data:      ha.EventData{EntityId: entityId},
+			EventType: ha.EventTimerFinished,
+			Data:      ha.EventData{EntityID: entityId},
 		},
 	})
 }
@@ -153,11 +153,11 @@ func (s *MockHAServer) InjectTimerFinished(entityId string) {
 // InjectZWaveEvent queues a zwave_js_value_notification event for delivery to the subscriber.
 func (s *MockHAServer) InjectZWaveEvent(deviceId string) {
 	s.inject(ha.HassMessage{
-		Type: ha.MessageType.Event,
-		Id:   1004,
+		Type: ha.MsgEvent,
+		ID:   1004,
 		Event: ha.Event{
-			EventType: ha.MessageType.ZwaveEvent,
-			Data:      ha.EventData{DeviceId: deviceId},
+			EventType: ha.EventZWave,
+			Data:      ha.EventData{DeviceID: deviceId},
 		},
 	})
 }
@@ -184,7 +184,7 @@ func (s *MockHAServer) handle(w http.ResponseWriter, r *http.Request) {
 	s.mu.Unlock()
 
 	// Step 1: send auth_required
-	if err := conn.WriteJSON(ha.HassMessage{Type: ha.MessageType.AuthRequired, Version: "2024.1.0"}); err != nil {
+	if err := conn.WriteJSON(ha.HassMessage{Type: ha.MsgAuthRequired, Version: "2024.1.0"}); err != nil {
 		return
 	}
 
@@ -193,17 +193,17 @@ func (s *MockHAServer) handle(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	var authMsg ha.HassMessage
+	var authMsg ha.AuthMessage
 	if err := json.Unmarshal(data, &authMsg); err != nil {
 		slog.Error("haserver: failed to unmarshal auth message", "error", err)
 		return
 	}
 
 	if s.RejectAuth || authMsg.AccessToken != s.Token {
-		conn.WriteJSON(ha.HassMessage{Type: ha.MessageType.AuthInvalid})
+		conn.WriteJSON(ha.HassMessage{Type: ha.MsgAuthInvalid})
 		return
 	}
-	if err := conn.WriteJSON(ha.HassMessage{Type: ha.MessageType.AuthOk}); err != nil {
+	if err := conn.WriteJSON(ha.HassMessage{Type: ha.MsgAuthOk}); err != nil {
 		return
 	}
 
@@ -234,11 +234,11 @@ func (s *MockHAServer) handle(w http.ResponseWriter, r *http.Request) {
 				slog.Warn("haserver: failed to unmarshal message", "error", err)
 			} else {
 				switch msg.Type {
-				case ha.MessageType.SubscribeEvents:
-					if err := conn.WriteJSON(ha.HassMessage{Type: ha.MessageType.Result, Id: msg.Id, Success: true}); err != nil {
+				case ha.MsgSubscribeEvents:
+					if err := conn.WriteJSON(ha.HassMessage{Type: ha.MsgResult, ID: msg.ID, Success: true}); err != nil {
 						return
 					}
-				case ha.MessageType.Ping:
+				case ha.MsgPing:
 					s.mu.Lock()
 					s.pingsReceived++
 					dropIt := s.DropOnPing
@@ -247,7 +247,7 @@ func (s *MockHAServer) handle(w http.ResponseWriter, r *http.Request) {
 						conn.Close()
 						return
 					}
-					if err := conn.WriteJSON(ha.HassMessage{Type: ha.MessageType.Pong, Id: msg.Id}); err != nil {
+					if err := conn.WriteJSON(ha.HassMessage{Type: ha.MsgPong, ID: msg.ID}); err != nil {
 						return
 					}
 				}
