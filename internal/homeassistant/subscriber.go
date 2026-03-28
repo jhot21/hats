@@ -40,25 +40,36 @@ var ReconnectBackoff = 5 * time.Second
 // Set to a lower value in integration tests.
 var SupervisorDelay = 15 * time.Second
 
-// Subscribe connects to Home Assistant WebSocket, subscribes to all event types,
-// and starts goroutines that route events to NATS subjects.
-func Subscribe(parentLogger *slog.Logger, parentConfig *config.HatsConfig) error {
+// Subscribe connects to Home Assistant WebSocket and starts the supervisor goroutine.
+// It returns an error if the initial connection or subscription fails.
+// cancel is called by the supervisor if an auth failure is detected during restart.
+func Subscribe(ctx context.Context, parentLogger *slog.Logger, parentConfig *config.HatsConfig, cancel context.CancelFunc) error {
 	logger = parentLogger
 	cfg = parentConfig
 
+	if err := connect(ctx); err != nil {
+		return err
+	}
+
+	go supervise(ctx, cancel)
+	return nil
+}
+
+// connect creates a fresh WSClient, subscribes to all event types, and starts the
+// event handler goroutines. It must only be called when wg is at zero.
+func connect(ctx context.Context) error {
 	var err error
 	wsClient, err = ha.NewWSClient(
 		cfg.GetHomeAssistantBaseUrl(),
 		cfg.HomeAssistantToken,
 		ha.WithPingInterval(PingInterval),
-		ha.WithMaxReconnectAttempts(10),
-		ha.WithReconnectBackoff(5*time.Second),
+		ha.WithMaxReconnectAttempts(MaxReconnectAttempts),
+		ha.WithReconnectBackoff(ReconnectBackoff),
+		ha.WithPongTimeout(10*time.Second),
 	)
 	if err != nil {
 		return fmt.Errorf("connecting to Home Assistant: %w", err)
 	}
-
-	ctx := context.Background()
 
 	stateCh, err := wsClient.Subscribe(ctx, ha.EventStateChanged)
 	if err != nil {
@@ -94,6 +105,43 @@ func Subscribe(parentLogger *slog.Logger, parentConfig *config.HatsConfig) error
 	go handleTimerFinished(timerCh)
 
 	return nil
+}
+
+// supervise watches for the event handlers to exit and restarts the subscription.
+// It exits when ctx is cancelled (clean shutdown) or when an auth failure is detected
+// (in which case it calls cancel to shut down the whole application).
+func supervise(ctx context.Context, cancel context.CancelFunc) {
+	attempt := 0
+	for {
+		wg.Wait() // block until all event handlers have exited
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+		attempt++
+		logger.Warn("HA subscription lost, restarting",
+			"attempt", attempt,
+			"delay", SupervisorDelay,
+		)
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(SupervisorDelay):
+		}
+		if err := connect(ctx); err != nil {
+			if strings.Contains(err.Error(), "authentication failed") {
+				logger.Error("HA auth failure, shutting down", "error", err)
+				cancel()
+				return
+			}
+			logger.Error("HA subscription connect failed, will retry", "error", err)
+			// wg is at 0 (no handlers started); next loop iteration: wg.Wait returns
+			// immediately, ctx is checked, then another delay before the next connect.
+			continue
+		}
+		logger.Info("HA subscription re-established")
+	}
 }
 
 // CloseSubscription shuts down the WebSocket client and waits for all event handlers to exit.

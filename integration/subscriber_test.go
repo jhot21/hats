@@ -173,13 +173,14 @@ func TestAuthInvalidStops(t *testing.T) {
 		NatsClientName:     "test-hats",
 	}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	testLogger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	require.NoError(t, internalnats.JetstreamConnect(ctx, testLogger, testCfg))
 	require.NoError(t, internalnats.KvConnect())
 	t.Cleanup(func() { internalnats.Close() })
 
-	err = internalha.Subscribe(testLogger, testCfg)
+	err = internalha.Subscribe(ctx, testLogger, testCfg, cancel)
 	require.Error(t, err, "Subscribe should return an error when auth is rejected")
 
 	assert.Never(t, func() bool {

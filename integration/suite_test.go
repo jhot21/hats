@@ -83,12 +83,12 @@ func setupSubscriber(t *testing.T, ha *haserver.MockHAServer) *nats.Conn {
 		NatsClientName:     "test-hats",
 	}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 
 	require.NoError(t, internalnats.JetstreamConnect(ctx, logger, cfg))
 	require.NoError(t, internalnats.KvConnect())
-	require.NoError(t, internalha.Subscribe(logger, cfg))
+	require.NoError(t, internalha.Subscribe(ctx, logger, cfg, cancel))
 
 	// Wait for the subscriber to authenticate and set up event subscriptions.
 	require.Eventually(t, func() bool {
@@ -99,6 +99,7 @@ func setupSubscriber(t *testing.T, ha *haserver.MockHAServer) *nats.Conn {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
+		cancel()
 		internalha.CloseSubscription()
 		internalnats.Close()
 		nc.Drain()
