@@ -295,3 +295,105 @@ func TestMultipleEventsOrdered(t *testing.T) {
 		receiveWithin(t, channels[i], 10*time.Second)
 	}
 }
+
+// TestSupervisorRestartsAfterExhaustedReconnects verifies that when the SDK exhausts its
+// reconnect attempts (channels close, all handlers exit), the supervisor detects this and
+// re-establishes the subscription so events flow again.
+//
+// Sequence: initial conn → drop → SDK tries 2 reconnects (both dropped) → exhausted →
+//
+//	supervisor waits 50ms → supervisor connects → events flow.
+func TestSupervisorRestartsAfterExhaustedReconnects(t *testing.T) {
+	internalha.MaxReconnectAttempts = 2
+	internalha.ReconnectBackoff = 10 * time.Millisecond
+	internalha.SupervisorDelay = 50 * time.Millisecond
+	t.Cleanup(func() {
+		internalha.MaxReconnectAttempts = 10
+		internalha.ReconnectBackoff = 5 * time.Second
+		internalha.SupervisorDelay = 15 * time.Second
+	})
+
+	server := haserver.New("test-token")
+	t.Cleanup(server.Close)
+	nc := setupSubscriber(t, server)
+
+	// Drop the next 2 connections (SDK reconnect attempts 1 and 2).
+	// Attempt 3 exceeds MaxReconnectAttempts=2, so reconnect() returns false.
+	server.DropNextN = 2
+	server.DropConnection()
+
+	// Wait for supervisor to re-establish: initial(1) + 2 dropped + supervisor(1) = 4 total.
+	require.Eventually(t, func() bool {
+		return server.ConnectionCount() >= 4
+	}, 10*time.Second, 100*time.Millisecond, "supervisor did not re-establish subscription after exhausted reconnects")
+
+	// Events must flow on the supervisor's new connection.
+	received := captureWithReply(t, nc, "homeassistant.states.sensor.supervisor.on")
+	listenAndReply(t, nc, "homeassistant.attributes.sensor.supervisor.on")
+	server.InjectStateChange("sensor.supervisor", "off", "on")
+	receiveWithin(t, received, 5*time.Second)
+}
+
+// TestSupervisorAuthFailureShutdown verifies that when the supervisor's reconnect attempt
+// receives auth_invalid, it calls cancel() to shut down the application gracefully.
+//
+// Sequence: initial conn (accepted) → drop → SDK tries 2 reconnects (both dropped) →
+//
+//	exhausted → supervisor waits 50ms → supervisor connect → auth_invalid →
+//	supervisor calls cancel() → ctx.Done() fires.
+func TestSupervisorAuthFailureShutdown(t *testing.T) {
+	internalha.MaxReconnectAttempts = 2
+	internalha.ReconnectBackoff = 10 * time.Millisecond
+	internalha.SupervisorDelay = 50 * time.Millisecond
+	t.Cleanup(func() {
+		internalha.MaxReconnectAttempts = 10
+		internalha.ReconnectBackoff = 5 * time.Second
+		internalha.SupervisorDelay = 15 * time.Second
+	})
+
+	server := haserver.New("test-token")
+	server.RejectAuthAfterFirst = true // accept initial connection, reject supervisor reconnect
+	t.Cleanup(server.Close)
+
+	host, port, err := net.SplitHostPort(server.Addr())
+	require.NoError(t, err)
+
+	testCfg := &config.HatsConfig{
+		HomeAssistantHost:  host,
+		HomeAssistantPort:  port,
+		HomeAssistantToken: "test-token",
+		NatsHost:           "127.0.0.1",
+		NatsPort:           natsPort,
+		NatsClientName:     "test-hats",
+	}
+
+	testLogger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	ctx, cancel := context.WithCancel(context.Background())
+
+	require.NoError(t, internalnats.JetstreamConnect(ctx, testLogger, testCfg))
+	require.NoError(t, internalnats.KvConnect())
+	t.Cleanup(func() {
+		cancel()
+		internalha.CloseSubscription()
+		internalnats.Close()
+	})
+
+	require.NoError(t, internalha.Subscribe(ctx, testLogger, testCfg, cancel))
+
+	// Wait for initial connection.
+	require.Eventually(t, func() bool {
+		return server.ConnectionCount() >= 1
+	}, 3*time.Second, 50*time.Millisecond, "initial connection not established")
+
+	// Drop next 2 connections (SDK reconnect attempts), then supervisor fires and gets auth_invalid.
+	server.DropNextN = 2
+	server.DropConnection()
+
+	// Supervisor should detect auth failure and call cancel(), closing ctx.Done().
+	select {
+	case <-ctx.Done():
+		// correct: supervisor detected auth failure and cancelled the context
+	case <-time.After(10 * time.Second):
+		t.Fatal("timeout: supervisor did not cancel context after auth failure")
+	}
+}
