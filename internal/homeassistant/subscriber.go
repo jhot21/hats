@@ -16,10 +16,11 @@ import (
 )
 
 var (
-	wsClient *ha.WSClient
-	wg       sync.WaitGroup
-	logger   *slog.Logger
-	cfg      *config.HatsConfig
+	wsClient       *ha.WSClient
+	wg             sync.WaitGroup
+	logger         *slog.Logger
+	cfg            *config.HatsConfig
+	supervisorDone chan struct{}
 )
 
 const defaultTimeout = 250 * time.Millisecond
@@ -51,7 +52,11 @@ func Subscribe(ctx context.Context, parentLogger *slog.Logger, parentConfig *con
 		return err
 	}
 
-	go supervise(ctx, cancel)
+	supervisorDone = make(chan struct{})
+	go func() {
+		defer close(supervisorDone)
+		supervise(ctx, cancel)
+	}()
 	return nil
 }
 
@@ -152,6 +157,10 @@ func CloseSubscription() error {
 	wsClient.Close()
 	wsClient = nil
 	wg.Wait()
+	if supervisorDone != nil {
+		<-supervisorDone
+		supervisorDone = nil
+	}
 	return nil
 }
 
