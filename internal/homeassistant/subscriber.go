@@ -28,6 +28,18 @@ const defaultTimeout = 250 * time.Millisecond
 // It is a var (not a const) to allow integration tests to reduce it for faster keepalive testing.
 var PingInterval = 30 * time.Second
 
+// MaxReconnectAttempts is the maximum number of SDK-level reconnect attempts per connect cycle.
+// Set to a lower value in integration tests to exhaust reconnects quickly.
+var MaxReconnectAttempts = 10
+
+// ReconnectBackoff is the base duration for SDK-level reconnect backoff.
+// Set to a lower value in integration tests.
+var ReconnectBackoff = 5 * time.Second
+
+// SupervisorDelay is how long the supervisor waits between subscription restart attempts.
+// Set to a lower value in integration tests.
+var SupervisorDelay = 15 * time.Second
+
 // Subscribe connects to Home Assistant WebSocket, subscribes to all event types,
 // and starts goroutines that route events to NATS subjects.
 func Subscribe(parentLogger *slog.Logger, parentConfig *config.HatsConfig) error {
