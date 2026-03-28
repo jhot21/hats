@@ -1,9 +1,9 @@
 module codeberg.org/jhot/hats
 
-go 1.24.0
+go 1.25.0
 
 require (
-	codeberg.org/jhot/go-ha-sdk v0.1.0-b2
+	codeberg.org/jhot/go-ha-sdk v0.1.0
 	codeberg.org/jhot/passgen v0.0.0-20260310191203-c0cce4aeabf3
 	github.com/gorilla/websocket v1.5.3
 	github.com/nats-io/nats-server/v2 v2.12.4
@@ -27,7 +27,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
-	golang.org/x/net v0.49.0 // indirect
+	golang.org/x/net v0.52.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
@@ -45,6 +45,6 @@ require (
 	github.com/nats-io/nkeys v0.4.12 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/samber/lo v1.38.1
-	golang.org/x/crypto v0.48.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/crypto v0.49.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 )
