@@ -18,7 +18,7 @@ tasks:
     requires:
       vars: [VERSION]
     status:
-      - task tags | grep {{.VERSION}}
+      - task tags | grep -x {{.VERSION}}
   tags:
     desc: List git tags
     cmds:

@@ -58,7 +58,7 @@ func main() {
 	nats.GetExistingSchedules()
 	defer nats.StopSchedules()
 
-	err = homeassistant.Subscribe(logger, cfg)
+	err = homeassistant.Subscribe(ctx, logger, cfg, cancel)
 	if err != nil {
 		panic(err)
 	}

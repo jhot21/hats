@@ -20,8 +20,10 @@ var upgrader = websocket.Upgrader{
 type MockHAServer struct {
 	Server     *httptest.Server
 	Token      string
-	RejectAuth bool // send auth_invalid instead of auth_ok
-	DropOnPing bool // close connection when first ping is received
+	RejectAuth           bool // send auth_invalid instead of auth_ok
+	DropOnPing           bool // close connection when first ping is received
+	RejectAuthAfterFirst bool // accept first connection's auth, reject all subsequent
+	DropNextN            int  // close the next N connections immediately after upgrade, before auth
 
 	mu            sync.Mutex
 	allConns      []*websocket.Conn
@@ -181,6 +183,11 @@ func (s *MockHAServer) handle(w http.ResponseWriter, r *http.Request) {
 
 	s.mu.Lock()
 	s.allConns = append(s.allConns, conn)
+	if s.DropNextN > 0 {
+		s.DropNextN--
+		s.mu.Unlock()
+		return // drop before auth — causes SDK authenticate() to fail, reconnect loop continues
+	}
 	s.mu.Unlock()
 
 	// Step 1: send auth_required
@@ -199,7 +206,14 @@ func (s *MockHAServer) handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if s.RejectAuth || authMsg.AccessToken != s.Token {
+	s.mu.Lock()
+	connCount := len(s.allConns)
+	s.mu.Unlock()
+
+	rejectAuth := s.RejectAuth ||
+		authMsg.AccessToken != s.Token ||
+		(s.RejectAuthAfterFirst && connCount > 1)
+	if rejectAuth {
 		conn.WriteJSON(ha.HassMessage{Type: ha.MsgAuthInvalid})
 		return
 	}
