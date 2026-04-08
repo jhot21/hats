@@ -90,9 +90,6 @@ These are only needed if you use the corresponding client in your subscriber. Se
 | `SYNCTHING_TOKEN` | — | Syncthing API key |
 | `GOKAPI_HOST` | `http://gokapi:53842` | Gokapi URL |
 | `GOKAPI_TOKEN` | — | Gokapi API key |
-| `QBITTORRENT_HOST` | `http://qbittorrent:8080` | qBittorrent web UI URL |
-| `QBITTORRENT_USER` | — | qBittorrent username |
-| `QBITTORRENT_PASS` | — | qBittorrent password |
 
 ### Infisical secrets
 
