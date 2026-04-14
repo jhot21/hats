@@ -57,20 +57,6 @@ client := gokapi.New(cfg.GokapiHost, cfg.GokapiToken)
 
 ---
 
-## qBittorrent
-
-Package: `codeberg.org/jhot/hats/pkg/qbittorrent`
-
-[qBittorrent](https://github.com/qbittorrent/qBittorrent) client for checking torrent status, pausing/resuming downloads, etc.
-
-```go
-import "codeberg.org/jhot/hats/pkg/qbittorrent"
-```
-
-**Config:** `QBITTORRENT_HOST` (default: `http://qbittorrent:8080`), `QBITTORRENT_USER`, `QBITTORRENT_PASS`
-
----
-
 ## Syncthing
 
 Package: `codeberg.org/jhot/hats/pkg/syncthing`

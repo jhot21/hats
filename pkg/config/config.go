@@ -44,10 +44,6 @@ type HatsConfig struct {
 	GokapiHost  string `config:"GOKAPI_HOST" default:"http://gokapi:53842"`
 	GokapiToken string `config:"GOKAPI_TOKEN" default:""`
 
-	QbittorrentHost     string `config:"QBITTORRENT_HOST" default:"http://qbittorrent:8080"`
-	QbittorrentUser     string `config:"QBITTORRENT_USER" default:""`
-	QbittorrentPassword string `config:"QBITTORRENT_PASS" default:""`
-
 	ConfigDir string `config:"CONFIG_DIR" default:"/config"`
 
 	infisicalClient *infisical.InfisicalClient

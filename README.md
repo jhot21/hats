@@ -131,7 +131,7 @@ See [docs/getting-started.md](docs/getting-started.md) for the full variable ref
 - HTTP → NATS command bridge for triggering subscriber logic from webhooks
 - Domain-specific NATS subscriber helpers (`SubscribeState`, `SubscribeZHA`, `SubscribeCommand`, etc.)
 - Direct Home Assistant REST client with concurrent service calls and history API
-- Third-party clients: [ntfy](https://ntfy.sh), [Gokapi](https://github.com/Forceu/Gokapi), [qBittorrent](https://github.com/qbittorrent/qBittorrent), [Syncthing](https://github.com/syncthing/syncthing), [National Weather Service](https://www.weather.gov/), [Amcrest cameras](https://amcrest.com/), [Infisical](https://infisical.com/)
+- Third-party clients: [ntfy](https://ntfy.sh), [Gokapi](https://github.com/Forceu/Gokapi), [Syncthing](https://github.com/syncthing/syncthing), [National Weather Service](https://www.weather.gov/), [Amcrest cameras](https://amcrest.com/), [Infisical](https://infisical.com/)
 
 ## Further reading
 

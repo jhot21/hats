@@ -5,25 +5,13 @@ includes:
     taskfile: ./Taskfile_{{OS}}.yml
     flatten: true
     optional: true
+  git:
+    taskfile: https://codeberg.org/jhot/taskfiles/raw/branch/main/git.yaml
 
 vars:
   REPO: codeberg.org/jhot/hats
 
 tasks:
-  tag:
-    desc: Tag the latest commit to VERSION and push to origin
-    cmds:
-      - git tag {{.VERSION}}
-      - git push origin {{.VERSION}}
-    requires:
-      vars: [VERSION]
-    status:
-      - task tags | grep -x {{.VERSION}}
-  tags:
-    desc: List git tags
-    cmds:
-      - git --no-pager tag --list
-    silent: true
   docker-login:
     desc: Login to the {{.REPO}} repo
     cmds:
