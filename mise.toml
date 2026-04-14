@@ -1,2 +1,5 @@
 [tools]
 go = "1"
+
+[env]
+TASK_X_REMOTE_TASKFILES = "1"
