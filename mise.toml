@@ -1,5 +1,6 @@
 [tools]
 go = "1"
+"npm:@tailwindcss/cli" = "latest"
 
 [env]
 TASK_X_REMOTE_TASKFILES = "1"
