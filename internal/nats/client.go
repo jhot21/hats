@@ -24,6 +24,11 @@ func Close() {
 	client.Close()
 }
 
+// IsConnected reports whether the NATS connection is currently active.
+func IsConnected() bool {
+	return client != nil && client.Conn != nil && client.Conn.IsConnected()
+}
+
 func JetstreamConnect(parentContext context.Context, parentLogger *slog.Logger, parentConfig *config.HatsConfig) error {
 	ctx = parentContext
 	logger = parentLogger
