@@ -21,7 +21,22 @@ var (
 	logger         *slog.Logger
 	cfg            *config.HatsConfig
 	supervisorDone chan struct{}
+	connectedMu    sync.RWMutex
+	connected      bool
 )
+
+// IsConnected reports whether the Home Assistant WebSocket is currently connected.
+func IsConnected() bool {
+	connectedMu.RLock()
+	defer connectedMu.RUnlock()
+	return connected
+}
+
+func setConnected(v bool) {
+	connectedMu.Lock()
+	connected = v
+	connectedMu.Unlock()
+}
 
 const defaultTimeout = 250 * time.Millisecond
 
@@ -109,6 +124,7 @@ func connect(ctx context.Context) error {
 	go handleZWave(zwaveCh)
 	go handleTimerFinished(timerCh)
 
+	setConnected(true)
 	return nil
 }
 
@@ -119,6 +135,7 @@ func supervise(ctx context.Context, cancel context.CancelFunc) {
 	attempt := 0
 	for {
 		wg.Wait() // block until all event handlers have exited
+		setConnected(false)
 		select {
 		case <-ctx.Done():
 			return
@@ -156,6 +173,7 @@ func CloseSubscription() error {
 	}
 	wsClient.Close()
 	wsClient = nil
+	setConnected(false)
 	wg.Wait()
 	if supervisorDone != nil {
 		<-supervisorDone
