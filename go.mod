@@ -14,14 +14,11 @@ require (
 require (
 	codeberg.org/jhot/go-sdk-base v0.1.0-b2 // indirect
 	ekyu.moe/base91 v0.2.3 // indirect
-	github.com/a-h/templ v0.3.1001 // indirect
 	github.com/aead/skein v0.0.0-20160722084837-9365ae6e95d2 // indirect
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/antithesishq/antithesis-sdk-go v0.5.0-default-no-op // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/eknkc/basex v1.0.1 // indirect
-	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/go-tpm v0.9.8 // indirect
 	github.com/google/uuid v1.3.1 // indirect
 	github.com/minio/highwayhash v1.0.4-0.20251030100505-070ab1a87a76 // indirect
