@@ -6,6 +6,7 @@ require (
 	codeberg.org/jhot/go-ha-sdk v0.1.0
 	codeberg.org/jhot/passgen v0.0.0-20260310191203-c0cce4aeabf3
 	github.com/a-h/templ v0.3.1001
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/nats-io/nats-server/v2 v2.12.4
 	github.com/nats-io/nats.go v1.48.0
@@ -20,7 +21,6 @@ require (
 	github.com/antithesishq/antithesis-sdk-go v0.5.0-default-no-op // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/eknkc/basex v1.0.1 // indirect
-	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/google/go-tpm v0.9.8 // indirect
 	github.com/google/uuid v1.3.1 // indirect
 	github.com/minio/highwayhash v1.0.4-0.20251030100505-070ab1a87a76 // indirect

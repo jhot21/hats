@@ -7,3 +7,4 @@ healthcheck
 hats
 .task/
 .superpowers/
+node_modules/
