@@ -21,7 +21,9 @@ var (
 )
 
 func Close() {
-	client.Close()
+	if client != nil {
+		client.Close()
+	}
 }
 
 // IsConnected reports whether the NATS connection is currently active.
