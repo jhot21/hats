@@ -215,8 +215,6 @@ func (s *store) flush() {
 		if err != nil {
 			continue
 		}
-		if _, err := s.kv.Put(s.ctx, hash, data); err != nil {
-			s.logger.Debug("tokens: flush skipped stale token", "hash", hash, "error", err)
-		}
+		s.kv.Put(s.ctx, hash, data) //nolint:errcheck
 	}
 }
