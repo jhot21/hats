@@ -74,37 +74,46 @@ func (s *store) startWatch() error {
 		return err
 	}
 	go func() {
-		for entry := range watcher.Updates() {
-			if entry == nil {
-				continue // signals end of initial values
-			}
-			hash := entry.Key()
-			op := entry.Operation()
-			if op == jetstream.KeyValueDelete || op == jetstream.KeyValuePurge {
+		defer watcher.Stop()
+		for {
+			select {
+			case <-s.ctx.Done():
+				return
+			case entry, ok := <-watcher.Updates():
+				if !ok {
+					return
+				}
+				if entry == nil {
+					continue // signals end of initial values
+				}
+				hash := entry.Key()
+				op := entry.Operation()
+				if op == jetstream.KeyValueDelete || op == jetstream.KeyValuePurge {
+					s.mu.Lock()
+					delete(s.cache, hash)
+					s.mu.Unlock()
+					s.usageMu.Lock()
+					delete(s.usage, hash)
+					s.usageMu.Unlock()
+					continue
+				}
+				var rec tokenRecord
+				if err := json.Unmarshal(entry.Value(), &rec); err != nil {
+					s.logger.Error("tokens: failed to unmarshal token record", "hash", hash, "error", err)
+					continue
+				}
+				t := &Token{
+					Hash:       hash,
+					Name:       rec.Name,
+					Scopes:     rec.Scopes,
+					ExpiresAt:  rec.ExpiresAt,
+					CreatedAt:  rec.CreatedAt,
+					LastUsedAt: rec.LastUsedAt,
+				}
 				s.mu.Lock()
-				delete(s.cache, hash)
+				s.cache[hash] = t
 				s.mu.Unlock()
-				s.usageMu.Lock()
-				delete(s.usage, hash)
-				s.usageMu.Unlock()
-				continue
 			}
-			var rec tokenRecord
-			if err := json.Unmarshal(entry.Value(), &rec); err != nil {
-				s.logger.Error("tokens: failed to unmarshal token record", "hash", hash, "error", err)
-				continue
-			}
-			t := &Token{
-				Hash:       hash,
-				Name:       rec.Name,
-				Scopes:     rec.Scopes,
-				ExpiresAt:  rec.ExpiresAt,
-				CreatedAt:  rec.CreatedAt,
-				LastUsedAt: rec.LastUsedAt,
-			}
-			s.mu.Lock()
-			s.cache[hash] = t
-			s.mu.Unlock()
 		}
 	}()
 	return nil
