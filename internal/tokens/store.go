@@ -174,6 +174,7 @@ func (s *store) Revoke(tokenHash string) error {
 	return err
 }
 
+// List returns pointers into the live cache. Callers must not mutate the returned Token values.
 func (s *store) List() ([]*Token, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -212,6 +213,8 @@ func (s *store) flush() {
 		if !ok {
 			continue // token was revoked between flush ticks
 		}
+		// Safe to read t's fields without holding mu: Token fields are set once at
+		// construction in startWatch and never mutated afterward.
 		lu := lastUsed
 		rec := tokenRecord{
 			Name:       t.Name,

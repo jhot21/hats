@@ -133,3 +133,15 @@ func TestStore_List(t *testing.T) {
 	}
 	assert.ElementsMatch(t, []string{"alpha", "beta"}, names)
 }
+
+func TestStore_ContextCancellation(t *testing.T) {
+	js := startTestNATS(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	_, err := tokens.NewStore(ctx, slog.Default(), js)
+	require.NoError(t, err)
+
+	// Cancel the context and give goroutines a moment to exit.
+	cancel()
+	time.Sleep(50 * time.Millisecond)
+	// The race detector will catch any goroutine accessing freed state after cancel.
+}
