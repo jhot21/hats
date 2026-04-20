@@ -16,6 +16,7 @@ import (
 	"codeberg.org/jhot/hats/internal/admin"
 	"codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/internal/ntfy"
+	"codeberg.org/jhot/hats/internal/tokens"
 	"codeberg.org/jhot/hats/pkg/config"
 	pkgnats "codeberg.org/jhot/hats/pkg/nats"
 	ntfyPkg "codeberg.org/jhot/hats/pkg/ntfy"
@@ -29,33 +30,35 @@ import (
 )
 
 var (
-	cfg      *config.HatsConfig
-	logger   *slog.Logger
-	server   http.Server
-	haClient *ha.Client
-	homepage string
+	cfg        *config.HatsConfig
+	logger     *slog.Logger
+	server     http.Server
+	haClient   *ha.Client
+	homepage   string
+	tokenStore tokens.TokenStore
 )
 
 const (
 	HA_STATE_PREFIX = "homeassistant.states"
 )
 
-func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme []byte) {
-	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme []byte) {
+func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts tokens.TokenStore, readme []byte) {
+	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts tokens.TokenStore, readme []byte) {
 		for {
-			err := Listen(parentLogger, parentConfig, readme)
+			err := Listen(parentLogger, parentConfig, ts, readme)
 			if err == nil {
 				break
 			}
 			parentLogger.Error("An error occurred with the API. Restarting now.", "error", err)
 			Close()
 		}
-	}(parentLogger, parentConfig, readme)
+	}(parentLogger, parentConfig, ts, readme)
 }
 
-func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme []byte) error {
+func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts tokens.TokenStore, readme []byte) error {
 	logger = parentLogger
 	cfg = parentConfig
+	tokenStore = ts
 
 	// render readme to HTML
 	p := parser.NewWithExtensions(parser.CommonExtensions | parser.AutoHeadingIDs | parser.NoEmptyLineBeforeBlock)
@@ -152,32 +155,49 @@ func Close() {
 	}
 }
 
-// authMiddleware checks both basic and bearer auth schemes for a token
-//
-//	When using basic auth: the username does not matter and the the password should equal the configured token
-//	When using bearer auth: set the "Authorization" header to "Bearer your-token-here"
+func extractToken(r *http.Request) string {
+	_, p, ok := r.BasicAuth()
+	if ok && p != "" {
+		return p
+	}
+	parts := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
+	if len(parts) == 2 && strings.EqualFold(parts[0], "bearer") {
+		return parts[1]
+	}
+	return ""
+}
+
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if cfg.HatsToken == "" { // No token required
-			next.ServeHTTP(w, r)
+		rawToken := extractToken(r)
+		if rawToken == "" {
+			logger.Warn("Unauthorized request: no token", "method", r.Method, "path", r.URL.Path, "address", r.RemoteAddr)
+			http.Error(w, "authorization required", http.StatusUnauthorized)
 			return
 		}
 
-		_, p, ok := r.BasicAuth()
+		var tok *tokens.Token
 
-		if ok && p == cfg.HatsToken {
-			next.ServeHTTP(w, r)
+		if t, err := tokenStore.Validate(rawToken); err == nil {
+			tok = t
+		} else if cfg.HatsToken != "" && rawToken == cfg.HatsToken {
+			logger.Warn("HATS_TOKEN is deprecated — create a named token via the admin UI and remove this env var")
+			tok = &tokens.Token{Name: "HATS_TOKEN (deprecated)", Scopes: []string{"*:*:*"}}
+		} else {
+			logger.Warn("Unauthorized request: invalid token", "method", r.Method, "path", r.URL.Path, "address", r.RemoteAddr)
+			http.Error(w, "invalid token", http.StatusUnauthorized)
 			return
 		}
 
-		authHeaderPars := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
-		if len(authHeaderPars) > 1 && strings.EqualFold(authHeaderPars[0], "bearer") && authHeaderPars[1] == cfg.HatsToken {
-			next.ServeHTTP(w, r)
+		required := tokens.RequiredScope(r)
+		if !tokens.HasScope(tok.Scopes, required) {
+			logger.Warn("Forbidden: insufficient scope", "token", tok.Name, "required", required, "method", r.Method, "path", r.URL.Path)
+			w.Header().Set("Content-Type", "application/json")
+			http.Error(w, `{"error":"missing scope: `+required+`"}`, http.StatusForbidden)
 			return
 		}
 
-		logger.Warn("Unauthorized request", "method", r.Method, "path", r.URL.Path, "address", r.RemoteAddr)
-		http.Error(w, "Bearer authorization header doesn't match configured token", http.StatusUnauthorized)
+		next.ServeHTTP(w, r.WithContext(tokens.ContextWithToken(r.Context(), tok)))
 	})
 }
 
