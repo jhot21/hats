@@ -182,7 +182,7 @@ func authMiddleware(next http.Handler) http.Handler {
 		if t, err := tokenStore.Validate(rawToken); err == nil {
 			tok = t
 		} else if cfg.HatsToken != "" && subtle.ConstantTimeCompare([]byte(rawToken), []byte(cfg.HatsToken)) == 1 {
-			logger.Warn("HATS_TOKEN is deprecated — create a named token via the admin UI and remove this env var")
+			logger.Warn("HATS_TOKEN is deprecated — create a named token via the admin UI and remove this env var", "method", r.Method, "path", r.URL.Path, "address", r.RemoteAddr)
 			tok = &tokens.Token{Name: "HATS_TOKEN (deprecated)", Scopes: []string{"*:*:*"}}
 		} else {
 			logger.Warn("Unauthorized request: invalid token", "method", r.Method, "path", r.URL.Path, "address", r.RemoteAddr)
