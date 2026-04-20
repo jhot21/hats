@@ -74,14 +74,19 @@ func RequiredScope(r *http.Request) string {
 	case "/api/command/{commandName}":
 		return "write:command:" + chi.URLParam(r, "commandName")
 	}
+	// Unknown routes require full access — any unrecognized pattern
+	// is treated as a privileged operation to fail safely.
 	return "*:*:*"
 }
 
 // HasScope reports whether any scope in granted satisfies the required scope.
 // required must be a valid "action:resource:identifier" triplet.
 func HasScope(granted []string, required string) bool {
+	if required == "" {
+		return false
+	}
 	reqParts := strings.SplitN(required, ":", 3)
-	if len(reqParts) != 3 || required == "" {
+	if len(reqParts) != 3 {
 		return false
 	}
 	for _, g := range granted {
@@ -106,8 +111,7 @@ func matchScope(granted string, reqParts []string) bool {
 			continue
 		}
 		// prefix wildcard: "light.*" matches "light.living_room"
-		if strings.HasSuffix(gPart, ".*") {
-			prefix := strings.TrimSuffix(gPart, ".*")
+		if prefix, ok := strings.CutSuffix(gPart, ".*"); ok {
 			if strings.HasPrefix(req, prefix+".") {
 				continue
 			}
