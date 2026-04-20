@@ -1,0 +1,98 @@
+package templates
+
+// TokenCreateForm renders the "create token" form inside the modal.
+// errMsg is shown if validation failed; scopesValue repopulates the scopes field.
+templ TokenCreateForm(errMsg string, scopesValue string) {
+	<div class="flex items-center justify-between mb-4">
+		<h2 class="text-lg font-semibold text-slate-100">Create API Token</h2>
+		<button
+			type="button"
+			onclick="document.getElementById('token-modal').close()"
+			class="text-slate-400 hover:text-slate-200 text-xl leading-none"
+		>
+			&times;
+		</button>
+	</div>
+	if errMsg != "" {
+		<p class="text-red-400 text-sm mb-4">{ errMsg }</p>
+	}
+	<form
+		hx-post="/admin/api/tokens"
+		hx-target="#modal-content"
+		hx-swap="innerHTML"
+		class="space-y-4"
+	>
+		<div>
+			<label class="block text-sm text-slate-400 mb-1">Name <span class="text-red-400">*</span></label>
+			<input
+				type="text"
+				name="name"
+				required
+				autofocus
+				placeholder="e.g. home-automation-hub"
+				class="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-slate-400"
+			/>
+		</div>
+		<div>
+			<label class="block text-sm text-slate-400 mb-1">Scopes <span class="text-red-400">*</span></label>
+			<textarea
+				name="scopes"
+				required
+				rows="4"
+				placeholder="One per line or comma-separated. Examples: *:*:*  read:states:*  write:states:light.*"
+				class="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-slate-100 placeholder-slate-500 font-mono text-sm focus:outline-none focus:border-slate-400"
+			>{ scopesValue }</textarea>
+			<p class="text-xs text-slate-500 mt-1">Format: <code class="font-mono">action:resource:identifier</code> — actions: <code class="font-mono">read</code>, <code class="font-mono">write</code>, <code class="font-mono">*</code> — use <code class="font-mono">*:*:*</code> {"for"} full access</p>
+		</div>
+		<div>
+			<label class="block text-sm text-slate-400 mb-1">Expiry <span class="text-slate-500">(optional)</span></label>
+			<input
+				type="date"
+				name="expires_at"
+				class="bg-slate-700 border border-slate-600 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-400"
+			/>
+		</div>
+		<div class="flex justify-end gap-3 pt-2">
+			<button
+				type="button"
+				onclick="document.getElementById('token-modal').close()"
+				class="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 transition-colors"
+			>
+				Cancel
+			</button>
+			<button
+				type="submit"
+				class="px-4 py-2 text-sm bg-slate-600 hover:bg-slate-500 text-white font-medium rounded transition-colors"
+			>
+				Create Token
+			</button>
+		</div>
+	</form>
+}
+
+// TokenCreated renders the "your token was created" view inside the modal.
+// rawToken is shown once and never retrievable again.
+templ TokenCreated(rawToken string) {
+	<div class="flex items-center justify-between mb-4">
+		<h2 class="text-lg font-semibold text-slate-100">Token Created</h2>
+	</div>
+	<div class="bg-amber-900/30 border border-amber-700 rounded p-3 mb-4">
+		<p class="text-amber-300 text-sm font-medium">Copy this token now — it will not be shown again.</p>
+	</div>
+	<div class="bg-slate-900 rounded p-3 mb-4 font-mono text-sm text-slate-100 break-all select-all">
+		{ rawToken }
+	</div>
+	<p class="text-slate-400 text-xs mb-6">Use this as a <code class="font-mono">Bearer</code> token in the <code class="font-mono">Authorization</code> header, or as the password in HTTP Basic Auth.</p>
+	<div class="flex justify-end">
+		<button
+			type="button"
+			hx-get="/admin/tokens/table"
+			hx-target="#token-table"
+			hx-swap="innerHTML"
+			hx-on::after-request="document.getElementById('token-modal').close()"
+			class="px-4 py-2 text-sm bg-slate-600 hover:bg-slate-500 text-white font-medium rounded transition-colors"
+		>
+			Done
+		</button>
+	</div>
+}
