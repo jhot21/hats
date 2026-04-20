@@ -1,0 +1,33 @@
+package templates
+
+templ StatusCards(services []ServiceStatus) {
+	<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+		for _, s := range services {
+			@statusCard(s)
+		}
+	</div>
+}
+
+templ statusCard(s ServiceStatus) {
+	<div
+		class={
+			"bg-slate-800 rounded-lg p-5 border-l-4",
+			templ.KV("border-green-500", s.Connected),
+			templ.KV("border-red-500", !s.Connected),
+		}
+	>
+		<div class="flex items-center justify-between mb-2">
+			<span class="text-sm font-medium text-slate-300">{ s.Name }</span>
+			if s.Connected {
+				<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-900 text-green-300">
+					Connected
+				</span>
+			} else {
+				<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-900 text-red-300">
+					Disconnected
+				</span>
+			}
+		</div>
+		<p class="text-xs text-slate-500">{ s.CheckedAt }</p>
+	</div>
+}

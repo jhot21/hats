@@ -5,6 +5,8 @@ go 1.25.0
 require (
 	codeberg.org/jhot/go-ha-sdk v0.1.0
 	codeberg.org/jhot/passgen v0.0.0-20260310191203-c0cce4aeabf3
+	github.com/a-h/templ v0.3.1001
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/nats-io/nats-server/v2 v2.12.4
 	github.com/nats-io/nats.go v1.48.0
@@ -45,6 +47,6 @@ require (
 	github.com/nats-io/nkeys v0.4.12 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/samber/lo v1.38.1
-	golang.org/x/crypto v0.49.0 // indirect
+	golang.org/x/crypto v0.49.0
 	golang.org/x/sys v0.42.0 // indirect
 )

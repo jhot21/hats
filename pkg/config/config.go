@@ -44,6 +44,9 @@ type HatsConfig struct {
 	GokapiHost  string `config:"GOKAPI_HOST" default:"http://gokapi:53842"`
 	GokapiToken string `config:"GOKAPI_TOKEN" default:""`
 
+	AdminPasswordHash   string `config:"ADMIN_PASSWORD_HASH" default:""`
+	AdminSessionSecret  string `config:"ADMIN_SESSION_SECRET" default:""`
+
 	ConfigDir string `config:"CONFIG_DIR" default:"/config"`
 
 	infisicalClient *infisical.InfisicalClient

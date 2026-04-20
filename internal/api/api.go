@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 
 	ha "codeberg.org/jhot/go-ha-sdk"
+	"codeberg.org/jhot/hats/internal/admin"
 	"codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/internal/ntfy"
 	"codeberg.org/jhot/hats/pkg/config"
@@ -69,6 +70,8 @@ func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, readme [
 	router.Use(loggerMiddleware)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.Timeout(60 * time.Second))
+
+	admin.Init(router, cfg, logger)
 
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		render.HTML(w, r, homepage)

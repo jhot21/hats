@@ -6,3 +6,6 @@ mockha
 healthcheck
 hats
 .task/
+.superpowers/
+node_modules/
+adminhash
