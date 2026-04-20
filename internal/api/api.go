@@ -193,7 +193,8 @@ func authMiddleware(next http.Handler) http.Handler {
 		if !tokens.HasScope(tok.Scopes, required) {
 			logger.Warn("Forbidden: insufficient scope", "token", tok.Name, "required", required, "method", r.Method, "path", r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
-			http.Error(w, `{"error":"missing scope: `+required+`"}`, http.StatusForbidden)
+			w.WriteHeader(http.StatusForbidden)
+			fmt.Fprintf(w, `{"error":"missing scope: %s"}`, required)
 			return
 		}
 
