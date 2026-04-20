@@ -11,6 +11,7 @@ import (
 	"codeberg.org/jhot/hats/internal/homeassistant"
 	"codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/internal/ntfy"
+	"codeberg.org/jhot/hats/internal/tokens"
 	"codeberg.org/jhot/hats/pkg/config"
 )
 
@@ -51,6 +52,11 @@ func main() {
 		panic(err)
 	}
 
+	ts, err := tokens.NewStore(ctx, logger, nats.JetStream())
+	if err != nil {
+		panic(err)
+	}
+
 	err = nats.ScheduleStoreConnect()
 	if err != nil {
 		panic(err)
@@ -66,7 +72,7 @@ func main() {
 
 	ntfy.InitClient(cfg)
 
-	api.InitAPI(logger, cfg, readme)
+	api.InitAPI(logger, cfg, ts, readme)
 	defer api.Close()
 
 	for sig := range interrupt {

@@ -74,7 +74,7 @@ func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts token
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.Timeout(60 * time.Second))
 
-	admin.Init(router, cfg, logger)
+	admin.Init(router, cfg, logger, tokenStore)
 
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		render.HTML(w, r, homepage)
