@@ -152,6 +152,9 @@ func parseScopes(raw string) []string {
 		if _, dup := seen[p]; dup {
 			continue
 		}
+		if strings.Count(p, ":") != 2 {
+			continue // skip malformed scopes — silently drop rather than error
+		}
 		seen[p] = struct{}{}
 		result = append(result, p)
 	}

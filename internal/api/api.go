@@ -1,6 +1,7 @@
 package api
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"io"
 	"net/http"
@@ -180,7 +181,7 @@ func authMiddleware(next http.Handler) http.Handler {
 
 		if t, err := tokenStore.Validate(rawToken); err == nil {
 			tok = t
-		} else if cfg.HatsToken != "" && rawToken == cfg.HatsToken {
+		} else if cfg.HatsToken != "" && subtle.ConstantTimeCompare([]byte(rawToken), []byte(cfg.HatsToken)) == 1 {
 			logger.Warn("HATS_TOKEN is deprecated — create a named token via the admin UI and remove this env var")
 			tok = &tokens.Token{Name: "HATS_TOKEN (deprecated)", Scopes: []string{"*:*:*"}}
 		} else {
@@ -194,7 +195,8 @@ func authMiddleware(next http.Handler) http.Handler {
 			logger.Warn("Forbidden: insufficient scope", "token", tok.Name, "required", required, "method", r.Method, "path", r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprintf(w, `{"error":"missing scope: %s"}`, required)
+			b, _ := json.Marshal(map[string]string{"error": "missing scope: " + required})
+			w.Write(b)
 			return
 		}
 

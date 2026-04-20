@@ -73,50 +73,60 @@ func (s *store) startWatch() error {
 	if err != nil {
 		return err
 	}
-	go func() {
-		defer watcher.Stop()
-		for {
-			select {
-			case <-s.ctx.Done():
-				return
-			case entry, ok := <-watcher.Updates():
-				if !ok {
+	go s.runWatch(watcher)
+	return nil
+}
+
+func (s *store) runWatch(watcher jetstream.KeyWatcher) {
+	defer watcher.Stop()
+	for {
+		select {
+		case <-s.ctx.Done():
+			return
+		case entry, ok := <-watcher.Updates():
+			if !ok {
+				// Channel closed — NATS connection dropped. Restart the watcher.
+				s.logger.Warn("tokens: KV watcher closed, restarting")
+				newWatcher, err := s.kv.WatchAll(s.ctx)
+				if err != nil {
+					s.logger.Error("tokens: failed to restart KV watcher", "error", err)
 					return
 				}
-				if entry == nil {
-					continue // signals end of initial values
-				}
-				hash := entry.Key()
-				op := entry.Operation()
-				if op == jetstream.KeyValueDelete || op == jetstream.KeyValuePurge {
-					s.mu.Lock()
-					delete(s.cache, hash)
-					s.mu.Unlock()
-					s.usageMu.Lock()
-					delete(s.usage, hash)
-					s.usageMu.Unlock()
-					continue
-				}
-				var rec tokenRecord
-				if err := json.Unmarshal(entry.Value(), &rec); err != nil {
-					s.logger.Error("tokens: failed to unmarshal token record", "hash", hash, "error", err)
-					continue
-				}
-				t := &Token{
-					Hash:       hash,
-					Name:       rec.Name,
-					Scopes:     rec.Scopes,
-					ExpiresAt:  rec.ExpiresAt,
-					CreatedAt:  rec.CreatedAt,
-					LastUsedAt: rec.LastUsedAt,
-				}
-				s.mu.Lock()
-				s.cache[hash] = t
-				s.mu.Unlock()
+				watcher = newWatcher
+				continue
 			}
+			if entry == nil {
+				continue // signals end of initial values
+			}
+			hash := entry.Key()
+			op := entry.Operation()
+			if op == jetstream.KeyValueDelete || op == jetstream.KeyValuePurge {
+				s.mu.Lock()
+				delete(s.cache, hash)
+				s.mu.Unlock()
+				s.usageMu.Lock()
+				delete(s.usage, hash)
+				s.usageMu.Unlock()
+				continue
+			}
+			var rec tokenRecord
+			if err := json.Unmarshal(entry.Value(), &rec); err != nil {
+				s.logger.Error("tokens: failed to unmarshal token record", "hash", hash, "error", err)
+				continue
+			}
+			t := &Token{
+				Hash:       hash,
+				Name:       rec.Name,
+				Scopes:     rec.Scopes,
+				ExpiresAt:  rec.ExpiresAt,
+				CreatedAt:  rec.CreatedAt,
+				LastUsedAt: rec.LastUsedAt,
+			}
+			s.mu.Lock()
+			s.cache[hash] = t
+			s.mu.Unlock()
 		}
-	}()
-	return nil
+	}
 }
 
 func (s *store) Create(name string, scopes []string, expiresAt *time.Time) (string, error) {
