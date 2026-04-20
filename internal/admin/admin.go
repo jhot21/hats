@@ -40,6 +40,16 @@ func Init(r chi.Router, cfg *config.HatsConfig, logger *slog.Logger, ts tokens.T
 			r.Use(requireAuth)
 			r.Get("/", dashboardHandler)
 			r.Get("/api/status", statusHandler)
+
+			// Token management pages
+			r.Get("/tokens", tokenListHandler)
+			r.Get("/tokens/new", tokenNewHandler)
+			r.Get("/tokens/table", tokenTableHandler)
+
+			// Token management API
+			r.Get("/api/tokens", tokenJSONListHandler)
+			r.Post("/api/tokens", tokenCreateAPIHandler)
+			r.Post("/api/tokens/{hash}/revoke", tokenRevokeAPIHandler)
 		})
 	})
 }
