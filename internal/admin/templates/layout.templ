@@ -16,10 +16,10 @@ templ Layout(title string) {
 					<span class="text-sm font-mono font-semibold text-slate-300 uppercase tracking-wider">HATS Admin</span>
 				</div>
 				<nav class="flex-1 px-3 py-4 space-y-1">
-					<a href="/admin" class="flex items-center px-3 py-2 text-sm rounded-md text-slate-100 bg-slate-700 font-medium">
+					<a href="/admin" class={ NavLinkClass(title, "Dashboard") }>
 						Dashboard
 					</a>
-					<a href="/admin/tokens" class="flex items-center px-3 py-2 text-sm rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-700 transition-colors">
+					<a href="/admin/tokens" class={ NavLinkClass(title, "Tokens") }>
 						Tokens
 					</a>
 					<span class="flex items-center px-3 py-2 text-sm rounded-md text-slate-500 cursor-not-allowed">

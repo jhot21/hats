@@ -49,7 +49,7 @@ func Tokens(toks []TokenData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><dialog id=\"token-modal\" class=\"bg-slate-800 rounded-lg p-6 w-full max-w-lg text-slate-100 backdrop:bg-black/60 open:flex open:flex-col\"><div id=\"modal-content\"></div></dialog>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><dialog id=\"token-modal\" class=\"bg-slate-800 rounded-lg p-6 w-full max-w-lg text-slate-100 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 backdrop:bg-black/70 backdrop:fixed backdrop:inset-0 open:flex open:flex-col\"><div id=\"modal-content\"></div></dialog>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

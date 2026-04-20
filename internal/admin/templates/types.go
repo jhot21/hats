@@ -18,6 +18,14 @@ type TokenData struct {
 	LastUsedAt string // "never" or "YYYY-MM-DD HH:MM"
 }
 
+// NavLinkClass returns nav link classes, highlighting the item when title matches section.
+func NavLinkClass(title, section string) string {
+	if title == section {
+		return "flex items-center px-3 py-2 text-sm rounded-md text-slate-100 bg-slate-700 font-medium"
+	}
+	return "flex items-center px-3 py-2 text-sm rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-700 transition-colors"
+}
+
 // ScopeBadgeClass returns the Tailwind CSS classes for a scope badge based on its action.
 func ScopeBadgeClass(scope string) string {
 	parts := strings.SplitN(scope, ":", 3)

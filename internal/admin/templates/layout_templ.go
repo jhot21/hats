@@ -42,7 +42,51 @@ func Layout(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " — HATS Admin</title><link rel=\"stylesheet\" href=\"/admin/static/admin.css\"><script src=\"/admin/static/htmx.min.js\"></script></head><body class=\"h-full flex bg-slate-900 text-slate-100\"><aside class=\"w-56 flex-shrink-0 bg-slate-800 flex flex-col\"><div class=\"px-4 py-5 border-b border-slate-700\"><span class=\"text-sm font-mono font-semibold text-slate-300 uppercase tracking-wider\">HATS Admin</span></div><nav class=\"flex-1 px-3 py-4 space-y-1\"><a href=\"/admin\" class=\"flex items-center px-3 py-2 text-sm rounded-md text-slate-100 bg-slate-700 font-medium\">Dashboard</a> <a href=\"/admin/tokens\" class=\"flex items-center px-3 py-2 text-sm rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-700 transition-colors\">Tokens</a> <span class=\"flex items-center px-3 py-2 text-sm rounded-md text-slate-500 cursor-not-allowed\">Secrets</span> <span class=\"flex items-center px-3 py-2 text-sm rounded-md text-slate-500 cursor-not-allowed\">Cache</span></nav><div class=\"px-3 py-4 border-t border-slate-700\"><a href=\"/admin/logout\" class=\"flex items-center px-3 py-2 text-sm rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-700 transition-colors\">Logout</a></div></aside><main class=\"flex-1 overflow-auto p-8\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " — HATS Admin</title><link rel=\"stylesheet\" href=\"/admin/static/admin.css\"><script src=\"/admin/static/htmx.min.js\"></script></head><body class=\"h-full flex bg-slate-900 text-slate-100\"><aside class=\"w-56 flex-shrink-0 bg-slate-800 flex flex-col\"><div class=\"px-4 py-5 border-b border-slate-700\"><span class=\"text-sm font-mono font-semibold text-slate-300 uppercase tracking-wider\">HATS Admin</span></div><nav class=\"flex-1 px-3 py-4 space-y-1\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var3 = []any{NavLinkClass(title, "Dashboard")}
+		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var3...)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<a href=\"/admin\" class=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var4 string
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var3).String())
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/layout.templ`, Line: 1, Col: 0}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\">Dashboard</a> ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var5 = []any{NavLinkClass(title, "Tokens")}
+		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var5...)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<a href=\"/admin/tokens\" class=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var6 string
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var5).String())
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/layout.templ`, Line: 1, Col: 0}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\">Tokens</a> <span class=\"flex items-center px-3 py-2 text-sm rounded-md text-slate-500 cursor-not-allowed\">Secrets</span> <span class=\"flex items-center px-3 py-2 text-sm rounded-md text-slate-500 cursor-not-allowed\">Cache</span></nav><div class=\"px-3 py-4 border-t border-slate-700\"><a href=\"/admin/logout\" class=\"flex items-center px-3 py-2 text-sm rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-700 transition-colors\">Logout</a></div></aside><main class=\"flex-1 overflow-auto p-8\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -50,7 +94,7 @@ func Layout(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</main></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</main></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
