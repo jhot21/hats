@@ -36,46 +36,64 @@ package tokens
 import (
 	"net/http"
 	"strings"
-
-	"github.com/go-chi/chi/v5"
 )
 
-// RequiredScope returns the scope a request must satisfy based on its route and method.
-// Called after chi routing so URL params are available.
+// RequiredScope returns the scope a request must satisfy based on its URL path and method.
+// Parses r.URL.Path directly rather than chi's RoutePattern, because sub-router middleware
+// runs before chi resolves the specific sub-route, making RoutePattern unreliable here.
 func RequiredScope(r *http.Request) string {
-	rctx := chi.RouteContext(r.Context())
-	if rctx == nil {
+	// Strip the /api/ prefix to get the resource segment(s).
+	sub := strings.TrimPrefix(r.URL.Path, "/api/")
+	if sub == r.URL.Path {
+		// Not an /api/ path — fail safe.
 		return "*:*:*"
 	}
-	pattern := rctx.RoutePattern()
-	switch pattern {
-	case "/api/state/{entityId}":
-		entity := chi.URLParam(r, "entityId")
-		if r.Method == http.MethodGet {
-			return "read:states:" + entity
-		}
-		return "write:states:" + entity
-	case "/api/state/{entityId}/{service}":
-		return "write:states:" + chi.URLParam(r, "entityId")
-	case "/api/timer/{timerName}":
-		name := chi.URLParam(r, "timerName")
-		if r.Method == http.MethodGet {
-			return "read:timer:" + name
-		}
-		return "write:timer:" + name
-	case "/api/schedule/{scheduleName}":
-		name := chi.URLParam(r, "scheduleName")
-		if r.Method == http.MethodGet {
-			return "read:schedule:" + name
-		}
-		return "write:schedule:" + name
-	case "/api/ntfy", "/api/ntfy/clear":
-		return "write:ntfy:*"
-	case "/api/command/{commandName}":
-		return "write:command:" + chi.URLParam(r, "commandName")
+
+	// Split into at most 3 parts: resource, identifier, optional extra segment.
+	parts := strings.SplitN(sub, "/", 3)
+	if len(parts) == 0 || parts[0] == "" {
+		return "*:*:*"
 	}
-	// Unknown routes require full access — any unrecognized pattern
-	// is treated as a privileged operation to fail safely.
+
+	switch parts[0] {
+	case "state":
+		if len(parts) < 2 || parts[1] == "" {
+			break
+		}
+		if len(parts) == 3 {
+			// /api/state/{entityId}/{service}
+			return "write:states:" + parts[1]
+		}
+		// /api/state/{entityId}
+		if r.Method == http.MethodGet {
+			return "read:states:" + parts[1]
+		}
+		return "write:states:" + parts[1]
+	case "timer":
+		if len(parts) < 2 || parts[1] == "" {
+			break
+		}
+		if r.Method == http.MethodGet {
+			return "read:timer:" + parts[1]
+		}
+		return "write:timer:" + parts[1]
+	case "schedule":
+		if len(parts) < 2 || parts[1] == "" {
+			break
+		}
+		if r.Method == http.MethodGet {
+			return "read:schedule:" + parts[1]
+		}
+		return "write:schedule:" + parts[1]
+	case "ntfy":
+		return "write:ntfy:*"
+	case "command":
+		if len(parts) < 2 || parts[1] == "" {
+			break
+		}
+		return "write:command:" + parts[1]
+	}
+	// Unknown routes require full access — fail safe.
 	return "*:*:*"
 }
 

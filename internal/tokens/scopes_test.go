@@ -1,11 +1,55 @@
 package tokens_test
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"codeberg.org/jhot/hats/internal/tokens"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestRequiredScope(t *testing.T) {
+	cases := []struct {
+		method string
+		path   string
+		want   string
+	}{
+		// state
+		{http.MethodGet, "/api/state/light.bedroom", "read:states:light.bedroom"},
+		{http.MethodPost, "/api/state/light.bedroom", "write:states:light.bedroom"},
+		{http.MethodPost, "/api/state/light.bedroom/turn_on", "write:states:light.bedroom"},
+
+		// timer
+		{http.MethodGet, "/api/timer/my_timer", "read:timer:my_timer"},
+		{http.MethodPost, "/api/timer/my_timer", "write:timer:my_timer"},
+		{http.MethodDelete, "/api/timer/my_timer", "write:timer:my_timer"},
+
+		// schedule
+		{http.MethodGet, "/api/schedule/morning", "read:schedule:morning"},
+		{http.MethodPost, "/api/schedule/morning", "write:schedule:morning"},
+		{http.MethodDelete, "/api/schedule/morning", "write:schedule:morning"},
+
+		// ntfy
+		{http.MethodPost, "/api/ntfy", "write:ntfy:*"},
+		{http.MethodDelete, "/api/ntfy", "write:ntfy:*"},
+		{http.MethodPut, "/api/ntfy/clear", "write:ntfy:*"},
+
+		// command
+		{http.MethodPost, "/api/command/bedtime", "write:command:bedtime"},
+
+		// unknown — fail safe
+		{http.MethodGet, "/api/unknown/thing", "*:*:*"},
+		{http.MethodGet, "/other/path", "*:*:*"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.method+" "+tc.path, func(t *testing.T) {
+			r := httptest.NewRequest(tc.method, tc.path, nil)
+			assert.Equal(t, tc.want, tokens.RequiredScope(r))
+		})
+	}
+}
 
 func TestHasScope(t *testing.T) {
 	cases := []struct {
