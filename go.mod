@@ -3,7 +3,7 @@ module codeberg.org/jhot/hats
 go 1.25.0
 
 require (
-	codeberg.org/jhot/go-ha-sdk v0.1.0
+	codeberg.org/jhot/go-ha-sdk v0.2.0
 	codeberg.org/jhot/passgen v0.0.0-20260310191203-c0cce4aeabf3
 	github.com/a-h/templ v0.3.1001
 	github.com/golang-jwt/jwt/v5 v5.3.1
@@ -14,7 +14,7 @@ require (
 )
 
 require (
-	codeberg.org/jhot/go-sdk-base v0.1.0-b2 // indirect
+	codeberg.org/jhot/go-sdk-base v0.1.0-b3 // indirect
 	ekyu.moe/base91 v0.2.3 // indirect
 	github.com/aead/skein v0.0.0-20160722084837-9365ae6e95d2 // indirect
 	github.com/ajg/form v1.5.1 // indirect
@@ -29,7 +29,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
-	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/net v0.53.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
@@ -47,6 +47,6 @@ require (
 	github.com/nats-io/nkeys v0.4.12 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/samber/lo v1.38.1
-	golang.org/x/crypto v0.49.0
-	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/crypto v0.50.0
+	golang.org/x/sys v0.43.0 // indirect
 )
