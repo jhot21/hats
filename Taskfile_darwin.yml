@@ -35,6 +35,7 @@ tasks:
       - docker buildx ls | grep 'multiplatform\*'
   docker-build:
     desc: Build and optionally push the multiplatform docker image
+    aliases: [docker:build]
     deps: [buildx-use-colima]
     cmds:
       - >
