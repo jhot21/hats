@@ -87,7 +87,7 @@ templ TokenCreated(rawToken string) {
 		<button
 			type="button"
 			hx-get="/admin/tokens/table"
-			hx-target="#token-table"
+			hx-target="#token-list"
 			hx-swap="innerHTML"
 			hx-on::after-request="document.getElementById('token-modal').close()"
 			class="px-4 py-2 text-sm bg-slate-600 hover:bg-slate-500 text-white font-medium rounded transition-colors"
