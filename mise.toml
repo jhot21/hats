@@ -1,5 +1,6 @@
 [tools]
 go = "1"
+node = "lts"
 "npm:@tailwindcss/cli" = "latest"
 
 [env]
