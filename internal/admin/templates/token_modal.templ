@@ -13,6 +13,7 @@ templ TokenCreateForm(errMsg string, scopesValue string) {
 				type="button"
 				onclick="document.getElementById('token-modal').close()"
 				class="modal-close"
+				aria-label="Close"
 			>
 				&times;
 			</button>
@@ -28,8 +29,9 @@ templ TokenCreateForm(errMsg string, scopesValue string) {
 		>
 			<div class="modal-body">
 				<div class="form-field">
-					<label class="form-label">Name <span class="required">*</span></label>
+					<label class="form-label" for="token-name">Name <span class="required">*</span></label>
 					<input
+						id="token-name"
 						type="text"
 						name="name"
 						required
@@ -39,8 +41,9 @@ templ TokenCreateForm(errMsg string, scopesValue string) {
 					/>
 				</div>
 				<div class="form-field">
-					<label class="form-label">Scopes <span class="required">*</span></label>
+					<label class="form-label" for="token-scopes">Scopes <span class="required">*</span></label>
 					<textarea
+						id="token-scopes"
 						name="scopes"
 						required
 						rows="4"
@@ -50,8 +53,9 @@ templ TokenCreateForm(errMsg string, scopesValue string) {
 					<p class="form-help">Format: <code>action:resource:identifier</code> — actions: <code>read</code>, <code>write</code>, <code>*</code> — use <code>*:*:*</code> {"for"} full access</p>
 				</div>
 				<div class="form-field">
-					<label class="form-label">Expiry <span class="optional">optional</span></label>
+					<label class="form-label" for="token-expires">Expiry <span class="optional">optional</span></label>
 					<input
+						id="token-expires"
 						type="date"
 						name="expires_at"
 						class="form-input mono"

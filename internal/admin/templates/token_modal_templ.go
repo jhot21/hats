@@ -31,19 +31,19 @@ func TokenCreateForm(errMsg string, scopesValue string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex items-center justify-between mb-4\"><h2 class=\"text-lg font-semibold text-slate-100\">Create API Token</h2><button type=\"button\" onclick=\"document.getElementById('token-modal').close()\" class=\"text-slate-400 hover:text-slate-200 text-xl leading-none\">&times;</button></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"modal\"><div class=\"modal-header\"><div><div class=\"modal-eyebrow\">Administration</div><div class=\"modal-title\">Create API Token</div></div><button type=\"button\" onclick=\"document.getElementById('token-modal').close()\" class=\"modal-close\" aria-label=\"Close\">&times;</button></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if errMsg != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p class=\"text-red-400 text-sm mb-4\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p class=\"login-error\" style=\"margin: 0 28px;\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(errMsg)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 17, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 22, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
@@ -54,33 +54,33 @@ func TokenCreateForm(errMsg string, scopesValue string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<form hx-post=\"/admin/api/tokens\" hx-target=\"#modal-content\" hx-swap=\"innerHTML\" class=\"space-y-4\"><div><label class=\"block text-sm text-slate-400 mb-1\">Name <span class=\"text-red-400\">*</span></label> <input type=\"text\" name=\"name\" required autofocus placeholder=\"e.g. home-automation-hub\" class=\"w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-slate-400\"></div><div><label class=\"block text-sm text-slate-400 mb-1\">Scopes <span class=\"text-red-400\">*</span></label> <textarea name=\"scopes\" required rows=\"4\" placeholder=\"One per line or comma-separated. Examples: *:*:*  read:states:*  write:states:light.*\" class=\"w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-slate-100 placeholder-slate-500 font-mono text-sm focus:outline-none focus:border-slate-400\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<form hx-post=\"/admin/api/tokens\" hx-target=\"#modal-content\" hx-swap=\"innerHTML\" style=\"display: flex; flex-direction: column; flex: 1;\"><div class=\"modal-body\"><div class=\"form-field\"><label class=\"form-label\" for=\"token-name\">Name <span class=\"required\">*</span></label> <input id=\"token-name\" type=\"text\" name=\"name\" required autofocus placeholder=\"e.g. home-automation-hub\" class=\"form-input\"></div><div class=\"form-field\"><label class=\"form-label\" for=\"token-scopes\">Scopes <span class=\"required\">*</span></label> <textarea id=\"token-scopes\" name=\"scopes\" required rows=\"4\" placeholder=\"One per line or comma-separated. Examples: *:*:*  read:states:*  write:states:light.*\" class=\"form-input mono\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(scopesValue)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 44, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 52, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</textarea><p class=\"text-xs text-slate-500 mt-1\">Format: <code class=\"font-mono\">action:resource:identifier</code> — actions: <code class=\"font-mono\">read</code>, <code class=\"font-mono\">write</code>, <code class=\"font-mono\">*</code> — use <code class=\"font-mono\">*:*:*</code> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</textarea><p class=\"form-help\">Format: <code>action:resource:identifier</code> — actions: <code>read</code>, <code>write</code>, <code>*</code> — use <code>*:*:*</code> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs("for")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 45, Col: 280}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 53, Col: 174}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, " full access</p></div><div><label class=\"block text-sm text-slate-400 mb-1\">Expiry <span class=\"text-slate-500\">(optional)</span></label> <input type=\"date\" name=\"expires_at\" class=\"bg-slate-700 border border-slate-600 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-400\"></div><div class=\"flex justify-end gap-3 pt-2\"><button type=\"button\" onclick=\"document.getElementById('token-modal').close()\" class=\"px-4 py-2 text-sm text-slate-400 hover:text-slate-200 transition-colors\">Cancel</button> <button type=\"submit\" class=\"px-4 py-2 text-sm bg-slate-600 hover:bg-slate-500 text-white font-medium rounded transition-colors\">Create Token</button></div></form>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, " full access</p></div><div class=\"form-field\"><label class=\"form-label\" for=\"token-expires\">Expiry <span class=\"optional\">optional</span></label> <input id=\"token-expires\" type=\"date\" name=\"expires_at\" class=\"form-input mono\"></div></div><div class=\"modal-footer\"><span></span><div style=\"display: flex; gap: 10px;\"><button type=\"button\" onclick=\"document.getElementById('token-modal').close()\" class=\"btn btn-ghost\">Cancel</button> <button type=\"submit\" class=\"btn btn-primary\">Create Token</button></div></div></form></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -111,20 +111,20 @@ func TokenCreated(rawToken string) templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"flex items-center justify-between mb-4\"><h2 class=\"text-lg font-semibold text-slate-100\">Token Created</h2></div><div class=\"bg-amber-900/30 border border-amber-700 rounded p-3 mb-4\"><p class=\"text-amber-300 text-sm font-medium\">Copy this token now — it will not be shown again.</p></div><div class=\"bg-slate-900 rounded p-3 mb-4 font-mono text-sm text-slate-100 break-all select-all\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"modal\"><div class=\"modal-header\"><div><div class=\"modal-eyebrow\">Administration</div><div class=\"modal-title\">Token Created</div></div></div><div class=\"modal-body\"><div style=\"background: rgba(232, 184, 97, 0.08); border: 1px solid rgba(232, 184, 97, 0.25); border-radius: 6px; padding: 12px 14px; margin-bottom: 16px;\"><p style=\"color: var(--warn); font-size: 13px; font-weight: 500;\">Copy this token now — it will not be shown again.</p></div><div style=\"background: var(--navy-950); border: 1px solid var(--border-strong); border-radius: 6px; padding: 14px; font-family: var(--font-mono); font-size: 12px; color: var(--text); word-break: break-all; user-select: all;\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(rawToken)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 83, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 104, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div><p class=\"text-slate-400 text-xs mb-6\">Use this as a <code class=\"font-mono\">Bearer</code> token in the <code class=\"font-mono\">Authorization</code> header, or as the password in HTTP Basic Auth.</p><div class=\"flex justify-end\"><button type=\"button\" hx-get=\"/admin/tokens/table\" hx-target=\"#token-list\" hx-swap=\"innerHTML\" hx-on::after-request=\"document.getElementById('token-modal').close()\" class=\"px-4 py-2 text-sm bg-slate-600 hover:bg-slate-500 text-white font-medium rounded transition-colors\">Done</button></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div><p class=\"form-help\" style=\"margin-top: 12px;\">Use this as a <code>Bearer</code> token in the <code>Authorization</code> header, or as the password in HTTP Basic Auth.</p></div><div class=\"modal-footer\"><span></span> <button type=\"button\" hx-get=\"/admin/tokens/table\" hx-target=\"#token-list\" hx-swap=\"innerHTML\" hx-on::after-request=\"document.getElementById('token-modal').close()\" class=\"btn btn-primary\">Done</button></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
