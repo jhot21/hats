@@ -33,9 +33,6 @@ func NavLinkClass(title, section string) string {
 // Deprecated: use ScopeTagClass instead. Kept temporarily for backward compatibility.
 func ScopeBadgeClass(scope string) string {
 	parts := strings.SplitN(scope, ":", 3)
-	if len(parts) == 0 {
-		return "bg-slate-700 text-slate-300"
-	}
 	switch parts[0] {
 	case "read":
 		return "bg-teal-900 text-teal-300"
@@ -49,9 +46,6 @@ func ScopeBadgeClass(scope string) string {
 // ScopeTagClass returns the CSS class for a scope tag.
 func ScopeTagClass(scope string) string {
 	parts := strings.SplitN(scope, ":", 3)
-	if len(parts) == 0 {
-		return "scope-tag"
-	}
 	switch parts[0] {
 	case "write":
 		return "scope-tag write"
