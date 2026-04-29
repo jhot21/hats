@@ -31,7 +31,7 @@ func tokenTableHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	templates.TokenTable(tokenDataList(toks)).Render(r.Context(), w)
+	templates.TokenList(tokenDataList(toks)).Render(r.Context(), w)
 }
 
 // tokenNewHandler returns the create token modal form fragment.
@@ -99,7 +99,7 @@ func tokenRevokeAPIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	templates.TokenTable(tokenDataList(toks)).Render(r.Context(), w)
+	templates.TokenList(tokenDataList(toks)).Render(r.Context(), w)
 }
 
 // tokenJSONListHandler returns all tokens as JSON (for programmatic access).

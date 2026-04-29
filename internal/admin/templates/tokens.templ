@@ -2,84 +2,90 @@ package templates
 
 templ Tokens(toks []TokenData) {
 	@Layout("Tokens", "Administration") {
-		<div class="mb-6 flex items-center justify-between">
+		<div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px;">
 			<div>
-				<h1 class="text-2xl font-semibold text-slate-100">API Tokens</h1>
-				<p class="text-slate-400 text-sm mt-1">Manage API access tokens and their scopes</p>
+				<h1 class="page-title">Access <strong>Tokens</strong></h1>
+				<div class="page-meta">
+					<span>MANAGE API ACCESS AND SCOPES</span>
+				</div>
 			</div>
 			<button
 				hx-get="/admin/tokens/new"
 				hx-target="#modal-content"
 				hx-swap="innerHTML"
 				hx-on::after-request="document.getElementById('token-modal').showModal()"
-				class="bg-slate-600 hover:bg-slate-500 text-white text-sm font-medium py-2 px-4 rounded transition-colors"
+				class="btn btn-primary"
 			>
 				+ Create Token
 			</button>
 		</div>
-		<div id="token-table">
-			@TokenTable(toks)
+		<div id="token-list">
+			@TokenList(toks)
 		</div>
-		<dialog
-			id="token-modal"
-			class="bg-slate-800 rounded-lg p-6 w-full max-w-lg text-slate-100 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 backdrop:bg-black/70 backdrop:fixed backdrop:inset-0 open:flex open:flex-col"
-		>
+		<dialog id="token-modal" class="modal-backdrop">
 			<div id="modal-content"></div>
 		</dialog>
 	}
 }
 
-templ TokenTable(toks []TokenData) {
+templ TokenList(toks []TokenData) {
 	if len(toks) == 0 {
-		<div class="bg-slate-800 rounded-lg p-8 text-center text-slate-400 text-sm">
-			No tokens yet. Create one to get started.
+		<div class="panel" style="padding: 40px; text-align: center;">
+			<p style="font-family: var(--font-mono); font-size: 13px; color: var(--text-mute); letter-spacing: 0.05em;">
+				No tokens yet. Create one to get started.
+			</p>
 		</div>
 	} else {
-		<div class="bg-slate-800 rounded-lg overflow-hidden">
-			<table class="w-full text-sm">
-				<thead>
-					<tr class="border-b border-slate-700 text-slate-400 text-xs uppercase tracking-wider">
-						<th class="text-left px-4 py-3 font-medium">Name</th>
-						<th class="text-left px-4 py-3 font-medium">Scopes</th>
-						<th class="text-left px-4 py-3 font-medium">Expiry</th>
-						<th class="text-left px-4 py-3 font-medium">Last Used</th>
-						<th class="px-4 py-3"></th>
-					</tr>
-				</thead>
-				<tbody>
-					for _, t := range toks {
-						@tokenRow(t)
-					}
-				</tbody>
-			</table>
+		<div class="token-list">
+			for _, t := range toks {
+				@tokenCard(t)
+			}
 		</div>
 	}
 }
 
-templ tokenRow(t TokenData) {
-	<tr class="border-b border-slate-700 last:border-0 hover:bg-slate-750">
-		<td class="px-4 py-3 font-medium text-slate-100">{ t.Name }</td>
-		<td class="px-4 py-3">
-			<div class="flex flex-wrap gap-1">
-				for _, s := range t.Scopes {
-					<span class={ "inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium " + ScopeBadgeClass(s) }>
-						{ s }
+templ tokenCard(t TokenData) {
+	<div class="token-card">
+		<div class="token-card-head">
+			<div>
+				<div class="token-name">
+					{ t.Name }
+					<span class={ TokenStatusPillClass(t) }>{ TokenStatusLabel(t) }</span>
+				</div>
+				<div class="token-hash">{ TokenHashPreview(t.Hash) }</div>
+			</div>
+		</div>
+		<div class="scope-tags">
+			for _, s := range t.Scopes {
+				@ScopeTag(s)
+			}
+		</div>
+		<div class="token-footer">
+			<div>
+				<span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-mute);">
+					Last used: { t.LastUsedAt }
+				</span>
+				if t.ExpiresAt != "never" {
+					<span class={ "expiry " + ExpiryClass(t.ExpiresAt) } style="margin-left: 16px;">
+						Expires: { t.ExpiresAt }
 					</span>
 				}
 			</div>
-		</td>
-		<td class="px-4 py-3 text-slate-400">{ t.ExpiresAt }</td>
-		<td class="px-4 py-3 text-slate-400">{ t.LastUsedAt }</td>
-		<td class="px-4 py-3 text-right">
-			<button
-				hx-post={ "/admin/api/tokens/" + t.Hash + "/revoke" }
-				hx-confirm={ "Revoke token \"" + t.Name + "\"? This cannot be undone." }
-				hx-target="#token-table"
-				hx-swap="innerHTML"
-				class="text-red-400 hover:text-red-300 text-xs font-medium transition-colors"
-			>
-				Revoke
-			</button>
-		</td>
-	</tr>
+			<div class="token-actions">
+				<button
+					hx-post={ "/admin/api/tokens/" + t.Hash + "/revoke" }
+					hx-confirm={ "Revoke token \"" + t.Name + "\"? This cannot be undone." }
+					hx-target="#token-list"
+					hx-swap="innerHTML"
+					class="btn btn-danger"
+				>
+					Revoke
+				</button>
+			</div>
+		</div>
+	</div>
+}
+
+templ ScopeTag(scope string) {
+	<span class={ ScopeTagClass(scope) }>{ scope }</span>
 }

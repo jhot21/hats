@@ -29,20 +29,6 @@ func NavLinkClass(title, section string) string {
 	return "nav-item"
 }
 
-// ScopeBadgeClass returns Tailwind CSS classes for a scope badge.
-// Deprecated: use ScopeTagClass instead. Kept temporarily for backward compatibility.
-func ScopeBadgeClass(scope string) string {
-	parts := strings.SplitN(scope, ":", 3)
-	switch parts[0] {
-	case "read":
-		return "bg-teal-900 text-teal-300"
-	case "write":
-		return "bg-amber-900 text-amber-300"
-	default:
-		return "bg-purple-900 text-purple-300"
-	}
-}
-
 // ScopeTagClass returns the CSS class for a scope tag.
 func ScopeTagClass(scope string) string {
 	parts := strings.SplitN(scope, ":", 3)
