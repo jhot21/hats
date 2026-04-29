@@ -29,7 +29,7 @@ func Login(errMsg string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\" class=\"h-full\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Login — HATS Admin</title><link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link href=\"https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700;800&display=swap\" rel=\"stylesheet\"><link rel=\"stylesheet\" href=\"/admin/static/admin.css\"></head><body><div class=\"login-page\"><div class=\"login-card\"><div class=\"panel\" style=\"padding: 36px 40px;\"><div class=\"login-title\"><div class=\"brand-mark\"><svg viewBox=\"0 0 100 100\" fill=\"none\"><path d=\"M50 8 L86 29 L86 71 L50 92 L14 71 L14 29 Z\" stroke=\"var(--teal)\" stroke-width=\"3\"></path> <rect x=\"42\" y=\"32\" width=\"16\" height=\"16\" stroke=\"var(--teal)\" stroke-width=\"2.2\" fill=\"none\"></rect> <rect x=\"26\" y=\"54\" width=\"16\" height=\"16\" stroke=\"var(--teal)\" stroke-width=\"2.2\" fill=\"none\"></rect> <rect x=\"58\" y=\"54\" width=\"16\" height=\"16\" stroke=\"var(--teal)\" stroke-width=\"2.2\" fill=\"none\"></rect> <path d=\"M50 48 L50 54 M50 54 L34 54 M50 54 L66 54\" stroke=\"var(--teal)\" stroke-width=\"2.2\"></path></svg></div><div><span class=\"wordmark\">HATS</span> <span class=\"subtitle\">Admin Access</span></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\" class=\"h-full\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Login — HATS Admin</title><link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link href=\"https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700;800&display=swap\" rel=\"stylesheet\"><link rel=\"stylesheet\" href=\"/admin/static/admin.css\"></head><body class=\"login-page\"><div class=\"login-card\"><div class=\"panel\" style=\"padding: 36px 40px;\"><div class=\"login-title\"><div class=\"brand-mark\"><svg viewBox=\"0 0 100 100\" fill=\"none\"><path d=\"M50 8 L86 29 L86 71 L50 92 L14 71 L14 29 Z\" stroke=\"var(--teal)\" stroke-width=\"3\"></path> <rect x=\"42\" y=\"32\" width=\"16\" height=\"16\" stroke=\"var(--teal)\" stroke-width=\"2.2\" fill=\"none\"></rect> <rect x=\"26\" y=\"54\" width=\"16\" height=\"16\" stroke=\"var(--teal)\" stroke-width=\"2.2\" fill=\"none\"></rect> <rect x=\"58\" y=\"54\" width=\"16\" height=\"16\" stroke=\"var(--teal)\" stroke-width=\"2.2\" fill=\"none\"></rect> <path d=\"M50 48 L50 54 M50 54 L34 54 M50 54 L66 54\" stroke=\"var(--teal)\" stroke-width=\"2.2\"></path></svg></div><div><span class=\"wordmark\">HATS</span> <span class=\"subtitle\">Admin Access</span></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -41,7 +41,7 @@ func Login(errMsg string) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(errMsg)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/login.templ`, Line: 35, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/login.templ`, Line: 34, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
@@ -52,7 +52,7 @@ func Login(errMsg string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<form method=\"POST\" action=\"/admin/login\" style=\"display: flex; flex-direction: column; gap: 20px;\"><div class=\"form-field\"><label class=\"form-label\">Password <span class=\"required\">*</span></label> <input type=\"password\" name=\"password\" autofocus class=\"form-input\"></div><button type=\"submit\" class=\"btn btn-primary\" style=\"width: 100%; justify-content: center;\">Sign in</button></form></div></div></div></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<form method=\"POST\" action=\"/admin/login\" style=\"display: flex; flex-direction: column; gap: 20px;\"><div class=\"form-field\"><label class=\"form-label\" for=\"password\">Password <span class=\"required\">*</span></label> <input id=\"password\" type=\"password\" name=\"password\" autofocus class=\"form-input\"></div><button type=\"submit\" class=\"btn btn-primary\" style=\"width: 100%; justify-content: center;\">Sign in</button></form></div></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
