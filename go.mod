@@ -41,7 +41,6 @@ require (
 	github.com/go-chi/render v1.0.3
 	github.com/go-co-op/gocron v1.35.2
 	github.com/go-resty/resty/v2 v2.17.2
-	github.com/gomarkdown/markdown v0.0.0-20231115200524-a660076da3fd
 	github.com/icholy/digest v0.1.22
 	github.com/klauspost/compress v1.18.3 // indirect
 	github.com/nats-io/nkeys v0.4.12 // indirect

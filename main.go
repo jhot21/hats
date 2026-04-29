@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	_ "embed"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -14,9 +13,6 @@ import (
 	"codeberg.org/jhot/hats/internal/tokens"
 	"codeberg.org/jhot/hats/pkg/config"
 )
-
-//go:embed README.md
-var readme []byte
 
 var (
 	interrupt chan os.Signal
@@ -72,7 +68,7 @@ func main() {
 
 	ntfy.InitClient(cfg)
 
-	api.InitAPI(logger, cfg, ts, readme)
+	api.InitAPI(logger, cfg, ts)
 	defer api.Close()
 
 	for sig := range interrupt {

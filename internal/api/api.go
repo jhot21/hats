@@ -25,9 +25,8 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
-	"github.com/gomarkdown/markdown"
-	"github.com/gomarkdown/markdown/html"
-	"github.com/gomarkdown/markdown/parser"
+
+	"codeberg.org/jhot/hats/internal/admin/templates"
 )
 
 var (
@@ -35,7 +34,6 @@ var (
 	logger     *slog.Logger
 	server     http.Server
 	haClient   *ha.Client
-	homepage   string
 	tokenStore tokens.TokenStore
 )
 
@@ -43,28 +41,23 @@ const (
 	HA_STATE_PREFIX = "homeassistant.states"
 )
 
-func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts tokens.TokenStore, readme []byte) {
-	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts tokens.TokenStore, readme []byte) {
+func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts tokens.TokenStore) {
+	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts tokens.TokenStore) {
 		for {
-			err := Listen(parentLogger, parentConfig, ts, readme)
+			err := Listen(parentLogger, parentConfig, ts)
 			if err == nil {
 				break
 			}
 			parentLogger.Error("An error occurred with the API. Restarting now.", "error", err)
 			Close()
 		}
-	}(parentLogger, parentConfig, ts, readme)
+	}(parentLogger, parentConfig, ts)
 }
 
-func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts tokens.TokenStore, readme []byte) error {
+func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts tokens.TokenStore) error {
 	logger = parentLogger
 	cfg = parentConfig
 	tokenStore = ts
-
-	// render readme to HTML
-	p := parser.NewWithExtensions(parser.CommonExtensions | parser.AutoHeadingIDs | parser.NoEmptyLineBeforeBlock)
-	doc := p.Parse(readme)
-	homepage = string(markdown.Render(doc, html.NewRenderer(html.RendererOptions{Flags: html.CommonFlags | html.HrefTargetBlank})))
 
 	haClient = ha.New(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
 	router := chi.NewRouter()
@@ -78,7 +71,7 @@ func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts token
 	admin.Init(router, cfg, logger, tokenStore)
 
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		render.HTML(w, r, homepage)
+		templates.Home().Render(r.Context(), w)
 	})
 	router.Get("/status", func(w http.ResponseWriter, r *http.Request) {
 		render.PlainText(w, r, "OK")
