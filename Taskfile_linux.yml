@@ -5,7 +5,7 @@ vars:
 
 tasks:
   docker-build:
-    desc: Build docker image
+    desc: Build and optionally push the multiplatform docker image
     aliases: [docker:build]
     cmds:
       - >
@@ -19,3 +19,4 @@ tasks:
       LATEST: '{{ .LATEST | default "false" }}'
       MAIN: '{{ .MAIN | default "false" }}'
       VERSION: '{{ .VERSION | default "dev" }}'
+      PUSH: '{{ .PUSH | default "false" }}'
