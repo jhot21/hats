@@ -12,11 +12,11 @@ templ statusCard(s ServiceStatus) {
 	<div class="status-card">
 		<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
 			<div style="display: flex; align-items: center; gap: 10px;">
-				if s.Connected {
-					<span class="status-dot ok"></span>
-				} else {
-					<span class="status-dot err"></span>
-				}
+			if s.Connected {
+				<span class="status-dot ok" aria-hidden="true"></span>
+			} else {
+				<span class="status-dot err" aria-hidden="true"></span>
+			}
 				<span class="service-name">{ s.Name }</span>
 			</div>
 			if s.Connected {
