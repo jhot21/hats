@@ -41,7 +41,7 @@ func Dashboard() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"mb-6\"><h1 class=\"text-2xl font-semibold text-slate-100\">System Status</h1><p class=\"text-slate-400 text-sm mt-1\">Live connection health — refreshes every 10 seconds</p></div><div id=\"status-cards\" hx-get=\"/admin/api/status\" hx-trigger=\"load, every 10s\" hx-swap=\"innerHTML\"></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div style=\"display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px;\"><div><h1 class=\"page-title\">System <strong>Overview</strong></h1><div class=\"page-meta\"><span class=\"pulse\">Live Connection Health</span> <span>REFRESHES EVERY 10 SECONDS</span></div></div></div><div id=\"status-cards\" hx-get=\"/admin/api/status\" hx-trigger=\"load, every 10s\" hx-swap=\"innerHTML\"></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

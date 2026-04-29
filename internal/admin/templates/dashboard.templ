@@ -2,9 +2,14 @@ package templates
 
 templ Dashboard() {
 	@Layout("Dashboard", "Observability") {
-		<div class="mb-6">
-			<h1 class="text-2xl font-semibold text-slate-100">System Status</h1>
-			<p class="text-slate-400 text-sm mt-1">Live connection health — refreshes every 10 seconds</p>
+		<div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px;">
+			<div>
+				<h1 class="page-title">System <strong>Overview</strong></h1>
+				<div class="page-meta">
+					<span class="pulse">Live Connection Health</span>
+					<span>REFRESHES EVERY 10 SECONDS</span>
+				</div>
+			</div>
 		</div>
 		<div
 			id="status-cards"
