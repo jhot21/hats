@@ -15,7 +15,6 @@ import (
 	"encoding/json"
 
 	ha "codeberg.org/jhot/go-ha-sdk"
-	"codeberg.org/jhot/hats/internal/admin"
 	"codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/internal/ntfy"
 	"codeberg.org/jhot/hats/internal/secrets"
@@ -44,35 +43,32 @@ const (
 	HA_STATE_PREFIX = "homeassistant.states"
 )
 
-func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts tokens.TokenStore, ss secrets.SecretStore) {
-	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts tokens.TokenStore, ss secrets.SecretStore) {
+func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, ts tokens.TokenStore, ss secrets.SecretStore) {
+	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, ts tokens.TokenStore, ss secrets.SecretStore) {
 		for {
-			err := Listen(parentLogger, parentConfig, ts, ss)
+			err := Listen(parentLogger, parentConfig, newRouter(), ts, ss)
 			if err == nil {
 				break
 			}
 			parentLogger.Error("An error occurred with the API. Restarting now.", "error", err)
 			Close()
 		}
-	}(parentLogger, parentConfig, ts, ss)
+	}(parentLogger, parentConfig, newRouter, ts, ss)
 }
 
-func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts tokens.TokenStore, ss secrets.SecretStore) error {
+func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, router chi.Router, ts tokens.TokenStore, ss secrets.SecretStore) error {
 	logger = parentLogger
 	cfg = parentConfig
 	tokenStore = ts
 	secretStore = ss
 
 	haClient = ha.New(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
-	router := chi.NewRouter()
 
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
 	router.Use(loggerMiddleware)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.Timeout(60 * time.Second))
-
-	admin.Init(router, cfg, logger, tokenStore, secretStore)
 
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		templates.Home().Render(r.Context(), w)

@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 
+	"codeberg.org/jhot/hats/internal/admin"
 	"codeberg.org/jhot/hats/internal/api"
 	"codeberg.org/jhot/hats/internal/homeassistant"
 	"codeberg.org/jhot/hats/internal/nats"
@@ -14,11 +15,12 @@ import (
 	"codeberg.org/jhot/hats/internal/secrets"
 	"codeberg.org/jhot/hats/internal/tokens"
 	"codeberg.org/jhot/hats/pkg/config"
+	"github.com/go-chi/chi/v5"
 )
 
 var (
 	interrupt chan os.Signal
-	cfg       *config.HatsConfig
+	cfg       *config.ServerConfig
 	logger    *slog.Logger
 	ctx       context.Context
 	cancel    context.CancelFunc
@@ -26,7 +28,7 @@ var (
 
 func main() {
 	var err error
-	cfg, err = config.New()
+	cfg, err = config.NewServer()
 	ctx, cancel = context.WithCancel(context.Background())
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: cfg.GetLogLevel(),
@@ -39,7 +41,7 @@ func main() {
 	interrupt = make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	err = nats.JetstreamConnect(ctx, logger, cfg)
+	err = nats.JetstreamConnect(ctx, logger, &cfg.HatsConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -76,15 +78,19 @@ func main() {
 	nats.GetExistingSchedules()
 	defer nats.StopSchedules()
 
-	err = homeassistant.Subscribe(ctx, logger, cfg, cancel)
+	err = homeassistant.Subscribe(ctx, logger, &cfg.HatsConfig, cancel)
 	if err != nil {
 		panic(err)
 	}
 	defer homeassistant.CloseSubscription()
 
-	ntfy.InitClient(cfg)
+	ntfy.InitClient(&cfg.HatsConfig)
 
-	api.InitAPI(logger, cfg, ts, ss)
+	api.InitAPI(logger, &cfg.HatsConfig, func() chi.Router {
+		router := chi.NewRouter()
+		admin.Init(router, cfg, logger, ts, ss)
+		return router
+	}, ts, ss)
 	defer api.Close()
 
 	for sig := range interrupt {

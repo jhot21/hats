@@ -21,7 +21,7 @@ var adminTokenStore tokens.TokenStore
 var adminSecretStore secrets.SecretStore
 
 // Init mounts the /admin sub-router onto the provided Chi router.
-func Init(r chi.Router, cfg *config.HatsConfig, logger *slog.Logger, ts tokens.TokenStore, ss secrets.SecretStore) {
+func Init(r chi.Router, cfg *config.ServerConfig, logger *slog.Logger, ts tokens.TokenStore, ss secrets.SecretStore) {
 	adminCfg = cfg
 	adminLogger = logger
 	adminTokenStore = ts
