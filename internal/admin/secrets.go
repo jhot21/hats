@@ -59,7 +59,7 @@ func secretCreateAPIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	name := r.FormValue("name")
 	typStr := r.FormValue("type")
-	value := r.FormValue("value")
+	value := r.FormValue("value_" + typStr)
 
 	if name == "" || typStr == "" || value == "" {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")

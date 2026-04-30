@@ -16,13 +16,7 @@ templ Layout(title string, section string) {
 			<script>
 			function switchSecretType(type) {
 			  document.querySelectorAll('.value-editor').forEach(function(el) {
-			    var active = el.dataset.type === type;
-			    el.style.display = active ? '' : 'none';
-			    var input = el.querySelector('[data-value-input]');
-			    if (input) {
-			      if (active) { input.setAttribute('name', 'value'); }
-			      else { input.removeAttribute('name'); }
-			    }
+			    el.style.display = el.dataset.type === type ? '' : 'none';
 			  });
 			}
 
