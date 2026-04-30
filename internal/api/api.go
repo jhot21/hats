@@ -2,6 +2,7 @@ package api
 
 import (
 	"crypto/subtle"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,6 +18,7 @@ import (
 	"codeberg.org/jhot/hats/internal/admin"
 	"codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/internal/ntfy"
+	"codeberg.org/jhot/hats/internal/secrets"
 	"codeberg.org/jhot/hats/internal/tokens"
 	"codeberg.org/jhot/hats/pkg/config"
 	pkgnats "codeberg.org/jhot/hats/pkg/nats"
@@ -35,29 +37,31 @@ var (
 	server     http.Server
 	haClient   *ha.Client
 	tokenStore tokens.TokenStore
+	secretStore secrets.SecretStore
 )
 
 const (
 	HA_STATE_PREFIX = "homeassistant.states"
 )
 
-func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts tokens.TokenStore) {
-	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts tokens.TokenStore) {
+func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts tokens.TokenStore, ss secrets.SecretStore) {
+	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts tokens.TokenStore, ss secrets.SecretStore) {
 		for {
-			err := Listen(parentLogger, parentConfig, ts)
+			err := Listen(parentLogger, parentConfig, ts, ss)
 			if err == nil {
 				break
 			}
 			parentLogger.Error("An error occurred with the API. Restarting now.", "error", err)
 			Close()
 		}
-	}(parentLogger, parentConfig, ts)
+	}(parentLogger, parentConfig, ts, ss)
 }
 
-func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts tokens.TokenStore) error {
+func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts tokens.TokenStore, ss secrets.SecretStore) error {
 	logger = parentLogger
 	cfg = parentConfig
 	tokenStore = ts
+	secretStore = ss
 
 	haClient = ha.New(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
 	router := chi.NewRouter()
@@ -68,7 +72,7 @@ func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts token
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.Timeout(60 * time.Second))
 
-	admin.Init(router, cfg, logger, tokenStore)
+	admin.Init(router, cfg, logger, tokenStore, secretStore)
 
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		templates.Home().Render(r.Context(), w)
@@ -133,6 +137,11 @@ func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts token
 		r.Put("/ntfy/clear", clearNtfyHandler)
 
 		r.Handle("/command/{commandName}", http.HandlerFunc(postCommandHandler))
+
+		r.Get("/secret/{name}", getSecretHandler)
+		r.Post("/secret/{name}", createSecretHandler)
+		r.Put("/secret/{name}", updateSecretHandler)
+		r.Delete("/secret/{name}", deleteSecretHandler)
 	})
 
 	server = http.Server{
@@ -480,5 +489,95 @@ func postCommandHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	commandPublish(fmt.Sprintf("command.%s", commandName), data)
+	render.PlainText(w, r, "OK")
+}
+
+// SECRETS
+
+func getSecretHandler(w http.ResponseWriter, r *http.Request) {
+	name := chi.URLParam(r, "name")
+	s, err := secretStore.Get(name)
+	if err != nil {
+		if errors.Is(err, secrets.ErrSecretNotFound) {
+			http.Error(w, "secret not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	switch s.Type {
+	case secrets.TypeYAML:
+		w.Header().Set("Content-Type", "application/x-yaml")
+	case secrets.TypeJSON:
+		w.Header().Set("Content-Type", "application/json")
+	default:
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	}
+	w.Write([]byte(s.Value))
+}
+
+func createSecretHandler(w http.ResponseWriter, r *http.Request) {
+	name := chi.URLParam(r, "name")
+	var body struct {
+		Type  string `json:"type"`
+		Value string `json:"value"`
+	}
+	if err := render.DecodeJSON(r.Body, &body); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+	typ := secrets.SecretType(body.Type)
+	switch typ {
+	case secrets.TypeBasicString, secrets.TypeEncryptedString, secrets.TypeYAML, secrets.TypeJSON:
+	default:
+		http.Error(w, "invalid type", http.StatusBadRequest)
+		return
+	}
+	if err := secretStore.Create(name, body.Value, typ); err != nil {
+		if errors.Is(err, secrets.ErrInvalidName) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, secrets.ErrNameConflict) {
+			http.Error(w, err.Error(), http.StatusConflict)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	render.Status(r, http.StatusCreated)
+	render.PlainText(w, r, "OK")
+}
+
+func updateSecretHandler(w http.ResponseWriter, r *http.Request) {
+	name := chi.URLParam(r, "name")
+	var body struct {
+		Value string `json:"value"`
+	}
+	if err := render.DecodeJSON(r.Body, &body); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+	if err := secretStore.Update(name, body.Value); err != nil {
+		if errors.Is(err, secrets.ErrSecretNotFound) {
+			http.Error(w, "secret not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	render.PlainText(w, r, "OK")
+}
+
+func deleteSecretHandler(w http.ResponseWriter, r *http.Request) {
+	name := chi.URLParam(r, "name")
+	if err := secretStore.Delete(name); err != nil {
+		if errors.Is(err, secrets.ErrSecretNotFound) {
+			http.Error(w, "secret not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	render.PlainText(w, r, "OK")
 }

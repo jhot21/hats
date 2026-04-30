@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"codeberg.org/jhot/hats/internal/admin/templates"
+	"codeberg.org/jhot/hats/internal/secrets"
 	"codeberg.org/jhot/hats/internal/tokens"
 	"codeberg.org/jhot/hats/pkg/config"
 	"github.com/go-chi/chi/v5"
@@ -17,12 +18,14 @@ import (
 var staticFiles embed.FS
 
 var adminTokenStore tokens.TokenStore
+var adminSecretStore secrets.SecretStore
 
 // Init mounts the /admin sub-router onto the provided Chi router.
-func Init(r chi.Router, cfg *config.HatsConfig, logger *slog.Logger, ts tokens.TokenStore) {
+func Init(r chi.Router, cfg *config.HatsConfig, logger *slog.Logger, ts tokens.TokenStore, ss secrets.SecretStore) {
 	adminCfg = cfg
 	adminLogger = logger
 	adminTokenStore = ts
+	adminSecretStore = ss
 	initSessionKey()
 
 	staticFS, err := fs.Sub(staticFiles, "static")

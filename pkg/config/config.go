@@ -35,6 +35,8 @@ type HatsConfig struct {
 	HatsToken  string `config:"HATS_TOKEN" default:""`
 	HatsSecure bool   `config:"HATS_SECURE" default:"false"`
 
+	SecretsEncryptionKey string `config:"SECRETS_ENCRYPTION_KEY" default:""`
+
 	NtfyHost  string `config:"NTFY_HOST" default:"https://ntfy.sh"`
 	NtfyToken string `config:"NTFY_TOKEN" default:""`
 

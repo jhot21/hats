@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -10,6 +11,7 @@ import (
 	"codeberg.org/jhot/hats/internal/homeassistant"
 	"codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/internal/ntfy"
+	"codeberg.org/jhot/hats/internal/secrets"
 	"codeberg.org/jhot/hats/internal/tokens"
 	"codeberg.org/jhot/hats/pkg/config"
 )
@@ -53,6 +55,20 @@ func main() {
 		panic(err)
 	}
 
+	var encKey []byte
+	if cfg.SecretsEncryptionKey != "" {
+		decoded, err := hex.DecodeString(cfg.SecretsEncryptionKey)
+		if err != nil || len(decoded) != 32 {
+			panic("SECRETS_ENCRYPTION_KEY must be a 64-char hex string (32 bytes); generate one with: openssl rand -hex 32")
+		}
+		encKey = decoded
+	}
+
+	ss, err := secrets.NewStore(ctx, nats.JetStream(), encKey, nats.Publish)
+	if err != nil {
+		panic(err)
+	}
+
 	err = nats.ScheduleStoreConnect()
 	if err != nil {
 		panic(err)
@@ -68,7 +84,7 @@ func main() {
 
 	ntfy.InitClient(cfg)
 
-	api.InitAPI(logger, cfg, ts)
+	api.InitAPI(logger, cfg, ts, ss)
 	defer api.Close()
 
 	for sig := range interrupt {
