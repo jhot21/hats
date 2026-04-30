@@ -55,13 +55,17 @@ templ Layout(title string, section string) {
 			  new CM.EditorView({ doc: initialDoc, extensions: extensions, parent: host });
 			}
 
-			document.addEventListener('htmx:afterSwap', function(e) {
-			  if (e.target && e.target.id === 'modal-content') {
-			    document.querySelectorAll('.cm-host').forEach(function(host) {
-			      initCodeMirror(host, host.dataset.lang);
-			    });
-			  }
-			});
+document.addEventListener('htmx:afterSwap', function(e) {
+  if (e.target && e.target.id === 'modal-content') {
+    var modal = e.target.querySelector('.modal');
+    if (modal && modal.dataset.selectedType) {
+      switchSecretType(modal.dataset.selectedType);
+    }
+    document.querySelectorAll('.cm-host').forEach(function(host) {
+      initCodeMirror(host, host.dataset.lang);
+    });
+  }
+});
 			</script>
 		</head>
 		<body>

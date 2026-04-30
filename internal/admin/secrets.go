@@ -33,7 +33,7 @@ func secretTableHandler(w http.ResponseWriter, r *http.Request) {
 
 func secretNewHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	templates.SecretCreateForm("", "").Render(r.Context(), w)
+	templates.SecretCreateForm("", "basic_string").Render(r.Context(), w)
 }
 
 func secretEditHandler(w http.ResponseWriter, r *http.Request) {
