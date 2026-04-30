@@ -138,6 +138,7 @@ func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, ts token
 
 		r.Handle("/command/{commandName}", http.HandlerFunc(postCommandHandler))
 
+		r.Get("/secrets", getSecretsHandler)
 		r.Get("/secret/{name}", getSecretHandler)
 		r.Post("/secret/{name}", createSecretHandler)
 		r.Put("/secret/{name}", updateSecretHandler)
@@ -493,6 +494,34 @@ func postCommandHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // SECRETS
+
+func getSecretsHandler(w http.ResponseWriter, r *http.Request) {
+	tok := tokens.TokenFromContext(r.Context())
+	if tok == nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	metas, err := secretStore.List()
+	if err != nil {
+		http.Error(w, "failed to list secrets", http.StatusInternalServerError)
+		return
+	}
+
+	result := make(map[string]string)
+	for _, meta := range metas {
+		if !tokens.HasScope(tok.Scopes, "read:secret:"+meta.Name) {
+			continue
+		}
+		s, err := secretStore.Get(meta.Name)
+		if err != nil {
+			continue
+		}
+		result[meta.Name] = s.Value
+	}
+
+	render.JSON(w, r, result)
+}
 
 func getSecretHandler(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
