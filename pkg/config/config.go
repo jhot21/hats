@@ -8,17 +8,12 @@ import (
 	"strconv"
 	"strings"
 
-	"codeberg.org/jhot/hats/pkg/infisical"
+	"codeberg.org/jhot/hats/pkg/client"
 )
 
+// HatsConfig holds configuration shared by the HATS server and all subscriber services.
 type HatsConfig struct {
-	LogLevl string `config:"LOG_LEVEL" default:"INFO"`
-
-	InfisicalHost         string `config:"INFISICAL_HOST" default:"http://infisical:8080"`
-	InfisicalClientID     string `config:"INFISICAL_CLIENT" default:""`
-	InfisicalClientSecret string `config:"INFISICAL_SECRET" default:""`
-	InfisicalProjectID    string `config:"INFISICAL_PROJECT" default:""`
-	InfisicalEnvironment  string `config:"INFISICAL_ENVIRONMENT" default:"prod"`
+	LogLvl string `config:"LOG_LEVEL" default:"INFO"`
 
 	HomeAssistantHost   string `config:"HASS_HOST" default:"127.0.0.1"`
 	HomeAssistantPort   string `config:"HASS_PORT" default:"8123"`
@@ -35,76 +30,85 @@ type HatsConfig struct {
 	HatsToken  string `config:"HATS_TOKEN" default:""`
 	HatsSecure bool   `config:"HATS_SECURE" default:"false"`
 
-	SecretsEncryptionKey string `config:"SECRETS_ENCRYPTION_KEY" default:""`
-
 	NtfyHost  string `config:"NTFY_HOST" default:"https://ntfy.sh"`
 	NtfyToken string `config:"NTFY_TOKEN" default:""`
 
-	SyncthingHost  string `config:"SYNCTHING_HOST" default:"http://127.0.0.1:8384"`
-	SyncthingToken string `config:"SYNCTHING_TOKEN" default:""`
-
-	GokapiHost  string `config:"GOKAPI_HOST" default:"http://gokapi:53842"`
-	GokapiToken string `config:"GOKAPI_TOKEN" default:""`
-
-	AdminPasswordHash   string `config:"ADMIN_PASSWORD_HASH" default:""`
-	AdminSessionSecret  string `config:"ADMIN_SESSION_SECRET" default:""`
-
 	ConfigDir string `config:"CONFIG_DIR" default:"/config"`
 
-	infisicalClient *infisical.InfisicalClient
+	secrets map[string]string
 }
 
+// ServerConfig extends HatsConfig with fields only needed by the HATS server process.
+type ServerConfig struct {
+	HatsConfig
+	SecretsEncryptionKey string `config:"SECRETS_ENCRYPTION_KEY" default:""`
+	AdminPasswordHash    string `config:"ADMIN_PASSWORD_HASH" default:""`
+	AdminSessionSecret   string `config:"ADMIN_SESSION_SECRET" default:""`
+}
+
+// New returns a HatsConfig for use by subscriber services.
+// Overlay chain: defaults → env vars → HATS secrets (if HATS_HOST and HATS_TOKEN are set).
+// If the HATS secrets fetch fails the error is returned but cfg is still usable with env-only values.
 func New() (*HatsConfig, error) {
 	cfg := &HatsConfig{}
 	cfg.SetValues(ConfigValueSourceDefault).SetValues(ConfigValueSourceEnv)
-
-	if cfg.InfisicalConfigured() {
-		cfg.infisicalClient = infisical.New(cfg.InfisicalHost, cfg.InfisicalClientID, cfg.InfisicalClientSecret)
-
-		err := cfg.infisicalClient.Login()
-		if err != nil {
-			cfg.infisicalClient = nil
-			return cfg, fmt.Errorf("error logging in to Infisical: %w", err)
-		}
-
-		secrets, err := cfg.infisicalClient.ListSecrets(cfg.InfisicalProjectID, cfg.InfisicalEnvironment)
-		if err != nil {
-			return cfg, fmt.Errorf("error getting Infisical secrets: %w", err)
-		}
-
-		secretsMap := make(map[string]string)
-		for _, secret := range secrets {
-			secretsMap[secret.SecretKey] = secret.SecretValue
-		}
-
-		cfg.SetValues(ConfigValueSourceInfisical, secretsMap)
+	if err := cfg.applyHATSSecrets(); err != nil {
+		return cfg, fmt.Errorf("HATS secrets overlay failed (continuing with env-only values): %w", err)
 	}
-
 	return cfg, nil
+}
+
+// NewServer returns a ServerConfig for use by the HATS server process.
+// Overlay chain: defaults → env vars → HATS secrets (if HATS_HOST and HATS_TOKEN are set).
+func NewServer() (*ServerConfig, error) {
+	srv := &ServerConfig{}
+	srv.SetValues(ConfigValueSourceDefault).SetValues(ConfigValueSourceEnv)
+	if err := srv.HatsConfig.applyHATSSecrets(); err != nil {
+		return srv, fmt.Errorf("HATS secrets overlay failed (continuing with env-only values): %w", err)
+	}
+	return srv, nil
+}
+
+// applyHATSSecrets fetches all secrets from the HATS API and overlays them onto
+// the config struct fields using config tag names as keys. It is a no-op if
+// HatsHost or HatsToken is empty (i.e. when running as the HATS server itself).
+func (c *HatsConfig) applyHATSSecrets() error {
+	if c.HatsHost == "" || c.HatsToken == "" {
+		return nil
+	}
+	hatsClient := client.NewHatsClient(c.GetHatsBaseUrl(), c.HatsToken)
+	fetched, err := hatsClient.GetAllSecrets()
+	if err != nil {
+		return err
+	}
+	c.secrets = fetched
+	c.SetValues(ConfigValueSourceHATS, fetched)
+	return nil
 }
 
 type ConfigValueSource string
 
 const ConfigValueSourceEnv ConfigValueSource = "env"
 const ConfigValueSourceDefault ConfigValueSource = "default"
-const ConfigValueSourceInfisical ConfigValueSource = "infisical"
+const ConfigValueSourceHATS ConfigValueSource = "hats"
 
-func (c *HatsConfig) SetValues(source ConfigValueSource, inputs ...map[string]string) *HatsConfig {
-	fields := reflect.VisibleFields(reflect.TypeOf(*c))
-
+// applyValues sets fields on v (must be a struct Value) using the given source.
+// It handles both HatsConfig and ServerConfig via reflect.VisibleFields which
+// promotes embedded struct fields.
+func applyValues(v reflect.Value, source ConfigValueSource, inputs ...map[string]string) {
+	fields := reflect.VisibleFields(v.Type())
 	for _, field := range fields {
 		envName := field.Tag.Get("config")
 		if envName == "" {
 			continue
 		}
-
 		var envValue string
 		switch source {
 		case ConfigValueSourceDefault:
 			envValue = field.Tag.Get("default")
 		case ConfigValueSourceEnv:
 			envValue = os.Getenv(envName)
-		case ConfigValueSourceInfisical:
+		case ConfigValueSourceHATS:
 			if len(inputs) == 0 {
 				break
 			}
@@ -112,12 +116,13 @@ func (c *HatsConfig) SetValues(source ConfigValueSource, inputs ...map[string]st
 				envValue = val
 			}
 		}
-
 		if envValue == "" {
 			continue
 		}
-
-		f := reflect.ValueOf(c).Elem().FieldByName(field.Name)
+		f := v.FieldByName(field.Name)
+		if !f.IsValid() || !f.CanSet() {
+			continue
+		}
 		switch field.Type.Kind() {
 		case reflect.Bool:
 			f.SetBool(strings.EqualFold(envValue, "true"))
@@ -130,26 +135,28 @@ func (c *HatsConfig) SetValues(source ConfigValueSource, inputs ...map[string]st
 			f.SetString(envValue)
 		}
 	}
+}
 
+func (c *HatsConfig) SetValues(source ConfigValueSource, inputs ...map[string]string) *HatsConfig {
+	applyValues(reflect.ValueOf(c).Elem(), source, inputs...)
 	return c
 }
 
+func (s *ServerConfig) SetValues(source ConfigValueSource, inputs ...map[string]string) *ServerConfig {
+	applyValues(reflect.ValueOf(s).Elem(), source, inputs...)
+	return s
+}
+
 func (c *HatsConfig) GetCustomSetting(name string, defaultValue string) string {
-	returnValue := defaultValue
-
-	envValue := os.Getenv(name)
-	if envValue != "" {
-		returnValue = envValue
+	if envValue := os.Getenv(name); envValue != "" {
+		return envValue
 	}
-
-	if c.InfisicalConfigured() {
-		secret, _ := c.infisicalClient.GetSecret(name, c.InfisicalProjectID, c.InfisicalEnvironment)
-		if secret.SecretValue != "" {
-			returnValue = secret.SecretValue
+	if c.secrets != nil {
+		if val, ok := c.secrets[name]; ok && val != "" {
+			return val
 		}
 	}
-
-	return returnValue
+	return defaultValue
 }
 
 func (c *HatsConfig) GetHomeAssistantBaseUrl() string {
@@ -181,7 +188,7 @@ func (c *HatsConfig) GetHatsBaseUrl() string {
 }
 
 func (c *HatsConfig) GetLogLevel() slog.Level {
-	switch strings.ToLower(c.LogLevl) {
+	switch strings.ToLower(c.LogLvl) {
 	case "error":
 		return slog.LevelError
 	case "warn":
@@ -191,12 +198,4 @@ func (c *HatsConfig) GetLogLevel() slog.Level {
 	default:
 		return slog.LevelInfo
 	}
-}
-
-func (c *HatsConfig) InfisicalConfigured() bool {
-	return c.InfisicalHost != "" &&
-		c.InfisicalClientID != "" &&
-		c.InfisicalClientSecret != "" &&
-		c.InfisicalProjectID != "" &&
-		c.InfisicalEnvironment != ""
 }
