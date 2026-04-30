@@ -1,7 +1,7 @@
 package templates
 
 templ StatusCards(services []ServiceStatus) {
-	<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+	<div class="status-grid">
 		for _, s := range services {
 			@statusCard(s)
 		}
@@ -9,25 +9,22 @@ templ StatusCards(services []ServiceStatus) {
 }
 
 templ statusCard(s ServiceStatus) {
-	<div
-		class={
-			"bg-slate-800 rounded-lg p-5 border-l-4",
-			templ.KV("border-green-500", s.Connected),
-			templ.KV("border-red-500", !s.Connected),
-		}
-	>
-		<div class="flex items-center justify-between mb-2">
-			<span class="text-sm font-medium text-slate-300">{ s.Name }</span>
+	<div class="status-card">
+		<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+			<div style="display: flex; align-items: center; gap: 10px;">
 			if s.Connected {
-				<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-900 text-green-300">
-					Connected
-				</span>
+				<span class="status-dot ok" aria-hidden="true"></span>
 			} else {
-				<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-900 text-red-300">
-					Disconnected
-				</span>
+				<span class="status-dot err" aria-hidden="true"></span>
+			}
+				<span class="service-name">{ s.Name }</span>
+			</div>
+			if s.Connected {
+				<span class="status-badge ok">Connected</span>
+			} else {
+				<span class="status-badge err">Disconnected</span>
 			}
 		</div>
-		<p class="text-xs text-slate-500">{ s.CheckedAt }</p>
+		<p class="checked-at">{ s.CheckedAt }</p>
 	</div>
 }

@@ -50,7 +50,7 @@ tasks:
   tailwind:
     desc: Build Tailwind CSS for admin UI
     cmds:
-      - mise exec -- tailwindcss -i internal/admin/static/input.css -o internal/admin/static/admin.css --minify
+      - tailwindcss -i internal/admin/static/input.css -o internal/admin/static/admin.css --minify
 
   templ:generate:
     desc: Generate Go code from Templ templates

@@ -1,0 +1,22 @@
+version: '3'
+
+vars:
+  REPO: codeberg.org/jhot/hats
+
+tasks:
+  docker-build:
+    desc: Build and optionally push the multiplatform docker image
+    aliases: [docker:build]
+    cmds:
+      - >
+        docker buildx build
+        {{ if (eq .MAIN "true") }}-t {{.REPO}}:main{{ end }}
+        {{ if (ne .VERSION "") }}-t {{.REPO}}:{{.VERSION}}{{ end }}
+        {{ if (eq .LATEST "true") }}-t {{.REPO}}:latest{{ end }}
+        {{ if (eq .PUSH "true") }}--push{{ end }}
+        --platform=linux/amd64 .
+    vars:
+      LATEST: '{{ .LATEST | default "false" }}'
+      MAIN: '{{ .MAIN | default "false" }}'
+      VERSION: '{{ .VERSION | default "dev" }}'
+      PUSH: '{{ .PUSH | default "false" }}'

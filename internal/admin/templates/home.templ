@@ -1,0 +1,117 @@
+package templates
+
+templ Home() {
+	<!DOCTYPE html>
+	<html lang="en" class="h-full">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>HATS — Home Assistant to NATS Streaming</title>
+			<link rel="preconnect" href="https://fonts.googleapis.com"/>
+			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+			<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+			<link rel="stylesheet" href="/admin/static/admin.css"/>
+		</head>
+		<body>
+			<div class="home-page">
+				<div class="home-hero">
+					<div class="brand-mark">
+						<svg viewBox="0 0 100 100" fill="none">
+							<path d="M50 8 L86 29 L86 71 L50 92 L14 71 L14 29 Z" stroke="var(--teal)" stroke-width="3"/>
+							<rect x="42" y="32" width="16" height="16" stroke="var(--teal)" stroke-width="2.2" fill="none"/>
+							<rect x="26" y="54" width="16" height="16" stroke="var(--teal)" stroke-width="2.2" fill="none"/>
+							<rect x="58" y="54" width="16" height="16" stroke="var(--teal)" stroke-width="2.2" fill="none"/>
+							<path d="M50 48 L50 54 M50 54 L34 54 M50 54 L66 54" stroke="var(--teal)" stroke-width="2.2"/>
+						</svg>
+					</div>
+					<div class="tagline">Home Assistant + NATS</div>
+					<span class="wordmark">HATS</span>
+					<div class="description">
+						Stream Home Assistant events into NATS in real time.
+						React with subscriber services — no polling, no direct HA dependency.
+					</div>
+				</div>
+
+				<div class="home-arch">
+					<div class="home-section-label">Architecture</div>
+					<div class="home-arch-diagram">
+						<span class="service">Home Assistant</span> <span class="arrow">──ws──▶</span> <span class="service">HATS</span> <span class="arrow">──pub──▶</span> <span class="service">NATS</span><br/>
+						<span class="note">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└──▶</span> <span class="note">HTTP API</span> <span class="note">(cached state, timers, schedules, commands)</span>
+					</div>
+				</div>
+
+				<div class="home-section-label">Features</div>
+				<div class="home-features">
+					<div class="home-feature">
+						<div class="label">Real-time Streaming</div>
+						<div class="title">State Changes</div>
+						<div class="desc">Entity state changes stream instantly to NATS subjects — no polling required.</div>
+					</div>
+					<div class="home-feature">
+						<div class="label">Cached State</div>
+						<div class="title">Fast Reads</div>
+						<div class="desc">Entity state cached in JetStream KV — subscriber reads never hit Home Assistant.</div>
+					</div>
+					<div class="home-feature">
+						<div class="label">Event-driven</div>
+						<div class="title">Timers &amp; Commands</div>
+						<div class="desc">Countdown timers, cron schedules, and HTTP-to-NATS command bridge.</div>
+					</div>
+				</div>
+
+				<div class="home-topics">
+					<div class="home-section-label">NATS Topics</div>
+					<table>
+						<thead>
+							<tr>
+								<th>Subject</th>
+								<th>Fires when</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td class="subject">homeassistant.states.{"{"}domain{"}"}.{"{"}entity{"}"}.{"{"}state{"}"}</td>
+								<td class="fires">Entity state changes</td>
+							</tr>
+							<tr>
+								<td class="subject">homeassistant.attributes.{"{"}domain{"}"}.{"{"}entity{"}"}.{"{"}state{"}"}</td>
+								<td class="fires">Attributes change, state unchanged</td>
+							</tr>
+							<tr>
+								<td class="subject">homeassistant.zha.{"{"}device_ieee{"}"}</td>
+								<td class="fires">ZHA device event</td>
+							</tr>
+							<tr>
+								<td class="subject">homeassistant.zwave-scene.{"{"}device_id{"}"}</td>
+								<td class="fires">Z-Wave JS scene</td>
+							</tr>
+							<tr>
+								<td class="subject">homeassistant.nfc.{"{"}tag_id{"}"}</td>
+								<td class="fires">NFC tag scanned</td>
+							</tr>
+							<tr>
+								<td class="subject">homeassistant.timers.{"{"}name{"}"}.finished</td>
+								<td class="fires">Timer expired</td>
+							</tr>
+							<tr>
+								<td class="subject">schedules.{"{"}name{"}"}</td>
+								<td class="fires">Cron schedule fired</td>
+							</tr>
+							<tr>
+								<td class="subject">command.{"{"}name{"}"}</td>
+								<td class="fires">HTTP command received</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<div class="home-actions">
+					<a href="https://codeberg.org/jhot/hats/src/branch/main/README.md" class="btn btn-primary">Read the docs</a>
+					<a href="/admin" class="btn btn-ghost">Admin →</a>
+				</div>
+
+				<div class="home-alpha">Alpha software · Breaking changes may occur</div>
+			</div>
+		</body>
+	</html>
+}

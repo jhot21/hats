@@ -2,7 +2,6 @@ package client
 
 import (
 	"fmt"
-	"strconv"
 
 	"codeberg.org/jhot/hats/internal/api"
 	ha "codeberg.org/jhot/go-ha-sdk"
@@ -70,14 +69,13 @@ func (c *HatsClient) GetStateBool(entityId string) (bool, error) {
 }
 
 func (c *HatsClient) GetStateFloat(entityId string) (float64, error) {
-	stateString, err := c.GetState(entityId)
+	stateData, err := c.GetStateFull(entityId)
 
 	if err != nil {
 		return 0.0, err
 	}
 
-	parsed, err := strconv.ParseFloat(stateString, 64)
-	return parsed, err
+	return ha.StateToFloat(stateData)
 }
 
 func (c *HatsClient) CallService(entityId string, service string, extras ...map[string]any) error {

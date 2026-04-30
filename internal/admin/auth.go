@@ -69,6 +69,7 @@ func setSessionCookie(w http.ResponseWriter, tokenStr string) {
 		Value:    tokenStr,
 		Path:     "/admin",
 		HttpOnly: true,
+		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 		MaxAge:   86400,
 	})

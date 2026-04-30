@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"codeberg.org/jhot/hats/internal/admin/templates"
+	"codeberg.org/jhot/hats/internal/tokens"
 	"codeberg.org/jhot/hats/pkg/config"
 	"github.com/go-chi/chi/v5"
 )
@@ -15,10 +16,13 @@ import (
 //go:embed static
 var staticFiles embed.FS
 
+var adminTokenStore tokens.TokenStore
+
 // Init mounts the /admin sub-router onto the provided Chi router.
-func Init(r chi.Router, cfg *config.HatsConfig, logger *slog.Logger) {
+func Init(r chi.Router, cfg *config.HatsConfig, logger *slog.Logger, ts tokens.TokenStore) {
 	adminCfg = cfg
 	adminLogger = logger
+	adminTokenStore = ts
 	initSessionKey()
 
 	staticFS, err := fs.Sub(staticFiles, "static")
@@ -36,6 +40,16 @@ func Init(r chi.Router, cfg *config.HatsConfig, logger *slog.Logger) {
 			r.Use(requireAuth)
 			r.Get("/", dashboardHandler)
 			r.Get("/api/status", statusHandler)
+
+			// Token management pages
+			r.Get("/tokens", tokenListHandler)
+			r.Get("/tokens/new", tokenNewHandler)
+			r.Get("/tokens/table", tokenTableHandler)
+
+			// Token management API
+			r.Get("/api/tokens", tokenJSONListHandler)
+			r.Post("/api/tokens", tokenCreateAPIHandler)
+			r.Post("/api/tokens/{hash}/revoke", tokenRevokeAPIHandler)
 		})
 	})
 }

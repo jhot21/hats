@@ -1,0 +1,124 @@
+package templates
+
+// TokenCreateForm renders the "create token" form inside the modal.
+// errMsg is shown if validation failed; scopesValue repopulates the scopes field.
+templ TokenCreateForm(errMsg string, scopesValue string) {
+	<div class="modal">
+		<div class="modal-header">
+			<div>
+				<div class="modal-eyebrow">Administration</div>
+				<div class="modal-title">Create API Token</div>
+			</div>
+			<button
+				type="button"
+				onclick="document.getElementById('token-modal').close()"
+				class="modal-close"
+				aria-label="Close"
+			>
+				&times;
+			</button>
+		</div>
+		if errMsg != "" {
+			<p class="login-error" style="margin: 0 28px;">{ errMsg }</p>
+		}
+		<form
+			hx-post="/admin/api/tokens"
+			hx-target="#modal-content"
+			hx-swap="innerHTML"
+			style="display: flex; flex-direction: column; flex: 1;"
+		>
+			<div class="modal-body">
+				<div class="form-field">
+					<label class="form-label" for="token-name">Name <span class="required">*</span></label>
+					<input
+						id="token-name"
+						type="text"
+						name="name"
+						required
+						autofocus
+						placeholder="e.g. home-automation-hub"
+						class="form-input"
+					/>
+				</div>
+				<div class="form-field">
+					<label class="form-label" for="token-scopes">Scopes <span class="required">*</span></label>
+					<textarea
+						id="token-scopes"
+						name="scopes"
+						required
+						rows="4"
+						placeholder="One per line or comma-separated. Examples: *:*:*  read:states:*  write:states:light.*"
+						class="form-input mono"
+					>{ scopesValue }</textarea>
+					<p class="form-help">Format: <code>action:resource:identifier</code> — actions: <code>read</code>, <code>write</code>, <code>*</code> — use <code>*:*:*</code> {"for"} full access</p>
+				</div>
+				<div class="form-field">
+					<label class="form-label" for="token-expires">Expiry <span class="optional">optional</span></label>
+					<input
+						id="token-expires"
+						type="date"
+						name="expires_at"
+						class="form-input mono"
+					/>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<span></span>
+				<div style="display: flex; gap: 10px;">
+					<button
+						type="button"
+						onclick="document.getElementById('token-modal').close()"
+						class="btn btn-ghost"
+					>
+						Cancel
+					</button>
+					<button
+						type="submit"
+						class="btn btn-primary"
+					>
+						Create Token
+					</button>
+				</div>
+			</div>
+		</form>
+	</div>
+}
+
+// TokenCreated renders the "your token was created" view inside the modal.
+// rawToken is shown once and never retrievable again.
+templ TokenCreated(rawToken string) {
+	<div class="modal">
+		<div class="modal-header">
+			<div>
+				<div class="modal-eyebrow">Administration</div>
+				<div class="modal-title">Token Created</div>
+			</div>
+		</div>
+		<div class="modal-body">
+			<div style="background: rgba(232, 184, 97, 0.08); border: 1px solid rgba(232, 184, 97, 0.25); border-radius: 6px; padding: 12px 14px; margin-bottom: 16px;">
+				<p style="color: var(--warn); font-size: 13px; font-weight: 500;">
+					Copy this token now — it will not be shown again.
+				</p>
+			</div>
+			<div style="background: var(--navy-950); border: 1px solid var(--border-strong); border-radius: 6px; padding: 14px; font-family: var(--font-mono); font-size: 12px; color: var(--text); word-break: break-all; user-select: all;">
+				{ rawToken }
+			</div>
+			<p class="form-help" style="margin-top: 12px;">
+				Use this as a <code>Bearer</code> token in the <code>Authorization</code> header, or as the password in HTTP Basic Auth.
+			</p>
+		</div>
+		<div class="modal-footer">
+			<span></span>
+			<button
+				type="button"
+				hx-get="/admin/tokens/table"
+				hx-target="#token-list"
+				hx-swap="innerHTML"
+				hx-on::after-request="document.getElementById('token-modal').close()"
+				class="btn btn-primary"
+			>
+				Done
+			</button>
+		</div>
+	</div>
+}

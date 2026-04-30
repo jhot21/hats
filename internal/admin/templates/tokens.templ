@@ -1,0 +1,91 @@
+package templates
+
+templ Tokens(toks []TokenData) {
+	@Layout("Tokens", "Administration") {
+		<div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px;">
+			<div>
+				<h1 class="page-title">Access <strong>Tokens</strong></h1>
+				<div class="page-meta">
+					<span>MANAGE API ACCESS AND SCOPES</span>
+				</div>
+			</div>
+			<button
+				hx-get="/admin/tokens/new"
+				hx-target="#modal-content"
+				hx-swap="innerHTML"
+				hx-on::after-request="document.getElementById('token-modal').showModal()"
+				class="btn btn-primary"
+			>
+				+ Create Token
+			</button>
+		</div>
+		<div id="token-list">
+			@TokenList(toks)
+		</div>
+		<dialog id="token-modal" class="modal-backdrop">
+			<div id="modal-content"></div>
+		</dialog>
+	}
+}
+
+templ TokenList(toks []TokenData) {
+	if len(toks) == 0 {
+		<div class="panel" style="padding: 40px; text-align: center;">
+			<p style="font-family: var(--font-mono); font-size: 13px; color: var(--text-mute); letter-spacing: 0.05em;">
+				No tokens yet. Create one to get started.
+			</p>
+		</div>
+	} else {
+		<div class="token-list">
+			for _, t := range toks {
+				@tokenCard(t)
+			}
+		</div>
+	}
+}
+
+templ tokenCard(t TokenData) {
+	<div class="token-card">
+		<div class="token-card-head">
+			<div>
+				<div class="token-name">
+					{ t.Name }
+					<span class={ TokenStatusPillClass(t) }>{ TokenStatusLabel(t) }</span>
+				</div>
+				<div class="token-hash">{ TokenHashPreview(t.Hash) }</div>
+			</div>
+		</div>
+		<div class="scope-tags">
+			for _, s := range t.Scopes {
+				@ScopeTag(s)
+			}
+		</div>
+		<div class="token-footer">
+			<div>
+				<span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-mute);">
+					Last used: { t.LastUsedAt }
+				</span>
+				if t.ExpiresAt != "never" {
+					<span class={ "expiry " + ExpiryClass(t.ExpiresAt) } style="margin-left: 16px;">
+						Expires: { t.ExpiresAt }
+					</span>
+				}
+			</div>
+			<div class="token-actions">
+				<button
+					hx-post={ "/admin/api/tokens/" + t.Hash + "/revoke" }
+					hx-confirm={ "Revoke token \"" + t.Name + "\"? This cannot be undone." }
+					hx-target="#token-list"
+					hx-swap="innerHTML"
+					class="btn btn-danger"
+				>
+					Revoke
+				</button>
+			</div>
+		</div>
+	</div>
+}
+
+templ ScopeTag(scope string) {
+	<span class={ ScopeTagClass(scope) }>{ scope }</span>
+}

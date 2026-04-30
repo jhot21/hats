@@ -107,3 +107,8 @@ func SetKeyValueString(key, value string) error {
 	_, err := kv.PutString(ctx, key, value)
 	return err
 }
+
+// JetStream returns the JetStream context for use by other packages.
+func JetStream() jetstream.JetStream {
+	return client.JS
+}
