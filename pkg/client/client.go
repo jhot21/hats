@@ -3,7 +3,6 @@ package client
 import (
 	"fmt"
 
-	"codeberg.org/jhot/hats/internal/api"
 	ha "codeberg.org/jhot/go-ha-sdk"
 	"codeberg.org/jhot/hats/pkg/ntfy"
 	"github.com/go-resty/resty/v2"
@@ -120,13 +119,22 @@ func (c *HatsClient) GetTimer(name string) (string, error) {
 	return resp.String(), nil
 }
 
+type startTimerRequest struct {
+	Duration string `json:"duration"`
+	Force    bool   `json:"force"`
+}
+
+type createScheduleRequest struct {
+	Cron string `json:"cron"`
+}
+
 // Start a timer
 //
 //	name: the name of the timer (should be unique)
 //	duration: time.Duration string for how long the timer should last
 //	force: if true, will start the timer over even if it is already running
 func (c *HatsClient) StartTimer(name string, duration string, force bool) (string, error) {
-	data := api.StartTimerData{
+	data := startTimerRequest{
 		Duration: duration,
 		Force:    force,
 	}
@@ -169,7 +177,7 @@ func (c *HatsClient) GetSchedule(name string) (string, error) {
 //	name: a unique identifying string
 //	cron: a cron expression with seconds, like "0 */5 * * * *" (every 5 minutes)
 func (c *HatsClient) SetSchedule(name string, cron string) (string, error) {
-	data := api.CreateScheduleData{
+	data := createScheduleRequest{
 		Cron: cron,
 	}
 
