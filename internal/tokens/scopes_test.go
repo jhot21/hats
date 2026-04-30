@@ -44,6 +44,10 @@ func TestRequiredScope(t *testing.T) {
 		{http.MethodPut, "/api/secret/api_key", "write:secret:api_key"},
 		{http.MethodDelete, "/api/secret/api_key", "write:secret:api_key"},
 
+		// bulk secrets
+		{http.MethodGet, "/api/secrets", "read:secret:*"},
+		{http.MethodPost, "/api/secrets", "*:*:*"},
+
 		// unknown — fail safe
 		{http.MethodGet, "/api/unknown/thing", "*:*:*"},
 		{http.MethodGet, "/other/path", "*:*:*"},

@@ -94,6 +94,11 @@ func RequiredScope(r *http.Request) string {
 			return "read:secret:" + parts[1]
 		}
 		return "write:secret:" + parts[1]
+	case "secrets":
+		if r.Method == http.MethodGet {
+			return "read:secret:*"
+		}
+		return "*:*:*"
 	}
 	return "*:*:*"
 }
