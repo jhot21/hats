@@ -96,3 +96,41 @@ func TokenHashPreview(hash string) string {
 	}
 	return hash[:8] + "·····" + hash[len(hash)-4:]
 }
+
+// SecretData holds display-ready secret fields for templates.
+type SecretData struct {
+	Name      string
+	Type      string // "basic_string" | "encrypted_string" | "yaml" | "json"
+	CreatedAt string // "YYYY-MM-DD HH:MM"
+	UpdatedAt string // "YYYY-MM-DD HH:MM"
+}
+
+// SecretTypeLabel returns a human-readable label for a secret type.
+func SecretTypeLabel(typ string) string {
+	switch typ {
+	case "basic_string":
+		return "String"
+	case "encrypted_string":
+		return "Encrypted"
+	case "yaml":
+		return "YAML"
+	case "json":
+		return "JSON"
+	default:
+		return typ
+	}
+}
+
+// SecretTypeBadgeClass returns the CSS class for the type badge.
+func SecretTypeBadgeClass(typ string) string {
+	switch typ {
+	case "encrypted_string":
+		return "type-badge encrypted"
+	case "yaml":
+		return "type-badge yaml"
+	case "json":
+		return "type-badge json"
+	default:
+		return "type-badge"
+	}
+}
