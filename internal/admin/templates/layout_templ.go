@@ -42,7 +42,7 @@ func Layout(title string, section string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " — HATS Admin</title><link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link href=\"https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700;800&display=swap\" rel=\"stylesheet\"><link rel=\"stylesheet\" href=\"/admin/static/admin.css\"><script src=\"/admin/static/htmx.min.js\"></script></head><body><div class=\"app\"><aside class=\"sidebar\"><div class=\"brand\"><div class=\"brand-mark\"><svg viewBox=\"0 0 100 100\" fill=\"none\"><path d=\"M50 8 L86 29 L86 71 L50 92 L14 71 L14 29 Z\" stroke=\"var(--teal)\" stroke-width=\"3\"></path> <rect x=\"42\" y=\"32\" width=\"16\" height=\"16\" stroke=\"var(--teal)\" stroke-width=\"2.2\" fill=\"none\"></rect> <rect x=\"26\" y=\"54\" width=\"16\" height=\"16\" stroke=\"var(--teal)\" stroke-width=\"2.2\" fill=\"none\"></rect> <rect x=\"58\" y=\"54\" width=\"16\" height=\"16\" stroke=\"var(--teal)\" stroke-width=\"2.2\" fill=\"none\"></rect> <path d=\"M50 48 L50 54 M50 54 L34 54 M50 54 L66 54\" stroke=\"var(--teal)\" stroke-width=\"2.2\"></path></svg></div><div class=\"brand-text\"><span class=\"wordmark\">HATS</span> <span class=\"subtitle\">Control Plane</span></div></div><div class=\"nav-section\"><div class=\"nav-label\">Observability</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " — HATS Admin</title><link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link href=\"https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700;800&display=swap\" rel=\"stylesheet\"><link rel=\"stylesheet\" href=\"/admin/static/admin.css\"><script src=\"/admin/static/htmx.min.js\"></script><script src=\"/admin/static/codemirror.min.js\"></script><script>\n\t\t\tfunction switchSecretType(type) {\n\t\t\t  document.querySelectorAll('.value-editor').forEach(function(el) {\n\t\t\t    var active = el.dataset.type === type;\n\t\t\t    el.style.display = active ? '' : 'none';\n\t\t\t    var input = el.querySelector('[data-value-input]');\n\t\t\t    if (input) {\n\t\t\t      if (active) { input.setAttribute('name', 'value'); }\n\t\t\t      else { input.removeAttribute('name'); }\n\t\t\t    }\n\t\t\t  });\n\t\t\t}\n\n\t\t\tfunction togglePwd(btn) {\n\t\t\t  var input = btn.previousElementSibling;\n\t\t\t  if (input.type === 'password') { input.type = 'text'; btn.textContent = 'Hide'; }\n\t\t\t  else { input.type = 'password'; btn.textContent = 'Show'; }\n\t\t\t}\n\n\t\t\tfunction initCodeMirror(host, lang) {\n\t\t\t  if (!window.CM) return;\n\t\t\t  var hidden = host.parentElement.querySelector('[data-value-input]');\n\t\t\t  var extensions = [\n\t\t\t    CM.basicSetup,\n\t\t\t    CM.EditorView.updateListener.of(function(update) {\n\t\t\t      if (update.docChanged && hidden) hidden.value = update.state.doc.toString();\n\t\t\t    }),\n\t\t\t    CM.EditorView.theme({\n\t\t\t      '&': { background: 'var(--navy-950)', color: 'var(--text)', height: '200px' },\n\t\t\t      '.cm-scroller': { fontFamily: 'var(--font-mono)', fontSize: '13px', overflow: 'auto' },\n\t\t\t      '.cm-gutters': { background: 'var(--navy-900)', borderRight: '1px solid var(--border-strong)', color: 'var(--text-mute)' },\n\t\t\t      '.cm-activeLine': { background: 'var(--navy-850)' },\n\t\t\t      '&.cm-focused .cm-cursor': { borderLeftColor: 'var(--teal)' },\n\t\t\t      '.cm-selectionBackground, &.cm-focused .cm-selectionBackground': { background: 'var(--teal-dim) !important' },\n\t\t\t    }),\n\t\t\t  ];\n\t\t\t  if (lang === 'yaml' && CM.yaml) extensions.push(CM.yaml());\n\t\t\t  if (lang === 'json' && CM.json) extensions.push(CM.json());\n\t\t\t  var initialDoc = hidden ? hidden.value : '';\n\t\t\t  new CM.EditorView({ doc: initialDoc, extensions: extensions, parent: host });\n\t\t\t}\n\n\t\t\tdocument.addEventListener('htmx:afterSwap', function(e) {\n\t\t\t  if (e.target && e.target.id === 'modal-content') {\n\t\t\t    document.querySelectorAll('.cm-host').forEach(function(host) {\n\t\t\t      initCodeMirror(host, host.dataset.lang);\n\t\t\t    });\n\t\t\t  }\n\t\t\t});\n\t\t\t</script></head><body><div class=\"app\"><aside class=\"sidebar\"><div class=\"brand\"><div class=\"brand-mark\"><svg viewBox=\"0 0 100 100\" fill=\"none\"><path d=\"M50 8 L86 29 L86 71 L50 92 L14 71 L14 29 Z\" stroke=\"var(--teal)\" stroke-width=\"3\"></path> <rect x=\"42\" y=\"32\" width=\"16\" height=\"16\" stroke=\"var(--teal)\" stroke-width=\"2.2\" fill=\"none\"></rect> <rect x=\"26\" y=\"54\" width=\"16\" height=\"16\" stroke=\"var(--teal)\" stroke-width=\"2.2\" fill=\"none\"></rect> <rect x=\"58\" y=\"54\" width=\"16\" height=\"16\" stroke=\"var(--teal)\" stroke-width=\"2.2\" fill=\"none\"></rect> <path d=\"M50 48 L50 54 M50 54 L34 54 M50 54 L66 54\" stroke=\"var(--teal)\" stroke-width=\"2.2\"></path></svg></div><div class=\"brand-text\"><span class=\"wordmark\">HATS</span> <span class=\"subtitle\">Control Plane</span></div></div><div class=\"nav-section\"><div class=\"nav-label\">Observability</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -86,46 +86,68 @@ func Layout(title string, section string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"><path d=\"M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4\"></path></svg> Tokens</a> <span class=\"nav-item disabled\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\"></rect><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"></path></svg> Secrets</span> <span class=\"nav-item disabled\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"><ellipse cx=\"12\" cy=\"5\" rx=\"9\" ry=\"3\"></ellipse><path d=\"M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5\"></path><path d=\"M3 12c0 1.7 4 3 9 3s9-1.3 9-3\"></path></svg> Cache</span></div><div class=\"sidebar-footer\"><a href=\"/admin/logout\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4\"></path><polyline points=\"16 17 21 12 16 7\"></polyline><line x1=\"21\" y1=\"12\" x2=\"9\" y2=\"12\"></line></svg> Logout</a></div></aside><main class=\"main\"><div class=\"topbar\"><div class=\"topbar-brand\"><div class=\"brand-mark\"><svg viewBox=\"0 0 100 100\" fill=\"none\"><path d=\"M50 8 L86 29 L86 71 L50 92 L14 71 L14 29 Z\" stroke=\"var(--teal)\" stroke-width=\"3\"></path> <rect x=\"42\" y=\"32\" width=\"16\" height=\"16\" stroke=\"var(--teal)\" stroke-width=\"2.2\" fill=\"none\"></rect> <rect x=\"26\" y=\"54\" width=\"16\" height=\"16\" stroke=\"var(--teal)\" stroke-width=\"2.2\" fill=\"none\"></rect> <rect x=\"58\" y=\"54\" width=\"16\" height=\"16\" stroke=\"var(--teal)\" stroke-width=\"2.2\" fill=\"none\"></rect> <path d=\"M50 48 L50 54 M50 54 L34 54 M50 54 L66 54\" stroke=\"var(--teal)\" stroke-width=\"2.2\"></path></svg></div><span class=\"wordmark\">HATS</span></div><details class=\"nav-dropdown\"><summary>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"><path d=\"M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4\"></path></svg> Tokens</a> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(title)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/layout.templ`, Line: 83, Col: 15}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+		var templ_7745c5c3_Var7 = []any{NavLinkClass(title, "Secrets")}
+		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var7...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, " <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><polyline points=\"6 9 12 15 18 9\"></polyline></svg></summary><div class=\"nav-dropdown-menu\"><a href=\"/admin\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"M3 12h4l3-8 4 16 3-8h4\"></path></svg> Dashboard</a> <a href=\"/admin/tokens\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4\"></path></svg> Tokens</a></div></details></div><div class=\"breadcrumb\"><span>Home</span> <span class=\"sep\">/</span> <span>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<a href=\"/admin/secrets\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
-		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(section)
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var7).String())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/layout.templ`, Line: 101, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/layout.templ`, Line: 1, Col: 0}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</span> <span class=\"sep\">/</span> <span class=\"current\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\"></rect><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"></path></svg> Secrets</a> <span class=\"nav-item disabled\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"><ellipse cx=\"12\" cy=\"5\" rx=\"9\" ry=\"3\"></ellipse><path d=\"M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5\"></path><path d=\"M3 12c0 1.7 4 3 9 3s9-1.3 9-3\"></path></svg> Cache</span></div><div class=\"sidebar-footer\"><a href=\"/admin/logout\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4\"></path><polyline points=\"16 17 21 12 16 7\"></polyline><line x1=\"21\" y1=\"12\" x2=\"9\" y2=\"12\"></line></svg> Logout</a></div></aside><main class=\"main\"><div class=\"topbar\"><div class=\"topbar-brand\"><div class=\"brand-mark\"><svg viewBox=\"0 0 100 100\" fill=\"none\"><path d=\"M50 8 L86 29 L86 71 L50 92 L14 71 L14 29 Z\" stroke=\"var(--teal)\" stroke-width=\"3\"></path> <rect x=\"42\" y=\"32\" width=\"16\" height=\"16\" stroke=\"var(--teal)\" stroke-width=\"2.2\" fill=\"none\"></rect> <rect x=\"26\" y=\"54\" width=\"16\" height=\"16\" stroke=\"var(--teal)\" stroke-width=\"2.2\" fill=\"none\"></rect> <rect x=\"58\" y=\"54\" width=\"16\" height=\"16\" stroke=\"var(--teal)\" stroke-width=\"2.2\" fill=\"none\"></rect> <path d=\"M50 48 L50 54 M50 54 L34 54 M50 54 L66 54\" stroke=\"var(--teal)\" stroke-width=\"2.2\"></path></svg></div><span class=\"wordmark\">HATS</span></div><details class=\"nav-dropdown\"><summary>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/layout.templ`, Line: 103, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/layout.templ`, Line: 134, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</span></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, " <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><polyline points=\"6 9 12 15 18 9\"></polyline></svg></summary><div class=\"nav-dropdown-menu\"><a href=\"/admin\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"M3 12h4l3-8 4 16 3-8h4\"></path></svg> Dashboard</a> <a href=\"/admin/tokens\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4\"></path></svg> Tokens</a> <a href=\"/admin/secrets\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\"></rect><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"></path></svg> Secrets</a></div></details></div><div class=\"breadcrumb\"><span>Home</span> <span class=\"sep\">/</span> <span>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var10 string
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(section)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/layout.templ`, Line: 156, Col: 21}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</span> <span class=\"sep\">/</span> <span class=\"current\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var11 string
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(title)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/layout.templ`, Line: 158, Col: 35}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</span></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -133,7 +155,7 @@ func Layout(title string, section string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</main></div></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</main></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
