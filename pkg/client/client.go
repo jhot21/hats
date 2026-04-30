@@ -231,3 +231,26 @@ func (c *HatsClient) ClearNtfyMessage(data *ntfy.Message) error {
 	}
 	return err
 }
+
+func (c *HatsClient) GetSecret(name string) (string, error) {
+	resp, err := c.client.R().Get(fmt.Sprintf("api/secret/%s", name))
+	if err == nil && !resp.IsSuccess() {
+		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
+	}
+	if err != nil {
+		return "", err
+	}
+	return resp.String(), nil
+}
+
+func (c *HatsClient) GetAllSecrets() (map[string]string, error) {
+	var result map[string]string
+	resp, err := c.client.R().SetResult(&result).Get("api/secrets")
+	if err == nil && !resp.IsSuccess() {
+		err = fmt.Errorf("%d status code received: %s", resp.StatusCode(), resp.String())
+	}
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
