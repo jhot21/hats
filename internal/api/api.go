@@ -190,7 +190,7 @@ func authMiddleware(next http.Handler) http.Handler {
 		}
 
 		required := tokens.RequiredScope(r)
-		if !tokens.HasScope(tok.Scopes, required) {
+		if required != "" && !tokens.HasScope(tok.Scopes, required) {
 			logger.Warn("Forbidden: insufficient scope", "token", tok.Name, "required", required, "method", r.Method, "path", r.URL.Path)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusForbidden)
@@ -497,6 +497,13 @@ func getSecretsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
+	if !tokens.HasAnyResourceReadScope(tok.Scopes, "secret") {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		b, _ := json.Marshal(map[string]string{"error": "missing scope: read:secret:*"})
+		w.Write(b)
+		return
+	}
 
 	metas, err := secretStore.List()
 	if err != nil {
@@ -511,7 +518,8 @@ func getSecretsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		s, err := secretStore.Get(meta.Name)
 		if err != nil {
-			continue
+			http.Error(w, "failed to retrieve secret "+meta.Name, http.StatusInternalServerError)
+			return
 		}
 		result[meta.Name] = s.Value
 	}

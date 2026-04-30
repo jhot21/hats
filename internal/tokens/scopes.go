@@ -96,9 +96,10 @@ func RequiredScope(r *http.Request) string {
 		return "write:secret:" + parts[1]
 	case "secrets":
 		if r.Method == http.MethodGet {
-			return "read:secret:*"
+			// Bulk GET: scope is checked per-secret inside the handler.
+			// Return "" so the middleware skips the automatic scope gate.
+			return ""
 		}
-		return "*:*:*"
 	}
 	return "*:*:*"
 }
@@ -143,6 +144,25 @@ func matchScope(granted string, reqParts []string) bool {
 		return false
 	}
 	return true
+}
+
+// HasAnyResourceReadScope reports whether the token has read access to at least
+// one identifier within the given resource (e.g. "secret"). This is used by
+// endpoints that do per-item scope filtering internally rather than relying on
+// the middleware's blanket RequiredScope gate.
+func HasAnyResourceReadScope(granted []string, resource string) bool {
+	for _, g := range granted {
+		gParts := strings.SplitN(g, ":", 3)
+		if len(gParts) != 3 {
+			continue
+		}
+		action := gParts[0]
+		res := normalizeResource(gParts[1])
+		if (action == "read" || action == "*") && (res == resource || res == "*") {
+			return true
+		}
+	}
+	return false
 }
 
 func normalizeResource(r string) string {

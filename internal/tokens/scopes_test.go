@@ -44,8 +44,8 @@ func TestRequiredScope(t *testing.T) {
 		{http.MethodPut, "/api/secret/api_key", "write:secret:api_key"},
 		{http.MethodDelete, "/api/secret/api_key", "write:secret:api_key"},
 
-		// bulk secrets
-		{http.MethodGet, "/api/secrets", "read:secret:*"},
+		// bulk secrets — scope checked per-secret inside handler
+		{http.MethodGet, "/api/secrets", ""},
 		{http.MethodPost, "/api/secrets", "*:*:*"},
 
 		// unknown — fail safe
@@ -122,6 +122,34 @@ func TestHasScope(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.want, tokens.HasScope(tc.granted, tc.required))
+		})
+	}
+}
+
+func TestHasAnyResourceReadScope(t *testing.T) {
+	cases := []struct {
+		name     string
+		granted  []string
+		resource string
+		want     bool
+	}{
+		{"full wildcard grants any resource", []string{"*:*:*"}, "secret", true},
+		{"wildcard action and identifier", []string{"*:secret:*"}, "secret", true},
+		{"read wildcard identifier", []string{"read:secret:*"}, "secret", true},
+		{"read specific identifier", []string{"read:secret:HASS_TOKEN"}, "secret", true},
+		{"write-only scope denied", []string{"write:secret:*"}, "secret", false},
+		{"wrong resource denied", []string{"read:state:*"}, "secret", false},
+		{"wildcard resource grants", []string{"read:*:*"}, "secret", true},
+		{"plural normalization", []string{"read:secrets:*"}, "secret", true},
+		{"plural specific identifier", []string{"read:secrets:HASS_TOKEN"}, "secret", true},
+		{"empty grants denied", []string{}, "secret", false},
+		{"multiple scopes one matches", []string{"write:state:*", "read:secret:api_key"}, "secret", true},
+		{"multiple scopes none match", []string{"write:state:*", "write:secret:api_key"}, "secret", false},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, tokens.HasAnyResourceReadScope(tc.granted, tc.resource))
 		})
 	}
 }
