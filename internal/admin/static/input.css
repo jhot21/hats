@@ -368,7 +368,7 @@ body::before {
 
 .btn-primary {
   background: var(--teal);
-  color: var(--text);
+  color: var(--navy-950);
   box-shadow: 0 0 20px var(--teal-glow);
 }
 
@@ -822,6 +822,7 @@ dialog[open] {
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.015em;
+  color: var(--text);
 }
 
 .modal-desc {
