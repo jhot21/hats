@@ -53,6 +53,18 @@ func Init(r chi.Router, cfg *config.HatsConfig, logger *slog.Logger, ts tokens.T
 			r.Get("/api/tokens", tokenJSONListHandler)
 			r.Post("/api/tokens", tokenCreateAPIHandler)
 			r.Post("/api/tokens/{hash}/revoke", tokenRevokeAPIHandler)
+
+			// Secret management pages
+			r.Get("/secrets", secretListHandler)
+			r.Get("/secrets/new", secretNewHandler)
+			r.Get("/secrets/table", secretTableHandler)
+			r.Get("/secrets/{name}/edit", secretEditHandler)
+
+			// Secret management API
+			r.Get("/api/secrets", secretJSONListHandler)
+			r.Post("/api/secrets", secretCreateAPIHandler)
+			r.Put("/api/secrets/{name}", secretUpdateAPIHandler)
+			r.Delete("/api/secrets/{name}", secretDeleteAPIHandler)
 		})
 	})
 }
