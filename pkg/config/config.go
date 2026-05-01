@@ -180,6 +180,9 @@ func (c *HatsConfig) GetNatsBaseUrl() string {
 }
 
 func (c *HatsConfig) GetHatsBaseUrl() string {
+	if strings.HasPrefix(c.HatsHost, "http://") || strings.HasPrefix(c.HatsHost, "https://") {
+		return c.HatsHost
+	}
 	protocol := "http"
 	if c.HatsSecure {
 		protocol += "s"
