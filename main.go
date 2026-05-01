@@ -86,11 +86,10 @@ func main() {
 
 	ntfy.InitClient(&cfg.HatsConfig)
 
-	api.InitAPI(logger, &cfg.HatsConfig, func() chi.Router {
-		router := chi.NewRouter()
-		admin.Init(router, cfg, logger, ts, ss)
-		return router
-	}, ts, ss)
+	api.InitAPI(logger, &cfg.HatsConfig,
+		func() chi.Router { return chi.NewRouter() },
+		func(r chi.Router) { admin.Init(r, cfg, logger, ts, ss) },
+		ts, ss)
 	defer api.Close()
 
 	for sig := range interrupt {

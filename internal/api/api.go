@@ -43,20 +43,20 @@ const (
 	HA_STATE_PREFIX = "homeassistant.states"
 )
 
-func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, ts tokens.TokenStore, ss secrets.SecretStore) {
-	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, ts tokens.TokenStore, ss secrets.SecretStore) {
+func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore) {
+	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore) {
 		for {
-			err := Listen(parentLogger, parentConfig, newRouter(), ts, ss)
+			err := Listen(parentLogger, parentConfig, newRouter(), mount, ts, ss)
 			if err == nil {
 				break
 			}
 			parentLogger.Error("An error occurred with the API. Restarting now.", "error", err)
 			Close()
 		}
-	}(parentLogger, parentConfig, newRouter, ts, ss)
+	}(parentLogger, parentConfig, newRouter, mount, ts, ss)
 }
 
-func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, router chi.Router, ts tokens.TokenStore, ss secrets.SecretStore) error {
+func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, router chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore) error {
 	logger = parentLogger
 	cfg = parentConfig
 	tokenStore = ts
@@ -69,6 +69,10 @@ func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, router c
 	router.Use(loggerMiddleware)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.Timeout(60 * time.Second))
+
+	if mount != nil {
+		mount(router)
+	}
 
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		templates.Home().Render(r.Context(), w)
