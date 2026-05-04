@@ -46,7 +46,7 @@ func TestValidateToken(t *testing.T) {
 
 func TestLoginHandler(t *testing.T) {
 	hash, _ := bcrypt.GenerateFromPassword([]byte("testpassword"), bcrypt.MinCost)
-	adminCfg = &config.HatsConfig{AdminPasswordHash: string(hash)}
+	adminCfg = &config.ServerConfig{AdminPasswordHash: string(hash)}
 	sessionKey = []byte("test-session-key-32-bytes-padded")
 
 	t.Run("GET renders login page", func(t *testing.T) {

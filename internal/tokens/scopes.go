@@ -38,18 +38,14 @@ import (
 	"strings"
 )
 
-// RequiredScope returns the scope a request must satisfy based on its URL path and method.
-// Parses r.URL.Path directly rather than chi's RoutePattern, because sub-router middleware
-// runs before chi resolves the specific sub-route, making RoutePattern unreliable here.
+// RequiredScope returns the scope a request must satisfy. All resource names
+// use the canonical singular form (state, not states).
 func RequiredScope(r *http.Request) string {
-	// Strip the /api/ prefix to get the resource segment(s).
 	sub := strings.TrimPrefix(r.URL.Path, "/api/")
 	if sub == r.URL.Path {
-		// Not an /api/ path — fail safe.
 		return "*:*:*"
 	}
 
-	// Split into at most 3 parts: resource, identifier, optional extra segment.
 	parts := strings.SplitN(sub, "/", 3)
 	if len(parts) == 0 || parts[0] == "" {
 		return "*:*:*"
@@ -61,14 +57,12 @@ func RequiredScope(r *http.Request) string {
 			break
 		}
 		if len(parts) == 3 {
-			// /api/state/{entityId}/{service}
-			return "write:states:" + parts[1]
+			return "write:state:" + parts[1]
 		}
-		// /api/state/{entityId}
 		if r.Method == http.MethodGet {
-			return "read:states:" + parts[1]
+			return "read:state:" + parts[1]
 		}
-		return "write:states:" + parts[1]
+		return "write:state:" + parts[1]
 	case "timer":
 		if len(parts) < 2 || parts[1] == "" {
 			break
@@ -92,13 +86,26 @@ func RequiredScope(r *http.Request) string {
 			break
 		}
 		return "write:command:" + parts[1]
+	case "secret":
+		if len(parts) < 2 || parts[1] == "" {
+			break
+		}
+		if r.Method == http.MethodGet {
+			return "read:secret:" + parts[1]
+		}
+		return "write:secret:" + parts[1]
+	case "secrets":
+		if r.Method == http.MethodGet {
+			// Bulk GET: scope is checked per-secret inside the handler.
+			// Return "" so the middleware skips the automatic scope gate.
+			return ""
+		}
 	}
-	// Unknown routes require full access — fail safe.
 	return "*:*:*"
 }
 
-// HasScope reports whether any scope in granted satisfies the required scope.
-// required must be a valid "action:resource:identifier" triplet.
+// HasScope reports whether any scope in granted satisfies required.
+// Plural resource names in granted scopes are normalized to singular before matching.
 func HasScope(granted []string, required string) bool {
 	if required == "" {
 		return false
@@ -120,6 +127,7 @@ func matchScope(granted string, reqParts []string) bool {
 	if len(gParts) != 3 {
 		return false
 	}
+	gParts[1] = normalizeResource(gParts[1])
 	for i, gPart := range gParts {
 		if gPart == "*" {
 			continue
@@ -128,7 +136,6 @@ func matchScope(granted string, reqParts []string) bool {
 		if gPart == req {
 			continue
 		}
-		// prefix wildcard: "light.*" matches "light.living_room"
 		if prefix, ok := strings.CutSuffix(gPart, ".*"); ok {
 			if strings.HasPrefix(req, prefix+".") {
 				continue
@@ -137,4 +144,40 @@ func matchScope(granted string, reqParts []string) bool {
 		return false
 	}
 	return true
+}
+
+// HasAnyResourceReadScope reports whether the token has read access to at least
+// one identifier within the given resource (e.g. "secret"). This is used by
+// endpoints that do per-item scope filtering internally rather than relying on
+// the middleware's blanket RequiredScope gate.
+func HasAnyResourceReadScope(granted []string, resource string) bool {
+	for _, g := range granted {
+		gParts := strings.SplitN(g, ":", 3)
+		if len(gParts) != 3 {
+			continue
+		}
+		action := gParts[0]
+		res := normalizeResource(gParts[1])
+		if (action == "read" || action == "*") && (res == resource || res == "*") {
+			return true
+		}
+	}
+	return false
+}
+
+func normalizeResource(r string) string {
+	switch r {
+	case "states":
+		return "state"
+	case "commands":
+		return "command"
+	case "timers":
+		return "timer"
+	case "schedules":
+		return "schedule"
+	case "secrets":
+		return "secret"
+	default:
+		return r
+	}
 }

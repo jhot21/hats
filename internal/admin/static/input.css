@@ -822,6 +822,7 @@ dialog[open] {
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.015em;
+  color: var(--text);
 }
 
 .modal-desc {
@@ -1191,4 +1192,127 @@ dialog[open] {
     font-size: 11px;
     padding: 16px;
   }
+}
+
+/* ===== WIDE MODAL (secrets) ===== */
+.modal-backdrop--wide {
+  max-width: 800px;
+}
+
+@media (max-width: 640px) {
+  .modal-backdrop--wide {
+    max-width: 100%;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    transform: none;
+    border-radius: 0;
+  }
+}
+
+/* ===== SECRET TYPE BADGES ===== */
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: var(--navy-800);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+
+.type-badge.encrypted {
+  background: rgba(232, 184, 97, 0.08);
+  color: var(--warn);
+  border-color: rgba(232, 184, 97, 0.2);
+}
+
+.type-badge.yaml,
+.type-badge.json {
+  background: var(--teal-dim);
+  color: var(--teal-bright);
+  border-color: rgba(95, 180, 194, 0.2);
+}
+
+/* ===== SECRET CARDS ===== */
+.secret-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.secret-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: border-color 0.15s ease;
+}
+
+.secret-card:hover {
+  border-color: var(--border-strong);
+}
+
+.secret-card-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+  flex: 1;
+}
+
+.secret-card-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-mute);
+}
+
+.secret-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* ===== CODEMIRROR HOST ===== */
+.cm-host {
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  overflow: hidden;
+  min-height: 200px;
+}
+
+/* ===== SHOW/HIDE PASSWORD TOGGLE ===== */
+.input-with-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-toggle .form-input {
+  padding-right: 60px;
+}
+
+.input-toggle-btn {
+  position: absolute;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: var(--text-mute);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 3px;
+}
+
+.input-toggle-btn:hover {
+  color: var(--teal);
 }

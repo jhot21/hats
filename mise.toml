@@ -2,6 +2,7 @@
 go = "1"
 node = "lts"
 "npm:@tailwindcss/cli" = "latest"
+task = "latest"
 
 [env]
 TASK_X_REMOTE_TASKFILES = "1"

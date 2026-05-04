@@ -19,7 +19,7 @@ import (
 const cookieName = "hats_admin_session"
 
 var (
-	adminCfg    *config.HatsConfig
+	adminCfg    *config.ServerConfig
 	adminLogger *slog.Logger
 	sessionKey  []byte
 )

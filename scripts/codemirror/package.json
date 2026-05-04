@@ -1,0 +1,14 @@
+{
+  "name": "codemirror-build",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "@codemirror/lang-json": "^6.0.1",
+    "@codemirror/lang-yaml": "^6.1.1",
+    "codemirror": "^6.0.1",
+    "esbuild": "^0.24.0"
+  }
+}
