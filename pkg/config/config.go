@@ -175,6 +175,10 @@ func (c *HatsConfig) GetHomeAssistantWebsocketUrl() string {
 	return fmt.Sprintf("%s://%s:%s/api/websocket", protocol, c.HomeAssistantHost, c.HomeAssistantPort)
 }
 
+func (c *HatsConfig) GetHomeAssistantToken() string {
+	return c.HomeAssistantToken
+}
+
 func (c *HatsConfig) GetNatsBaseUrl() string {
 	return fmt.Sprintf("nats://%s:%s", c.NatsHost, c.NatsPort)
 }
