@@ -58,3 +58,13 @@ func TestHATSOverlaySkippedWhenTokenEmpty(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Nil(t, cfg.secrets)
 }
+
+func TestGetHomeAssistantToken_ReturnsToken(t *testing.T) {
+	cfg := &HatsConfig{HomeAssistantToken: "mytoken"}
+	assert.Equal(t, "mytoken", cfg.GetHomeAssistantToken())
+}
+
+func TestGetHomeAssistantToken_EmptyWhenNotSet(t *testing.T) {
+	cfg := &HatsConfig{}
+	assert.Equal(t, "", cfg.GetHomeAssistantToken())
+}
