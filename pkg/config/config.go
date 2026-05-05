@@ -38,14 +38,6 @@ type HatsConfig struct {
 	secrets map[string]string
 }
 
-// ServerConfig extends HatsConfig with fields only needed by the HATS server process.
-type ServerConfig struct {
-	HatsConfig
-	SecretsEncryptionKey string `config:"SECRETS_ENCRYPTION_KEY" default:""`
-	AdminPasswordHash    string `config:"ADMIN_PASSWORD_HASH" default:""`
-	AdminSessionSecret   string `config:"ADMIN_SESSION_SECRET" default:""`
-}
-
 // New returns a HatsConfig for use by subscriber services.
 // Overlay chain: defaults → env vars → HATS secrets (if HATS_HOST and HATS_TOKEN are set).
 // If the HATS secrets fetch fails the error is returned but cfg is still usable with env-only values.
@@ -56,17 +48,6 @@ func New() (*HatsConfig, error) {
 		return cfg, fmt.Errorf("HATS secrets overlay failed (continuing with env-only values): %w", err)
 	}
 	return cfg, nil
-}
-
-// NewServer returns a ServerConfig for use by the HATS server process.
-// Overlay chain: defaults → env vars → HATS secrets (if HATS_HOST and HATS_TOKEN are set).
-func NewServer() (*ServerConfig, error) {
-	srv := &ServerConfig{}
-	srv.SetValues(ConfigValueSourceDefault).SetValues(ConfigValueSourceEnv)
-	if err := srv.HatsConfig.applyHATSSecrets(); err != nil {
-		return srv, fmt.Errorf("HATS secrets overlay failed (continuing with env-only values): %w", err)
-	}
-	return srv, nil
 }
 
 // applyHATSSecrets fetches all secrets from the HATS API and overlays them onto
@@ -140,11 +121,6 @@ func ApplyValues(v reflect.Value, source ConfigValueSource, inputs ...map[string
 func (c *HatsConfig) SetValues(source ConfigValueSource, inputs ...map[string]string) *HatsConfig {
 	ApplyValues(reflect.ValueOf(c).Elem(), source, inputs...)
 	return c
-}
-
-func (s *ServerConfig) SetValues(source ConfigValueSource, inputs ...map[string]string) *ServerConfig {
-	ApplyValues(reflect.ValueOf(s).Elem(), source, inputs...)
-	return s
 }
 
 func (c *HatsConfig) GetCustomSetting(name string, defaultValue string) string {
