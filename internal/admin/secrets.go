@@ -42,6 +42,10 @@ func secretEditHandler(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	if ntfyReservedNames[name] {
+		http.NotFound(w, r)
+		return
+	}
 	s, err := adminSecretStore.Get(name)
 	if err != nil {
 		http.Error(w, "secret not found", http.StatusNotFound)
@@ -66,6 +70,11 @@ func secretCreateAPIHandler(w http.ResponseWriter, r *http.Request) {
 	if haReservedNames[name] {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		templates.SecretCreateForm("this name is reserved for Home Assistant connection management", typStr).Render(r.Context(), w)
+		return
+	}
+	if ntfyReservedNames[name] {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		templates.SecretCreateForm("this name is reserved for ntfy connection management", typStr).Render(r.Context(), w)
 		return
 	}
 	value := r.FormValue("value_" + typStr)
@@ -107,6 +116,10 @@ func secretUpdateAPIHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "reserved for Home Assistant connection management", http.StatusForbidden)
 		return
 	}
+	if ntfyReservedNames[name] {
+		http.Error(w, "reserved for ntfy connection management", http.StatusForbidden)
+		return
+	}
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "invalid form", http.StatusBadRequest)
 		return
@@ -128,6 +141,10 @@ func secretDeleteAPIHandler(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
 	if haReservedNames[name] {
 		http.Error(w, "reserved for Home Assistant connection management", http.StatusForbidden)
+		return
+	}
+	if ntfyReservedNames[name] {
+		http.Error(w, "reserved for ntfy connection management", http.StatusForbidden)
 		return
 	}
 	if err := adminSecretStore.Delete(name); err != nil {
@@ -158,7 +175,7 @@ func secretDataList(metas []*secrets.SecretMeta) []templates.SecretData {
 	})
 	var data []templates.SecretData
 	for _, m := range metas {
-		if haReservedNames[m.Name] {
+		if haReservedNames[m.Name] || ntfyReservedNames[m.Name] {
 			continue
 		}
 		data = append(data, templates.SecretData{
