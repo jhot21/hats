@@ -74,7 +74,7 @@ const ConfigValueSourceDefault ConfigValueSource = "default"
 const ConfigValueSourceHATS ConfigValueSource = "hats"
 
 // ApplyValues sets fields on v (must be a struct Value) using the given source.
-// It handles both HatsConfig and ServerConfig via reflect.VisibleFields which
+// It handles struct fields with config tags via reflect.VisibleFields which
 // promotes embedded struct fields.
 func ApplyValues(v reflect.Value, source ConfigValueSource, inputs ...map[string]string) {
 	fields := reflect.VisibleFields(v.Type())
