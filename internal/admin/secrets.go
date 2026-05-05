@@ -38,6 +38,10 @@ func secretNewHandler(w http.ResponseWriter, r *http.Request) {
 
 func secretEditHandler(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
+	if haReservedNames[name] {
+		http.NotFound(w, r)
+		return
+	}
 	s, err := adminSecretStore.Get(name)
 	if err != nil {
 		http.Error(w, "secret not found", http.StatusNotFound)
@@ -59,6 +63,11 @@ func secretCreateAPIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	name := r.FormValue("name")
 	typStr := r.FormValue("type")
+	if haReservedNames[name] {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		templates.SecretCreateForm("this name is reserved for Home Assistant connection management", typStr).Render(r.Context(), w)
+		return
+	}
 	value := r.FormValue("value_" + typStr)
 
 	if name == "" || typStr == "" || value == "" {
@@ -94,6 +103,10 @@ func secretCreateAPIHandler(w http.ResponseWriter, r *http.Request) {
 
 func secretUpdateAPIHandler(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
+	if haReservedNames[name] {
+		http.Error(w, "reserved for Home Assistant connection management", http.StatusForbidden)
+		return
+	}
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "invalid form", http.StatusBadRequest)
 		return
@@ -113,6 +126,10 @@ func secretUpdateAPIHandler(w http.ResponseWriter, r *http.Request) {
 
 func secretDeleteAPIHandler(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
+	if haReservedNames[name] {
+		http.Error(w, "reserved for Home Assistant connection management", http.StatusForbidden)
+		return
+	}
 	if err := adminSecretStore.Delete(name); err != nil {
 		http.Error(w, "failed to delete secret: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -139,14 +156,17 @@ func secretDataList(metas []*secrets.SecretMeta) []templates.SecretData {
 	sort.Slice(metas, func(i, j int) bool {
 		return metas[i].Name < metas[j].Name
 	})
-	data := make([]templates.SecretData, len(metas))
-	for i, m := range metas {
-		data[i] = templates.SecretData{
+	var data []templates.SecretData
+	for _, m := range metas {
+		if haReservedNames[m.Name] {
+			continue
+		}
+		data = append(data, templates.SecretData{
 			Name:      m.Name,
 			Type:      string(m.Type),
 			CreatedAt: m.CreatedAt.Format("2006-01-02 15:04"),
 			UpdatedAt: m.UpdatedAt.Format("2006-01-02 15:04"),
-		}
+		})
 	}
 	return data
 }
