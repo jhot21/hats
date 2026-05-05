@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"codeberg.org/jhot/hats/internal/admin/templates"
-	"codeberg.org/jhot/hats/pkg/config"
+	"codeberg.org/jhot/hats/internal/serverconfig"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -19,7 +19,7 @@ import (
 const cookieName = "hats_admin_session"
 
 var (
-	adminCfg    *config.ServerConfig
+	adminCfg    *serverconfig.ServerConfig
 	adminLogger *slog.Logger
 	sessionKey  []byte
 )
