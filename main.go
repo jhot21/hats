@@ -13,35 +13,30 @@ import (
 	"codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/internal/ntfy"
 	"codeberg.org/jhot/hats/internal/secrets"
+	"codeberg.org/jhot/hats/internal/serverconfig"
 	"codeberg.org/jhot/hats/internal/tokens"
-	"codeberg.org/jhot/hats/pkg/config"
 	"github.com/go-chi/chi/v5"
 )
 
 var (
 	interrupt chan os.Signal
-	cfg       *config.ServerConfig
+	cfg       *serverconfig.ServerConfig
 	logger    *slog.Logger
 	ctx       context.Context
 	cancel    context.CancelFunc
 )
 
 func main() {
-	var err error
-	cfg, err = config.NewServer()
+	cfg = serverconfig.NewBootstrap()
 	ctx, cancel = context.WithCancel(context.Background())
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: cfg.GetLogLevel(),
 	}))
 
-	if err != nil {
-		logger.Error("Error during config initialization", "error", err)
-	}
-
 	interrupt = make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	err = nats.JetstreamConnect(ctx, logger, &cfg.HatsConfig)
+	err := nats.JetstreamConnect(ctx, logger, &cfg.HatsConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -69,6 +64,11 @@ func main() {
 	ss, err := secrets.NewStore(ctx, nats.JetStream(), encKey, nats.Publish)
 	if err != nil {
 		panic(err)
+	}
+
+	// Phase 2: overlay config values stored in the secret store.
+	if err := cfg.ApplySecretStore(ss); err != nil {
+		logger.Warn("Secret store config overlay failed, using bootstrap values", "error", err)
 	}
 
 	err = nats.ScheduleStoreConnect()
