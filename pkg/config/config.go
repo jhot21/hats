@@ -92,10 +92,10 @@ const ConfigValueSourceEnv ConfigValueSource = "env"
 const ConfigValueSourceDefault ConfigValueSource = "default"
 const ConfigValueSourceHATS ConfigValueSource = "hats"
 
-// applyValues sets fields on v (must be a struct Value) using the given source.
+// ApplyValues sets fields on v (must be a struct Value) using the given source.
 // It handles both HatsConfig and ServerConfig via reflect.VisibleFields which
 // promotes embedded struct fields.
-func applyValues(v reflect.Value, source ConfigValueSource, inputs ...map[string]string) {
+func ApplyValues(v reflect.Value, source ConfigValueSource, inputs ...map[string]string) {
 	fields := reflect.VisibleFields(v.Type())
 	for _, field := range fields {
 		envName := field.Tag.Get("config")
@@ -138,12 +138,12 @@ func applyValues(v reflect.Value, source ConfigValueSource, inputs ...map[string
 }
 
 func (c *HatsConfig) SetValues(source ConfigValueSource, inputs ...map[string]string) *HatsConfig {
-	applyValues(reflect.ValueOf(c).Elem(), source, inputs...)
+	ApplyValues(reflect.ValueOf(c).Elem(), source, inputs...)
 	return c
 }
 
 func (s *ServerConfig) SetValues(source ConfigValueSource, inputs ...map[string]string) *ServerConfig {
-	applyValues(reflect.ValueOf(s).Elem(), source, inputs...)
+	ApplyValues(reflect.ValueOf(s).Elem(), source, inputs...)
 	return s
 }
 
