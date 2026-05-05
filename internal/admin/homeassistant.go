@@ -84,8 +84,9 @@ func haSaveHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// haTestHandler tests a connection to Home Assistant using only the submitted form values.
-// It is stateless — it never reads from or writes to the secret store.
+// haTestHandler tests a connection to Home Assistant using the submitted form values.
+// If the token field is empty, it falls back to the stored token so users can test
+// the current configuration without re-entering it.
 func haTestHandler(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "invalid form", http.StatusBadRequest)
@@ -96,6 +97,11 @@ func haTestHandler(w http.ResponseWriter, r *http.Request) {
 	port := r.FormValue("port")
 	secure := r.FormValue("secure") == "true"
 	token := r.FormValue("token")
+	if token == "" {
+		if s, err := adminSecretStore.Get("HASS_TOKEN"); err == nil {
+			token = s.Value
+		}
+	}
 
 	protocol := "http"
 	if secure {
