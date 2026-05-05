@@ -70,6 +70,7 @@ func Init(r chi.Router, cfg *serverconfig.ServerConfig, logger *slog.Logger, ts 
 			r.Get("/homeassistant", haPageHandler)
 			r.Post("/api/homeassistant", haSaveHandler)
 			r.Post("/api/homeassistant/test", haTestHandler)
+			r.Post("/api/restart", restartHandler)
 		})
 	})
 }

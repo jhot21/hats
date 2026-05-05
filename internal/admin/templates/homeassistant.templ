@@ -93,3 +93,7 @@ templ HATestResult(ok bool, message string) {
 		<p class="login-error">{ message }</p>
 	}
 }
+
+templ HARestartResult() {
+	<p class="login-error" style="color: var(--teal);">Restarting... the service will be back shortly.</p>
+}
