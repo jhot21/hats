@@ -113,30 +113,11 @@ client := amcrest.New(
 )
 ```
 
-`cfg.GetCustomSetting(name, default)` reads from the environment (and from Infisical if configured), so each camera's credentials can be set as individual env vars.
+`cfg.GetCustomSetting(name, default)` reads from the environment, so each camera's credentials can be set as individual env vars.
 
 **Config:** custom — use `AMCREST_{NAME}_HOST`, `AMCREST_{NAME}_USER`, `AMCREST_{NAME}_PASS` (or any names you choose)
 
 ---
 
-## Infisical
-
-Package: `codeberg.org/jhot/hats/pkg/infisical`
-
-[Infisical](https://infisical.com/) is a secrets manager. HATS initializes the Infisical client automatically during `config.New()` — you don't instantiate it directly.
-
-When configured, Infisical secrets are overlaid on top of environment variables at startup. Secret keys should match the environment variable names listed in [getting-started.md#environment-variable-reference](getting-started.md#environment-variable-reference).
-
-```go
-// No manual setup needed — config.New() handles it
-cfg, err := config.New()
-// cfg.HatsToken is now populated from Infisical if the secret exists
-```
-
-`cfg.GetCustomSetting(name, default)` also resolves through Infisical, so custom env vars (like camera credentials) can be stored there too.
-
-**Config:** `INFISICAL_HOST`, `INFISICAL_CLIENT`, `INFISICAL_SECRET`, `INFISICAL_PROJECT`, `INFISICAL_ENVIRONMENT` — see [getting-started.md#secret-management-with-infisical](getting-started.md#secret-management-with-infisical)
-
----
 
 ← [Getting started](getting-started.md)

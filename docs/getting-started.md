@@ -41,7 +41,7 @@ You can verify HATS is running at `http://localhost:8888` — it renders the REA
 
 ## Environment variable reference
 
-Variables are read from the environment in priority order: **Infisical secrets** (if configured) override **environment variables**, which override **defaults**.
+Variables are read from the environment in priority order: **secret store** (if configured) overrides **environment variables**, which override **defaults**.
 
 ### Core
 
@@ -90,26 +90,6 @@ These are only needed if you use the corresponding client in your subscriber. Se
 | `SYNCTHING_TOKEN` | — | Syncthing API key |
 | `GOKAPI_HOST` | `http://gokapi:53842` | Gokapi URL |
 | `GOKAPI_TOKEN` | — | Gokapi API key |
-
-### Infisical secrets
-
-| Variable | Default | Description |
-|---|---|---|
-| `INFISICAL_HOST` | `http://infisical:8080` | Infisical API URL |
-| `INFISICAL_CLIENT` | — | Machine identity client ID |
-| `INFISICAL_SECRET` | — | Machine identity client secret |
-| `INFISICAL_PROJECT` | — | Project ID |
-| `INFISICAL_ENVIRONMENT` | `prod` | Environment slug (`prod`, `dev`, etc.) |
-
----
-
-## Secret management with Infisical
-
-If `INFISICAL_CLIENT`, `INFISICAL_SECRET`, and `INFISICAL_PROJECT` are all set, HATS fetches secrets from [Infisical](https://infisical.com/) at startup and overlays them on top of environment variables. This lets you keep tokens out of your compose files entirely.
-
-Secret keys must match the environment variable names above (e.g. `HASS_TOKEN`, `HATS_TOKEN`). Custom settings retrieved with `cfg.GetCustomSetting` are also resolved through Infisical if configured.
-
-See [third-party-clients.md#infisical](third-party-clients.md#infisical) for more on the Infisical client.
 
 ---
 
