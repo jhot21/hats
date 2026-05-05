@@ -65,6 +65,11 @@ func Init(r chi.Router, cfg *config.ServerConfig, logger *slog.Logger, ts tokens
 			r.Post("/api/secrets", secretCreateAPIHandler)
 			r.Put("/api/secrets/{name}", secretUpdateAPIHandler)
 			r.Delete("/api/secrets/{name}", secretDeleteAPIHandler)
+
+			// Home Assistant connection management
+			r.Get("/homeassistant", haPageHandler)
+			r.Post("/api/homeassistant", haSaveHandler)
+			r.Post("/api/homeassistant/test", haTestHandler)
 		})
 	})
 }
