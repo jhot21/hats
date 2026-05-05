@@ -134,3 +134,11 @@ func SecretTypeBadgeClass(typ string) string {
 		return "type-badge"
 	}
 }
+
+// HAConnectionData holds pre-populated form values for the HA connection page.
+type HAConnectionData struct {
+	Host   string
+	Port   string
+	Secure bool
+	Error  string // non-empty when a save error should be displayed
+}

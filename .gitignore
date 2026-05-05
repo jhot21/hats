@@ -12,3 +12,4 @@ mockha
 node_modules/
 scripts/codemirror/node_modules/
 temp/
+.worktrees/

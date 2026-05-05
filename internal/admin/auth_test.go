@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"codeberg.org/jhot/hats/pkg/config"
+	"codeberg.org/jhot/hats/internal/serverconfig"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
@@ -46,7 +46,7 @@ func TestValidateToken(t *testing.T) {
 
 func TestLoginHandler(t *testing.T) {
 	hash, _ := bcrypt.GenerateFromPassword([]byte("testpassword"), bcrypt.MinCost)
-	adminCfg = &config.ServerConfig{AdminPasswordHash: string(hash)}
+	adminCfg = &serverconfig.ServerConfig{AdminPasswordHash: string(hash)}
 	sessionKey = []byte("test-session-key-32-bytes-padded")
 
 	t.Run("GET renders login page", func(t *testing.T) {

@@ -1,0 +1,118 @@
+package templates
+
+templ HomeAssistant(data HAConnectionData) {
+	@Layout("Home Assistant", "Administration") {
+		<div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px;">
+			<div>
+				<h1 class="page-title">Home <strong>Assistant</strong></h1>
+				<div class="page-meta">
+					<span>MANAGE HOME ASSISTANT CONNECTION</span>
+				</div>
+			</div>
+		</div>
+		<div class="panel" style="padding: 32px; max-width: 560px;">
+			if data.Error != "" {
+				<p class="login-error" style="margin: 0 0 20px 0;">{ data.Error }</p>
+			}
+			<form
+				id="ha-form"
+				hx-post="/admin/api/homeassistant"
+				hx-target="#ha-result"
+				hx-swap="innerHTML"
+			>
+				<div class="form-field">
+					<label class="form-label" for="ha-host">Host</label>
+					<input
+						id="ha-host"
+						type="text"
+						name="host"
+						value={ data.Host }
+						class="form-input"
+						placeholder="homeassistant.local"
+					/>
+				</div>
+				<div class="form-field">
+					<label class="form-label" for="ha-port">Port</label>
+					<input
+						id="ha-port"
+						type="text"
+						name="port"
+						value={ data.Port }
+						class="form-input"
+						placeholder="8123"
+					/>
+				</div>
+				<div class="form-field">
+					<label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+						if data.Secure {
+							<input type="checkbox" name="secure" value="true" checked/>
+						} else {
+							<input type="checkbox" name="secure" value="true"/>
+						}
+						Secure (HTTPS / WSS)
+					</label>
+				</div>
+				<div class="form-field">
+					<label class="form-label" for="ha-token">Token</label>
+					<div style="display: flex; gap: 8px; align-items: center;">
+						<input
+							id="ha-token"
+							type="password"
+							name="token"
+							class="form-input"
+							placeholder="Leave blank to keep existing token"
+							style="flex: 1;"
+						/>
+						<button type="button" class="btn btn-ghost" onclick="togglePwd(this)">Show</button>
+					</div>
+				</div>
+				<div style="display: flex; gap: 12px; margin-top: 24px;">
+					<button type="submit" class="btn btn-primary">Save</button>
+					<button
+						type="button"
+						class="btn btn-ghost"
+						hx-post="/admin/api/homeassistant/test"
+						hx-include="#ha-form"
+						hx-target="#ha-test-result"
+						hx-swap="innerHTML"
+					>
+						Test Connection
+					</button>
+				</div>
+			</form>
+			<div id="ha-result" style="margin-top: 16px;"></div>
+			<div id="ha-test-result" style="margin-top: 16px;"></div>
+		</div>
+		<div class="panel" style="padding: 32px; max-width: 560px; margin-top: 24px;">
+			<h2 style="font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 12px 0; opacity: 0.7;">Restart Service</h2>
+			<p style="margin: 0 0 20px 0; font-size: 14px; opacity: 0.7;">
+				Restart the service to apply configuration saved in the secret store.
+				Requires a Docker restart policy (<code>restart: unless-stopped</code>).
+			</p>
+			<button
+				type="button"
+				class="btn btn-ghost"
+				style="color: #f59e0b;"
+				hx-post="/admin/api/restart"
+				hx-confirm="The service will restart briefly and you may be logged out. Restart now?"
+				hx-target="#restart-result"
+				hx-swap="innerHTML"
+			>
+				Restart Service
+			</button>
+			<div id="restart-result" style="margin-top: 16px;"></div>
+		</div>
+	}
+}
+
+templ HATestResult(ok bool, message string) {
+	if ok {
+		<p class="login-error" style="color: var(--teal);">{ message }</p>
+	} else {
+		<p class="login-error">{ message }</p>
+	}
+}
+
+templ HARestartResult() {
+	<p class="login-error" style="color: var(--teal);">Restarting... the service will be back shortly.</p>
+}

@@ -22,6 +22,7 @@ var nameRegexp = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 type SecretStore interface {
 	Get(name string) (*Secret, error)
 	List() ([]*SecretMeta, error)
+	GetAll() (map[string]string, error)
 	Create(name, value string, typ SecretType) error
 	Update(name, value string) error
 	Delete(name string) error
@@ -147,6 +148,36 @@ func (s *store) List() ([]*SecretMeta, error) {
 			continue
 		}
 		result = append(result, &SecretMeta{Name: k, Type: TypeEncryptedString, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
+	}
+
+	return result, nil
+}
+
+func (s *store) GetAll() (map[string]string, error) {
+	result := make(map[string]string)
+
+	keys, err := s.plain.Keys(s.ctx)
+	if err != nil && !errors.Is(err, jetstream.ErrNoKeysFound) {
+		return nil, err
+	}
+	for _, k := range keys {
+		secret, err := s.Get(k)
+		if err != nil {
+			continue
+		}
+		result[k] = secret.Value
+	}
+
+	encKeys, err := s.enc.Keys(s.ctx)
+	if err != nil && !errors.Is(err, jetstream.ErrNoKeysFound) {
+		return nil, err
+	}
+	for _, k := range encKeys {
+		secret, err := s.Get(k)
+		if err != nil {
+			continue
+		}
+		result[k] = secret.Value
 	}
 
 	return result, nil

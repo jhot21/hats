@@ -9,8 +9,8 @@ import (
 
 	"codeberg.org/jhot/hats/internal/admin/templates"
 	"codeberg.org/jhot/hats/internal/secrets"
+	"codeberg.org/jhot/hats/internal/serverconfig"
 	"codeberg.org/jhot/hats/internal/tokens"
-	"codeberg.org/jhot/hats/pkg/config"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -21,7 +21,7 @@ var adminTokenStore tokens.TokenStore
 var adminSecretStore secrets.SecretStore
 
 // Init mounts the /admin sub-router onto the provided Chi router.
-func Init(r chi.Router, cfg *config.ServerConfig, logger *slog.Logger, ts tokens.TokenStore, ss secrets.SecretStore) {
+func Init(r chi.Router, cfg *serverconfig.ServerConfig, logger *slog.Logger, ts tokens.TokenStore, ss secrets.SecretStore) {
 	adminCfg = cfg
 	adminLogger = logger
 	adminTokenStore = ts
@@ -65,6 +65,12 @@ func Init(r chi.Router, cfg *config.ServerConfig, logger *slog.Logger, ts tokens
 			r.Post("/api/secrets", secretCreateAPIHandler)
 			r.Put("/api/secrets/{name}", secretUpdateAPIHandler)
 			r.Delete("/api/secrets/{name}", secretDeleteAPIHandler)
+
+			// Home Assistant connection management
+			r.Get("/homeassistant", haPageHandler)
+			r.Post("/api/homeassistant", haSaveHandler)
+			r.Post("/api/homeassistant/test", haTestHandler)
+			r.Post("/api/restart", restartHandler)
 		})
 	})
 }
