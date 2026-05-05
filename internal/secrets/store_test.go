@@ -241,3 +241,28 @@ func TestStore_ValidNames(t *testing.T) {
 		assert.ErrorIs(t, store.Create(name, "v", secrets.TypeBasicString), secrets.ErrInvalidName, "name: %s", name)
 	}
 }
+
+func TestStore_GetAll(t *testing.T) {
+	js := startTestNATS(t)
+	store, err := secrets.NewStore(context.Background(), js, testKey(), func(string, []byte) {})
+	require.NoError(t, err)
+
+	require.NoError(t, store.Create("plain_key", "plain_val", secrets.TypeBasicString))
+	require.NoError(t, store.Create("enc_key", "enc_val", secrets.TypeEncryptedString))
+
+	all, err := store.GetAll()
+	require.NoError(t, err)
+	assert.Len(t, all, 2)
+	assert.Equal(t, "plain_val", all["plain_key"])
+	assert.Equal(t, "enc_val", all["enc_key"])
+}
+
+func TestStore_GetAll_Empty(t *testing.T) {
+	js := startTestNATS(t)
+	store, err := secrets.NewStore(context.Background(), js, nil, func(string, []byte) {})
+	require.NoError(t, err)
+
+	all, err := store.GetAll()
+	require.NoError(t, err)
+	assert.Empty(t, all)
+}
