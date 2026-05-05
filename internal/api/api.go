@@ -31,36 +31,38 @@ import (
 )
 
 var (
-	cfg        *config.HatsConfig
-	logger     *slog.Logger
-	server     http.Server
-	haClient   *ha.Client
-	tokenStore tokens.TokenStore
+	cfg         *config.HatsConfig
+	logger      *slog.Logger
+	server      http.Server
+	haClient    *ha.Client
+	tokenStore  tokens.TokenStore
 	secretStore secrets.SecretStore
+	ntfyClient  *ntfy.Client
 )
 
 const (
 	HA_STATE_PREFIX = "homeassistant.states"
 )
 
-func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore) {
-	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore) {
+func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client) {
+	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client) {
 		for {
-			err := Listen(parentLogger, parentConfig, newRouter(), mount, ts, ss)
+			err := Listen(parentLogger, parentConfig, newRouter(), mount, ts, ss, nc)
 			if err == nil {
 				break
 			}
 			parentLogger.Error("An error occurred with the API. Restarting now.", "error", err)
 			Close()
 		}
-	}(parentLogger, parentConfig, newRouter, mount, ts, ss)
+	}(parentLogger, parentConfig, newRouter, mount, ts, ss, nc)
 }
 
-func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, router chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore) error {
+func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, router chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client) error {
 	logger = parentLogger
 	cfg = parentConfig
 	tokenStore = ts
 	secretStore = ss
+	ntfyClient = nc
 
 	haClient = ha.New(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
 
@@ -409,7 +411,7 @@ func postNtfyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := ntfy.Send(data); err != nil {
+	if err := ntfyClient.Send(data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -423,7 +425,7 @@ func deleteNtfyHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to parse message data", http.StatusNotAcceptable)
 		return
 	}
-	if err := ntfy.Delete(data); err != nil {
+	if err := ntfyClient.Delete(data); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -436,7 +438,7 @@ func clearNtfyHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to parse message data", http.StatusNotAcceptable)
 		return
 	}
-	if err := ntfy.Clear(data); err != nil {
+	if err := ntfyClient.Clear(data); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
