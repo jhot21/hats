@@ -105,7 +105,7 @@ func HomeAssistant(data HAConnectionData) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "Secure (HTTPS / WSS)</label></div><div class=\"form-field\"><label class=\"form-label\" for=\"ha-token\">Token</label><div style=\"display: flex; gap: 8px; align-items: center;\"><input id=\"ha-token\" type=\"password\" name=\"token\" class=\"form-input\" placeholder=\"Leave blank to keep existing token\" style=\"flex: 1;\"> <button type=\"button\" class=\"btn btn-ghost\" onclick=\"togglePwd(this)\">Show</button></div></div><div style=\"display: flex; gap: 12px; margin-top: 24px;\"><button type=\"submit\" class=\"btn btn-primary\">Save</button> <button type=\"button\" class=\"btn btn-ghost\" hx-post=\"/admin/api/homeassistant/test\" hx-include=\"#ha-form\" hx-target=\"#ha-test-result\" hx-swap=\"innerHTML\">Test Connection</button></div></form><div id=\"ha-result\" style=\"margin-top: 16px;\"></div><div id=\"ha-test-result\" style=\"margin-top: 16px;\"></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "Secure (HTTPS / WSS)</label></div><div class=\"form-field\"><label class=\"form-label\" for=\"ha-token\">Token</label><div style=\"display: flex; gap: 8px; align-items: center;\"><input id=\"ha-token\" type=\"password\" name=\"token\" class=\"form-input\" placeholder=\"Leave blank to keep existing token\" style=\"flex: 1;\"> <button type=\"button\" class=\"btn btn-ghost\" onclick=\"togglePwd(this)\">Show</button></div></div><div style=\"display: flex; gap: 12px; margin-top: 24px;\"><button type=\"submit\" class=\"btn btn-primary\">Save</button> <button type=\"button\" class=\"btn btn-ghost\" hx-post=\"/admin/api/homeassistant/test\" hx-include=\"#ha-form\" hx-target=\"#ha-test-result\" hx-swap=\"innerHTML\">Test Connection</button></div></form><div id=\"ha-result\" style=\"margin-top: 16px;\"></div><div id=\"ha-test-result\" style=\"margin-top: 16px;\"></div></div><div class=\"panel\" style=\"padding: 32px; max-width: 560px; margin-top: 24px;\"><h2 style=\"font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 12px 0; opacity: 0.7;\">Restart Service</h2><p style=\"margin: 0 0 20px 0; font-size: 14px; opacity: 0.7;\">Restart the service to apply configuration saved in the secret store. Requires a Docker restart policy (<code>restart: unless-stopped</code>).</p><button type=\"button\" class=\"btn btn-ghost\" style=\"color: #f59e0b;\" hx-post=\"/admin/api/restart\" hx-confirm=\"The service will restart briefly and you may be logged out. Restart now?\" hx-target=\"#restart-result\" hx-swap=\"innerHTML\">Restart Service</button><div id=\"restart-result\" style=\"margin-top: 16px;\"></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -148,7 +148,7 @@ func HATestResult(ok bool, message string) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/homeassistant.templ`, Line: 91, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/homeassistant.templ`, Line: 110, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -166,7 +166,7 @@ func HATestResult(ok bool, message string) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/homeassistant.templ`, Line: 93, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/homeassistant.templ`, Line: 112, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
