@@ -143,3 +143,13 @@ func ntfyTestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	templates.NtfyTestResult(true, "OK", true, readMsg).Render(r.Context(), w)
 }
+
+// ntfyTokenHandler fetches the stored NTFY_TOKEN and returns the revealed token wrapper fragment.
+func ntfyTokenHandler(w http.ResponseWriter, r *http.Request) {
+	var token string
+	if s, err := adminSecretStore.Get("NTFY_TOKEN"); err == nil {
+		token = s.Value
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	templates.NtfyTokenReveal(token).Render(r.Context(), w)
+}
