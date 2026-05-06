@@ -44,15 +44,17 @@ func Init(r chi.Router, cfg *serverconfig.ServerConfig, logger *slog.Logger, ts 
 			r.Get("/", dashboardHandler)
 			r.Get("/api/status", statusHandler)
 
-			// Token management pages
-			r.Get("/tokens", tokenListHandler)
-			r.Get("/tokens/new", tokenNewHandler)
-			r.Get("/tokens/table", tokenTableHandler)
+		// Token management pages
+		r.Get("/tokens", tokenListHandler)
+		r.Get("/tokens/new", tokenNewHandler)
+		r.Get("/tokens/table", tokenTableHandler)
+		r.Get("/tokens/{hash}/edit", tokenEditHandler)
 
-			// Token management API
-			r.Get("/api/tokens", tokenJSONListHandler)
-			r.Post("/api/tokens", tokenCreateAPIHandler)
-			r.Post("/api/tokens/{hash}/revoke", tokenRevokeAPIHandler)
+		// Token management API
+		r.Get("/api/tokens", tokenJSONListHandler)
+		r.Post("/api/tokens", tokenCreateAPIHandler)
+		r.Post("/api/tokens/{hash}/revoke", tokenRevokeAPIHandler)
+		r.Put("/api/tokens/{hash}", tokenUpdateAPIHandler)
 
 			// Secret management pages
 			r.Get("/secrets", secretListHandler)
