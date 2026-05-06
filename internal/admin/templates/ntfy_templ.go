@@ -77,7 +77,7 @@ func Ntfy(data NtfyConnectionData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\" class=\"form-input\" placeholder=\"https://ntfy.sh\"></div><div class=\"form-field\"><label class=\"form-label\" for=\"ntfy-token\">Token</label><div style=\"display: flex; gap: 8px; align-items: center;\"><input id=\"ntfy-token\" type=\"password\" name=\"token\" class=\"form-input\" placeholder=\"Leave blank to keep existing token\" style=\"flex: 1;\"> <button type=\"button\" class=\"btn btn-ghost\" onclick=\"togglePwd(this)\">Show</button></div></div><div style=\"display: flex; gap: 12px; margin-top: 24px;\"><button type=\"submit\" class=\"btn btn-primary\">Save</button></div></form><div id=\"ntfy-result\" style=\"margin-top: 16px;\"></div></div><div class=\"panel\" style=\"padding: 32px; max-width: 560px; margin-top: 24px;\"><h2 style=\"font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 12px 0; opacity: 0.7;\">Test Connection</h2><p style=\"margin: 0 0 20px 0; font-size: 14px; opacity: 0.7;\">Enter a topic to verify write (publish) and read (poll) access using the credentials above.</p><form id=\"ntfy-test-form\" hx-post=\"/admin/api/ntfy/test\" hx-include=\"#ntfy-form\" hx-target=\"#ntfy-test-result\" hx-swap=\"innerHTML\"><div class=\"form-field\"><label class=\"form-label\" for=\"ntfy-test-topic\">Test Topic</label> <input id=\"ntfy-test-topic\" type=\"text\" name=\"test_topic\" class=\"form-input\" placeholder=\"my-topic\"></div><div style=\"display: flex; gap: 12px; margin-top: 24px;\"><button type=\"submit\" class=\"btn btn-ghost\">Test Connection</button></div></form><div id=\"ntfy-test-result\" style=\"margin-top: 16px;\"></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\" class=\"form-input\" placeholder=\"https://ntfy.sh\"></div><div class=\"form-field\"><label class=\"form-label\" for=\"ntfy-token\">Token</label><div id=\"ntfy-token-wrapper\" style=\"display: flex; gap: 8px; align-items: center;\"><input id=\"ntfy-token\" type=\"password\" name=\"token\" class=\"form-input\" placeholder=\"Leave blank to keep existing token\" style=\"flex: 1;\"> <button type=\"button\" class=\"btn btn-ghost\" hx-get=\"/admin/api/ntfy/token\" hx-target=\"#ntfy-token-wrapper\" hx-swap=\"outerHTML\">Reveal</button></div></div><div style=\"display: flex; gap: 12px; margin-top: 24px;\"><button type=\"submit\" class=\"btn btn-primary\">Save</button></div></form><div id=\"ntfy-result\" style=\"margin-top: 16px;\"></div></div><div class=\"panel\" style=\"padding: 32px; max-width: 560px; margin-top: 24px;\"><h2 style=\"font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 12px 0; opacity: 0.7;\">Test Connection</h2><p style=\"margin: 0 0 20px 0; font-size: 14px; opacity: 0.7;\">Enter a topic to verify write (publish) and read (poll) access using the credentials above.</p><form id=\"ntfy-test-form\" hx-post=\"/admin/api/ntfy/test\" hx-include=\"#ntfy-form\" hx-target=\"#ntfy-test-result\" hx-swap=\"innerHTML\"><div class=\"form-field\"><label class=\"form-label\" for=\"ntfy-test-topic\">Test Topic</label> <input id=\"ntfy-test-topic\" type=\"text\" name=\"test_topic\" class=\"form-input\" placeholder=\"my-topic\"></div><div style=\"display: flex; gap: 12px; margin-top: 24px;\"><button type=\"submit\" class=\"btn btn-ghost\">Test Connection</button></div></form><div id=\"ntfy-test-result\" style=\"margin-top: 16px;\"></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -120,7 +120,7 @@ func NtfyTestResult(writeOK bool, writeMsg string, readOK bool, readMsg string) 
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(writeMsg)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/ntfy.templ`, Line: 87, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/ntfy.templ`, Line: 93, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -138,7 +138,7 @@ func NtfyTestResult(writeOK bool, writeMsg string, readOK bool, readMsg string) 
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(writeMsg)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/ntfy.templ`, Line: 89, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/ntfy.templ`, Line: 95, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -157,7 +157,7 @@ func NtfyTestResult(writeOK bool, writeMsg string, readOK bool, readMsg string) 
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(readMsg)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/ntfy.templ`, Line: 92, Col: 68}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/ntfy.templ`, Line: 98, Col: 68}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -175,7 +175,7 @@ func NtfyTestResult(writeOK bool, writeMsg string, readOK bool, readMsg string) 
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(readMsg)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/ntfy.templ`, Line: 94, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/ntfy.templ`, Line: 100, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -219,7 +219,7 @@ func NtfySaveResult(ok bool, message string) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/ntfy.templ`, Line: 100, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/ntfy.templ`, Line: 106, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -237,7 +237,7 @@ func NtfySaveResult(ok bool, message string) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/ntfy.templ`, Line: 102, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/ntfy.templ`, Line: 108, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -247,6 +247,63 @@ func NtfySaveResult(ok bool, message string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
+		}
+		return nil
+	})
+}
+
+func NtfyTokenReveal(token string) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var13 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var13 == nil {
+			templ_7745c5c3_Var13 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div id=\"ntfy-token-wrapper\" style=\"display: flex; gap: 8px; align-items: center;\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if token == "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<input id=\"ntfy-token\" type=\"text\" name=\"token\" class=\"form-input\" placeholder=\"No token stored\" style=\"flex: 1;\"> ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		} else {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<input id=\"ntfy-token\" type=\"text\" name=\"token\" value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var14 string
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(token)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/ntfy.templ`, Line: 128, Col: 17}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\" class=\"form-input\" style=\"flex: 1;\"> ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<button type=\"button\" class=\"btn btn-ghost\" onclick=\"togglePwd(this)\">Hide</button></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
 		}
 		return nil
 	})

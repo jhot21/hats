@@ -33,7 +33,7 @@ templ Ntfy(data NtfyConnectionData) {
 				</div>
 				<div class="form-field">
 					<label class="form-label" for="ntfy-token">Token</label>
-					<div style="display: flex; gap: 8px; align-items: center;">
+					<div id="ntfy-token-wrapper" style="display: flex; gap: 8px; align-items: center;">
 						<input
 							id="ntfy-token"
 							type="password"
@@ -42,7 +42,13 @@ templ Ntfy(data NtfyConnectionData) {
 							placeholder="Leave blank to keep existing token"
 							style="flex: 1;"
 						/>
-						<button type="button" class="btn btn-ghost" onclick="togglePwd(this)">Show</button>
+						<button
+							type="button"
+							class="btn btn-ghost"
+							hx-get="/admin/api/ntfy/token"
+							hx-target="#ntfy-token-wrapper"
+							hx-swap="outerHTML"
+						>Reveal</button>
 					</div>
 				</div>
 				<div style="display: flex; gap: 12px; margin-top: 24px;">
@@ -101,4 +107,29 @@ templ NtfySaveResult(ok bool, message string) {
 	} else {
 		<p class="login-error">{ message }</p>
 	}
+}
+
+templ NtfyTokenReveal(token string) {
+	<div id="ntfy-token-wrapper" style="display: flex; gap: 8px; align-items: center;">
+		if token == "" {
+			<input
+				id="ntfy-token"
+				type="text"
+				name="token"
+				class="form-input"
+				placeholder="No token stored"
+				style="flex: 1;"
+			/>
+		} else {
+			<input
+				id="ntfy-token"
+				type="text"
+				name="token"
+				value={ token }
+				class="form-input"
+				style="flex: 1;"
+			/>
+		}
+		<button type="button" class="btn btn-ghost" onclick="togglePwd(this)">Hide</button>
+	</div>
 }
