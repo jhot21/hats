@@ -62,7 +62,7 @@ func TestStore_Validate_WrongToken(t *testing.T) {
 	store, err := tokens.NewStore(context.Background(), slog.Default(), js)
 	require.NoError(t, err)
 
-	_, err = store.Validate("hats_doesnotexist12345678901234")
+	_, err = store.Validate("hats_doesnotexist12345678901234567890123456")
 	require.ErrorIs(t, err, tokens.ErrTokenNotFound)
 }
 

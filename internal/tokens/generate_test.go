@@ -18,8 +18,17 @@ func TestGenerateToken_HasPrefix(t *testing.T) {
 func TestGenerateToken_Length(t *testing.T) {
 	raw, err := tokens.GenerateToken()
 	require.NoError(t, err)
-	// "hats_" (5) + 32 random chars = 37 total
-	assert.Equal(t, 37, len(raw))
+	// "hats_" (5) + 40 random chars = 45 total
+	assert.Equal(t, 45, len(raw))
+}
+
+func TestGenerateToken_Alphanumeric(t *testing.T) {
+	raw, err := tokens.GenerateToken()
+	require.NoError(t, err)
+	suffix := raw[len("hats_"):]
+	for _, c := range suffix {
+		assert.True(t, (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'), "suffix must be alphanumeric, got %q", c)
+	}
 }
 
 func TestGenerateToken_Unique(t *testing.T) {
