@@ -70,12 +70,14 @@ func Init(r chi.Router, cfg *serverconfig.ServerConfig, logger *slog.Logger, ts 
 			r.Get("/homeassistant", haPageHandler)
 			r.Post("/api/homeassistant", haSaveHandler)
 			r.Post("/api/homeassistant/test", haTestHandler)
+			r.Get("/api/homeassistant/token", haTokenHandler)
 			r.Post("/api/restart", restartHandler)
 
 			// ntfy connection management
 			r.Get("/ntfy", ntfyPageHandler)
 			r.Post("/api/ntfy", ntfySaveHandler)
 			r.Post("/api/ntfy/test", ntfyTestHandler)
+			r.Get("/api/ntfy/token", ntfyTokenHandler)
 		})
 	})
 }
