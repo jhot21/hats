@@ -55,23 +55,23 @@ templ HomeAssistant(data HAConnectionData) {
 				<div class="form-field">
 					<label class="form-label" for="ha-token">Token</label>
 					<div id="ha-token-wrapper" style="display: flex; gap: 8px; align-items: center;">
-					<input
-						id="ha-token"
-						type="password"
-						name="token"
-						class="form-input"
-						placeholder="Leave blank to keep existing token"
-						style="flex: 1;"
-					/>
-					<button
-						type="button"
-						class="btn btn-ghost"
-						hx-get="/admin/api/homeassistant/token"
-						hx-target="#ha-token-wrapper"
-						hx-swap="outerHTML"
-					>Reveal</button>
+						<input
+							id="ha-token"
+							type="password"
+							name="token"
+							class="form-input"
+							placeholder="Leave blank to keep existing token"
+							style="flex: 1;"
+						/>
+						<button
+							type="button"
+							class="btn btn-ghost"
+							hx-get="/admin/api/homeassistant/token"
+							hx-target="#ha-token-wrapper"
+							hx-swap="outerHTML"
+						>Reveal</button>
+					</div>
 				</div>
-			</div>
 				<div style="display: flex; gap: 12px; margin-top: 24px;">
 					<button type="submit" class="btn btn-primary">Save</button>
 					<button

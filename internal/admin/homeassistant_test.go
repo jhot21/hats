@@ -30,7 +30,9 @@ func (m *mockSecretStore) Delete(name string) error                             
 
 func TestHATokenHandler(t *testing.T) {
 	t.Run("returns revealed wrapper containing stored token", func(t *testing.T) {
+		origStore := adminSecretStore
 		adminSecretStore = &mockSecretStore{data: map[string]string{"HASS_TOKEN": "eyABCDEF1234"}}
+		defer func() { adminSecretStore = origStore }()
 		req := httptest.NewRequest(http.MethodGet, "/admin/api/homeassistant/token", nil)
 		w := httptest.NewRecorder()
 		haTokenHandler(w, req)
@@ -41,7 +43,9 @@ func TestHATokenHandler(t *testing.T) {
 	})
 
 	t.Run("returns revealed wrapper with empty input when token not stored", func(t *testing.T) {
+		origStore := adminSecretStore
 		adminSecretStore = &mockSecretStore{data: map[string]string{}}
+		defer func() { adminSecretStore = origStore }()
 		req := httptest.NewRequest(http.MethodGet, "/admin/api/homeassistant/token", nil)
 		w := httptest.NewRecorder()
 		haTokenHandler(w, req)
