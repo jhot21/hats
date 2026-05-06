@@ -1,0 +1,62 @@
+package templates
+
+// ScopeBuilder renders a 3-part scope picker (action : resource : identifier)
+// that appends a formatted scope line to the textarea identified by textareaID.
+// Also defines the normalizeScopes() JS helper used by form textareas.
+templ ScopeBuilder(textareaID string) {
+	<div class="scope-builder" data-textarea={ textareaID }>
+		<div class="scope-builder-label">Add scope</div>
+		<div class="scope-row">
+			<select name="sb-action" class="form-input mono">
+				<option value="*">*</option>
+				<option value="read">read</option>
+				<option value="write">write</option>
+			</select>
+			<span class="scope-sep">:</span>
+			<select name="sb-resource" class="form-input mono">
+				<option value="*">*</option>
+				<option value="state">state</option>
+				<option value="timer">timer</option>
+				<option value="schedule">schedule</option>
+				<option value="command">command</option>
+				<option value="ntfy">ntfy</option>
+				<option value="secret">secret</option>
+			</select>
+			<span class="scope-sep">:</span>
+			<input
+				type="text"
+				name="sb-identifier"
+				value="*"
+				placeholder="*"
+				class="form-input mono"
+			/>
+			<button
+				type="button"
+				class="btn btn-secondary"
+				onclick="scopeBuilderAdd(this.closest('.scope-builder'))"
+			>
+				+ Add
+			</button>
+		</div>
+		<p class="form-help">Appends to the textarea below. Identifier defaults to <code>*</code></p>
+	</div>
+	<script>
+		function scopeBuilderAdd(builder) {
+			var action = builder.querySelector('[name="sb-action"]').value;
+			var resource = builder.querySelector('[name="sb-resource"]').value;
+			var identifier = builder.querySelector('[name="sb-identifier"]').value.trim();
+			if (!identifier) identifier = '*';
+			var scope = action + ':' + resource + ':' + identifier;
+			var ta = document.getElementById(builder.dataset.textarea);
+			var lines = ta.value.trim().split('\n').filter(function(l) { return l.trim() !== ''; });
+			lines.push(scope);
+			ta.value = lines.join('\n');
+			builder.querySelector('[name="sb-identifier"]').value = '*';
+		}
+
+		function normalizeScopes(ta) {
+			var parts = ta.value.split(/[\n,]+/).map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; });
+			ta.value = parts.join('\n');
+		}
+	</script>
+}

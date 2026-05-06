@@ -1,5 +1,7 @@
 package templates
 
+import "strings"
+
 // TokenCreateForm renders the "create token" form inside the modal.
 // errMsg is shown if validation failed; scopesValue repopulates the scopes field.
 templ TokenCreateForm(errMsg string, scopesValue string) {
@@ -42,15 +44,17 @@ templ TokenCreateForm(errMsg string, scopesValue string) {
 				</div>
 				<div class="form-field">
 					<label class="form-label" for="token-scopes">Scopes <span class="required">*</span></label>
+					@ScopeBuilder("token-scopes")
 					<textarea
 						id="token-scopes"
 						name="scopes"
 						required
 						rows="4"
-						placeholder="One per line or comma-separated. Examples: *:*:*  read:states:*  write:states:light.*"
+						onblur="normalizeScopes(this)"
+						placeholder="One per line or comma-separated. Examples: *:*:*  read:state:*  write:state:light.*"
 						class="form-input mono"
 					>{ scopesValue }</textarea>
-					<p class="form-help">Format: <code>action:resource:identifier</code> — actions: <code>read</code>, <code>write</code>, <code>*</code> — use <code>*:*:*</code> {"for"} full access</p>
+					<p class="form-help">Format: <code>action:resource:identifier</code> — actions: <code>read</code>, <code>write</code>, <code>*</code> — use <code>*:*:*</code> { "for" } full access</p>
 				</div>
 				<div class="form-field">
 					<label class="form-label" for="token-expires">Expiry <span class="optional">optional</span></label>
@@ -121,4 +125,114 @@ templ TokenCreated(rawToken string) {
 			</button>
 		</div>
 	</div>
+}
+
+// TokenEditForm renders the "edit token" form inside the modal.
+// t is the pre-populated token data; errMsg is shown on validation failure.
+templ TokenEditForm(t TokenData, errMsg string) {
+	<div class="modal">
+		<div class="modal-header">
+			<div>
+				<div class="modal-eyebrow">Administration</div>
+				<div class="modal-title">Edit Token</div>
+			</div>
+			<button
+				type="button"
+				onclick="document.getElementById('token-modal').close()"
+				class="modal-close"
+				aria-label="Close"
+			>
+				&times;
+			</button>
+		</div>
+		if errMsg != "" {
+			<p class="login-error" style="margin: 0 28px;">{ errMsg }</p>
+		}
+		<form
+			hx-put={ "/admin/api/tokens/" + t.Hash }
+			hx-target="#modal-content"
+			hx-swap="innerHTML"
+			style="display: flex; flex-direction: column; flex: 1;"
+		>
+			<div class="modal-body">
+				<div class="form-field">
+					<label class="form-label">Name</label>
+					<input
+						type="text"
+						value={ t.Name }
+						readonly
+						class="form-input"
+						style="opacity: 0.55; cursor: not-allowed;"
+					/>
+				</div>
+				<div class="form-field">
+					<label class="form-label" for="edit-token-expires">Expiry</label>
+					if TokenStatusLabel(t) == "expired" {
+						<input
+							id="edit-token-expires"
+							type="date"
+							name="expires_at"
+							value={ t.ExpiresAt }
+							disabled
+							class="form-input mono"
+							style="opacity: 0.55; cursor: not-allowed;"
+						/>
+						<input type="hidden" name="expires_at" value={ t.ExpiresAt }/>
+						<p class="form-help" style="color: var(--crit);">This token has already expired.</p>
+					} else {
+						<input
+							id="edit-token-expires"
+							type="date"
+							name="expires_at"
+							if t.ExpiresAt != "never" {
+								value={ t.ExpiresAt }
+							}
+							class="form-input mono"
+						/>
+					}
+				</div>
+				<div class="form-field">
+					<label class="form-label" for="edit-token-scopes">Scopes <span class="required">*</span></label>
+					@ScopeBuilder("edit-token-scopes")
+					<textarea
+						id="edit-token-scopes"
+						name="scopes"
+						required
+						rows="4"
+						onblur="normalizeScopes(this)"
+						class="form-input mono"
+					>{ strings.Join(t.Scopes, "\n") }</textarea>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<span></span>
+				<div style="display: flex; gap: 10px;">
+					<button
+						type="button"
+						onclick="document.getElementById('token-modal').close()"
+						class="btn btn-ghost"
+					>
+						Cancel
+					</button>
+					<button
+						type="submit"
+						class="btn btn-primary"
+					>
+						Save Changes
+					</button>
+				</div>
+			</div>
+		</form>
+	</div>
+}
+
+// TokenEditSuccess is returned by PUT /admin/api/tokens/{hash} on success.
+// It uses HTMX OOB swap to refresh the token list and an inline script to close the modal.
+templ TokenEditSuccess(toks []TokenData) {
+	<div>
+		<div id="token-list" hx-swap-oob="innerHTML">
+			@TokenList(toks)
+		</div>
+	</div>
+	<script>document.getElementById('token-modal').close();</script>
 }

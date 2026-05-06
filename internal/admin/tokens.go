@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"errors"
 	"net/http"
 	"sort"
 	"strings"
@@ -38,6 +39,94 @@ func tokenTableHandler(w http.ResponseWriter, r *http.Request) {
 func tokenNewHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	templates.TokenCreateForm("", "").Render(r.Context(), w)
+}
+
+// tokenEditHandler returns the edit token modal form fragment.
+func tokenEditHandler(w http.ResponseWriter, r *http.Request) {
+	hash := chi.URLParam(r, "hash")
+	toks, err := adminTokenStore.List()
+	if err != nil {
+		http.Error(w, "failed to list tokens", http.StatusInternalServerError)
+		return
+	}
+	var found *tokens.Token
+	for _, t := range toks {
+		if t.Hash == hash {
+			found = t
+			break
+		}
+	}
+	if found == nil {
+		http.Error(w, "token not found", http.StatusNotFound)
+		return
+	}
+	data := tokenDataList([]*tokens.Token{found})[0]
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	templates.TokenEditForm(data, "").Render(r.Context(), w)
+}
+
+// tokenUpdateAPIHandler updates a token's scopes and expiry.
+func tokenUpdateAPIHandler(w http.ResponseWriter, r *http.Request) {
+	hash := chi.URLParam(r, "hash")
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "invalid form", http.StatusBadRequest)
+		return
+	}
+
+	scopesRaw := r.FormValue("scopes")
+	expiryRaw := r.FormValue("expires_at")
+
+	scopes := parseScopes(scopesRaw)
+	if len(scopes) == 0 {
+		toks, _ := adminTokenStore.List()
+		var data templates.TokenData
+		for _, t := range toks {
+			if t.Hash == hash {
+				data = tokenDataList([]*tokens.Token{t})[0]
+				break
+			}
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		templates.TokenEditForm(data, "at least one valid scope is required").Render(r.Context(), w)
+		return
+	}
+
+	var expiresAt *time.Time
+	if expiryRaw != "" {
+		t, err := time.Parse("2006-01-02", expiryRaw)
+		if err != nil {
+			toks, _ := adminTokenStore.List()
+			var data templates.TokenData
+			for _, t := range toks {
+				if t.Hash == hash {
+					data = tokenDataList([]*tokens.Token{t})[0]
+					break
+				}
+			}
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			templates.TokenEditForm(data, "invalid expiry date (use YYYY-MM-DD)").Render(r.Context(), w)
+			return
+		}
+		t = t.UTC()
+		expiresAt = &t
+	}
+
+	if err := adminTokenStore.Update(hash, scopes, expiresAt); err != nil {
+		if errors.Is(err, tokens.ErrTokenNotFound) {
+			http.Error(w, "token not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "failed to update token: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	toks, err := adminTokenStore.List()
+	if err != nil {
+		http.Error(w, "failed to list tokens", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	templates.TokenEditSuccess(tokenDataList(toks)).Render(r.Context(), w)
 }
 
 // tokenCreateAPIHandler creates a new token and returns the "token created" fragment.

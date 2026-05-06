@@ -25,6 +25,7 @@ type TokenStore interface {
 	Validate(rawToken string) (*Token, error)
 	Revoke(tokenHash string) error
 	List() ([]*Token, error)
+	Update(hash string, scopes []string, expiresAt *time.Time) error
 }
 
 type store struct {
@@ -193,6 +194,42 @@ func (s *store) List() ([]*Token, error) {
 		result = append(result, t)
 	}
 	return result, nil
+}
+
+func (s *store) Update(hash string, scopes []string, expiresAt *time.Time) error {
+	s.mu.RLock()
+	old, ok := s.cache[hash]
+	s.mu.RUnlock()
+	if !ok {
+		return ErrTokenNotFound
+	}
+	rec := tokenRecord{
+		Name:       old.Name,
+		Scopes:     scopes,
+		ExpiresAt:  expiresAt,
+		CreatedAt:  old.CreatedAt,
+		LastUsedAt: old.LastUsedAt,
+	}
+	data, err := json.Marshal(rec)
+	if err != nil {
+		return err
+	}
+	if _, err = s.kv.Put(s.ctx, hash, data); err != nil {
+		return err
+	}
+	s.mu.Lock()
+	if _, ok := s.cache[hash]; ok {
+		s.cache[hash] = &Token{
+			Hash:       hash,
+			Name:       old.Name,
+			Scopes:     scopes,
+			ExpiresAt:  expiresAt,
+			CreatedAt:  old.CreatedAt,
+			LastUsedAt: old.LastUsedAt,
+		}
+	}
+	s.mu.Unlock()
+	return nil
 }
 
 func (s *store) flushLoop() {

@@ -8,6 +8,8 @@ package templates
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import "strings"
+
 // TokenCreateForm renders the "create token" form inside the modal.
 // errMsg is shown if validation failed; scopesValue repopulates the scopes field.
 func TokenCreateForm(errMsg string, scopesValue string) templ.Component {
@@ -43,7 +45,7 @@ func TokenCreateForm(errMsg string, scopesValue string) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(errMsg)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 22, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 24, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
@@ -54,33 +56,41 @@ func TokenCreateForm(errMsg string, scopesValue string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<form hx-post=\"/admin/api/tokens\" hx-target=\"#modal-content\" hx-swap=\"innerHTML\" style=\"display: flex; flex-direction: column; flex: 1;\"><div class=\"modal-body\"><div class=\"form-field\"><label class=\"form-label\" for=\"token-name\">Name <span class=\"required\">*</span></label> <input id=\"token-name\" type=\"text\" name=\"name\" required autofocus placeholder=\"e.g. home-automation-hub\" class=\"form-input\"></div><div class=\"form-field\"><label class=\"form-label\" for=\"token-scopes\">Scopes <span class=\"required\">*</span></label> <textarea id=\"token-scopes\" name=\"scopes\" required rows=\"4\" placeholder=\"One per line or comma-separated. Examples: *:*:*  read:states:*  write:states:light.*\" class=\"form-input mono\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<form hx-post=\"/admin/api/tokens\" hx-target=\"#modal-content\" hx-swap=\"innerHTML\" style=\"display: flex; flex-direction: column; flex: 1;\"><div class=\"modal-body\"><div class=\"form-field\"><label class=\"form-label\" for=\"token-name\">Name <span class=\"required\">*</span></label> <input id=\"token-name\" type=\"text\" name=\"name\" required autofocus placeholder=\"e.g. home-automation-hub\" class=\"form-input\"></div><div class=\"form-field\"><label class=\"form-label\" for=\"token-scopes\">Scopes <span class=\"required\">*</span></label>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = ScopeBuilder("token-scopes").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<textarea id=\"token-scopes\" name=\"scopes\" required rows=\"4\" onblur=\"normalizeScopes(this)\" placeholder=\"One per line or comma-separated. Examples: *:*:*  read:state:*  write:state:light.*\" class=\"form-input mono\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(scopesValue)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 52, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 56, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</textarea><p class=\"form-help\">Format: <code>action:resource:identifier</code> — actions: <code>read</code>, <code>write</code>, <code>*</code> — use <code>*:*:*</code> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</textarea><p class=\"form-help\">Format: <code>action:resource:identifier</code> — actions: <code>read</code>, <code>write</code>, <code>*</code> — use <code>*:*:*</code> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs("for")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 53, Col: 174}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 57, Col: 175}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, " full access</p></div><div class=\"form-field\"><label class=\"form-label\" for=\"token-expires\">Expiry <span class=\"optional\">optional</span></label> <input id=\"token-expires\" type=\"date\" name=\"expires_at\" class=\"form-input mono\"></div></div><div class=\"modal-footer\"><span></span><div style=\"display: flex; gap: 10px;\"><button type=\"button\" onclick=\"document.getElementById('token-modal').close()\" class=\"btn btn-ghost\">Cancel</button> <button type=\"submit\" class=\"btn btn-primary\">Create Token</button></div></div></form></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, " full access</p></div><div class=\"form-field\"><label class=\"form-label\" for=\"token-expires\">Expiry <span class=\"optional\">optional</span></label> <input id=\"token-expires\" type=\"date\" name=\"expires_at\" class=\"form-input mono\"></div></div><div class=\"modal-footer\"><span></span><div style=\"display: flex; gap: 10px;\"><button type=\"button\" onclick=\"document.getElementById('token-modal').close()\" class=\"btn btn-ghost\">Cancel</button> <button type=\"submit\" class=\"btn btn-primary\">Create Token</button></div></div></form></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -111,20 +121,224 @@ func TokenCreated(rawToken string) templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"modal\"><div class=\"modal-header\"><div><div class=\"modal-eyebrow\">Administration</div><div class=\"modal-title\">Token Created</div></div></div><div class=\"modal-body\"><div style=\"background: rgba(232, 184, 97, 0.08); border: 1px solid rgba(232, 184, 97, 0.25); border-radius: 6px; padding: 12px 14px; margin-bottom: 16px;\"><p style=\"color: var(--warn); font-size: 13px; font-weight: 500;\">Copy this token now — it will not be shown again.</p></div><div style=\"background: var(--navy-950); border: 1px solid var(--border-strong); border-radius: 6px; padding: 14px; font-family: var(--font-mono); font-size: 12px; color: var(--text); word-break: break-all; user-select: all;\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div class=\"modal\"><div class=\"modal-header\"><div><div class=\"modal-eyebrow\">Administration</div><div class=\"modal-title\">Token Created</div></div></div><div class=\"modal-body\"><div style=\"background: rgba(232, 184, 97, 0.08); border: 1px solid rgba(232, 184, 97, 0.25); border-radius: 6px; padding: 12px 14px; margin-bottom: 16px;\"><p style=\"color: var(--warn); font-size: 13px; font-weight: 500;\">Copy this token now — it will not be shown again.</p></div><div style=\"background: var(--navy-950); border: 1px solid var(--border-strong); border-radius: 6px; padding: 14px; font-family: var(--font-mono); font-size: 12px; color: var(--text); word-break: break-all; user-select: all;\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(rawToken)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 104, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 108, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div><p class=\"form-help\" style=\"margin-top: 12px;\">Use this as a <code>Bearer</code> token in the <code>Authorization</code> header, or as the password in HTTP Basic Auth.</p></div><div class=\"modal-footer\"><span></span> <button type=\"button\" hx-get=\"/admin/tokens/table\" hx-target=\"#token-list\" hx-swap=\"innerHTML\" hx-on::after-request=\"document.getElementById('token-modal').close()\" class=\"btn btn-primary\">Done</button></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div><p class=\"form-help\" style=\"margin-top: 12px;\">Use this as a <code>Bearer</code> token in the <code>Authorization</code> header, or as the password in HTTP Basic Auth.</p></div><div class=\"modal-footer\"><span></span> <button type=\"button\" hx-get=\"/admin/tokens/table\" hx-target=\"#token-list\" hx-swap=\"innerHTML\" hx-on::after-request=\"document.getElementById('token-modal').close()\" class=\"btn btn-primary\">Done</button></div></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+// TokenEditForm renders the "edit token" form inside the modal.
+// t is the pre-populated token data; errMsg is shown on validation failure.
+func TokenEditForm(t TokenData, errMsg string) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var7 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var7 == nil {
+			templ_7745c5c3_Var7 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"modal\"><div class=\"modal-header\"><div><div class=\"modal-eyebrow\">Administration</div><div class=\"modal-title\">Edit Token</div></div><button type=\"button\" onclick=\"document.getElementById('token-modal').close()\" class=\"modal-close\" aria-label=\"Close\">&times;</button></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if errMsg != "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<p class=\"login-error\" style=\"margin: 0 28px;\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var8 string
+			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(errMsg)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 149, Col: 58}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<form hx-put=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var9 string
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs("/admin/api/tokens/" + t.Hash)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 152, Col: 41}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" hx-target=\"#modal-content\" hx-swap=\"innerHTML\" style=\"display: flex; flex-direction: column; flex: 1;\"><div class=\"modal-body\"><div class=\"form-field\"><label class=\"form-label\">Name</label> <input type=\"text\" value=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var10 string
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(t.Name)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 162, Col: 20}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\" readonly class=\"form-input\" style=\"opacity: 0.55; cursor: not-allowed;\"></div><div class=\"form-field\"><label class=\"form-label\" for=\"edit-token-expires\">Expiry</label> ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if TokenStatusLabel(t) == "expired" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<input id=\"edit-token-expires\" type=\"date\" name=\"expires_at\" value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var11 string
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(t.ExpiresAt)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 175, Col: 26}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" disabled class=\"form-input mono\" style=\"opacity: 0.55; cursor: not-allowed;\"> <input type=\"hidden\" name=\"expires_at\" value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var12 string
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(t.ExpiresAt)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 180, Col: 64}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\"><p class=\"form-help\" style=\"color: var(--crit);\">This token has already expired.</p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		} else {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<input id=\"edit-token-expires\" type=\"date\" name=\"expires_at\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if t.ExpiresAt != "never" {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, " value=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var13 string
+				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(t.ExpiresAt)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 188, Col: 27}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, " class=\"form-input mono\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</div><div class=\"form-field\"><label class=\"form-label\" for=\"edit-token-scopes\">Scopes <span class=\"required\">*</span></label>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = ScopeBuilder("edit-token-scopes").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<textarea id=\"edit-token-scopes\" name=\"scopes\" required rows=\"4\" onblur=\"normalizeScopes(this)\" class=\"form-input mono\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var14 string
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(strings.Join(t.Scopes, "\n"))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/token_modal.templ`, Line: 204, Col: 36}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</textarea></div></div><div class=\"modal-footer\"><span></span><div style=\"display: flex; gap: 10px;\"><button type=\"button\" onclick=\"document.getElementById('token-modal').close()\" class=\"btn btn-ghost\">Cancel</button> <button type=\"submit\" class=\"btn btn-primary\">Save Changes</button></div></div></form></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+// TokenEditSuccess is returned by PUT /admin/api/tokens/{hash} on success.
+// It uses HTMX OOB swap to refresh the token list and an inline script to close the modal.
+func TokenEditSuccess(toks []TokenData) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var15 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var15 == nil {
+			templ_7745c5c3_Var15 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<div><div id=\"token-list\" hx-swap-oob=\"innerHTML\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = TokenList(toks).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "</div></div><script>document.getElementById('token-modal').close();</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

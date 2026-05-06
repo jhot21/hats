@@ -73,6 +73,15 @@ templ tokenCard(t TokenData) {
 			</div>
 			<div class="token-actions">
 				<button
+					hx-get={ "/admin/tokens/" + t.Hash + "/edit" }
+					hx-target="#modal-content"
+					hx-swap="innerHTML"
+					hx-on::after-request="document.getElementById('token-modal').showModal()"
+					class="btn btn-secondary"
+				>
+					Edit
+				</button>
+				<button
 					hx-post={ "/admin/api/tokens/" + t.Hash + "/revoke" }
 					hx-confirm={ "Revoke token \"" + t.Name + "\"? This cannot be undone." }
 					hx-target="#token-list"
