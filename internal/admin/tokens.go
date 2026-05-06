@@ -78,7 +78,16 @@ func tokenUpdateAPIHandler(w http.ResponseWriter, r *http.Request) {
 
 	scopes := parseScopes(scopesRaw)
 	if len(scopes) == 0 {
-		http.Error(w, "at least one valid scope is required", http.StatusBadRequest)
+		toks, _ := adminTokenStore.List()
+		var data templates.TokenData
+		for _, t := range toks {
+			if t.Hash == hash {
+				data = tokenDataList([]*tokens.Token{t})[0]
+				break
+			}
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		templates.TokenEditForm(data, "at least one valid scope is required").Render(r.Context(), w)
 		return
 	}
 
@@ -86,7 +95,16 @@ func tokenUpdateAPIHandler(w http.ResponseWriter, r *http.Request) {
 	if expiryRaw != "" {
 		t, err := time.Parse("2006-01-02", expiryRaw)
 		if err != nil {
-			http.Error(w, "invalid expiry date (use YYYY-MM-DD)", http.StatusBadRequest)
+			toks, _ := adminTokenStore.List()
+			var data templates.TokenData
+			for _, t := range toks {
+				if t.Hash == hash {
+					data = tokenDataList([]*tokens.Token{t})[0]
+					break
+				}
+			}
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			templates.TokenEditForm(data, "invalid expiry date (use YYYY-MM-DD)").Render(r.Context(), w)
 			return
 		}
 		t = t.UTC()
