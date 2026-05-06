@@ -1,0 +1,90 @@
+package templates
+
+import "fmt"
+
+// CacheStats renders the stats panel: global ring + per-domain breakdown.
+// On the dashboard it's wrapped in a .cache-panel shell; on the cache browser
+// it's embedded directly in the two-column stats row.
+templ CacheStats(data CacheStatsData) {
+	<div class="cache-panel">
+		<div class="panel-header" style="padding: 14px 22px;">
+			<div class="panel-title">
+				<span class="dot-indicator"></span>
+				Cache Statistics
+			</div>
+			<div style="display:flex;align-items:center;gap:16px;">
+				<span style="font-family:var(--font-mono);font-size:10px;color:var(--text-mute);letter-spacing:.1em;">
+					{ fmt.Sprintf("%d DOMAINS", len(data.Domains)) } · 2HR TTL
+				</span>
+				<a href="/admin/cache" style="font-family:var(--font-mono);font-size:10px;color:var(--teal);letter-spacing:.1em;text-decoration:none;">
+					VIEW BROWSER →
+				</a>
+			</div>
+		</div>
+		<div class="cache-panel-inner">
+			<!-- Global ring -->
+			<div class="cache-global">
+				<div class="cache-ring" style="position:relative;flex-shrink:0;">
+					<svg width="90" height="90" viewBox="0 0 90 90" style="transform:rotate(-90deg);">
+						<circle cx="45" cy="45" r="38" fill="none" stroke="#1a3247" stroke-width="5"></circle>
+						<circle cx="45" cy="45" r="38" fill="none" stroke="#5fb4c2" stroke-width="5"
+							stroke-dasharray="239"
+							stroke-dashoffset={ fmt.Sprintf("%.1f", data.RingDashOffset()) }
+							stroke-linecap="round"
+							style="filter:drop-shadow(0 0 4px rgba(95,180,194,0.5))"></circle>
+					</svg>
+					<div class="ring-label">
+						<span class="ring-value">{ fmt.Sprintf("%.1f", data.HitRate()) }</span>
+						<span class="ring-unit">%</span>
+					</div>
+				</div>
+				<div class="cache-global-label">Global Hit Rate</div>
+				<div class="cache-global-counts">
+					@cacheGlobalNum(data)
+				</div>
+			</div>
+			<!-- Per-domain breakdown -->
+			<div class="cache-domains">
+				<div class="cache-domains-header">
+					<span>Hit Rate by Domain</span>
+				</div>
+				<div class="domain-rows">
+					for _, d := range data.Domains {
+						<div class="domain-row">
+							<div class="top">
+								<span class="name">{ d.Domain }</span>
+								<span class="ratio">{ fmt.Sprintf("%.1f%%", DomainHitRate(d)) }</span>
+							</div>
+							<div class="cache-bar">
+								<div class="fill" style={ fmt.Sprintf("width:%.1f%%", DomainHitRate(d)) }></div>
+							</div>
+							<span class="counts">
+								{ fmt.Sprintf("%d hits · %d misses", d.Hits, d.Misses) }
+								if d.Keys > 0 {
+									{ fmt.Sprintf(" · %d keys", d.Keys) }
+								}
+							</span>
+						</div>
+					}
+					if len(data.Domains) == 0 {
+						<p style="font-family:var(--font-mono);font-size:11px;color:var(--text-mute);padding:8px 0;">
+							No stats recorded yet. Stats accumulate as API requests are served.
+						</p>
+					}
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+templ cacheGlobalNum(data CacheStatsData) {
+	{{ hits, misses := data.Global() }}
+	<div class="cache-count">
+		<div class="n hits">{ fmt.Sprintf("%d", hits) }</div>
+		<div class="l">Hits</div>
+	</div>
+	<div class="cache-count">
+		<div class="n misses">{ fmt.Sprintf("%d", misses) }</div>
+		<div class="l">Misses</div>
+	</div>
+}

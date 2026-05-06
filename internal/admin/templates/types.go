@@ -3,6 +3,8 @@ package templates
 import (
 	"strings"
 	"time"
+
+	"codeberg.org/jhot/hats/internal/cache"
 )
 
 // ServiceStatus holds the display state for a single status card.
@@ -147,4 +149,63 @@ type HAConnectionData struct {
 type NtfyConnectionData struct {
 	Host  string
 	Error string // non-empty when a save error should be displayed
+}
+
+// CacheStatsData holds stats for the cache stats fragment.
+type CacheStatsData struct {
+	Domains []cache.DomainStat
+}
+
+// Global returns the total hits and misses across all domains.
+func (c CacheStatsData) Global() (hits, misses int64) {
+	for _, d := range c.Domains {
+		hits += d.Hits
+		misses += d.Misses
+	}
+	return
+}
+
+// HitRate returns the global cache hit rate as a percentage (0–100).
+func (c CacheStatsData) HitRate() float64 {
+	hits, misses := c.Global()
+	total := hits + misses
+	if total == 0 {
+		return 0
+	}
+	return float64(hits) / float64(total) * 100
+}
+
+// RingDashOffset computes the SVG stroke-dashoffset for a 38-radius ring.
+func (c CacheStatsData) RingDashOffset() float64 {
+	const circumference = 2 * 3.14159 * 38
+	return circumference * (1 - c.HitRate()/100)
+}
+
+// DomainHitRate returns the hit rate percentage for a single domain.
+func DomainHitRate(d cache.DomainStat) float64 {
+	total := d.Hits + d.Misses
+	if total == 0 {
+		return 0
+	}
+	return float64(d.Hits) / float64(total) * 100
+}
+
+// DomainBadgeClass returns the CSS class for a domain badge.
+func DomainBadgeClass(domain string) string {
+	switch domain {
+	case "sensor":
+		return "domain-badge sensor"
+	case "binary_sensor":
+		return "domain-badge binary-sensor"
+	case "timer":
+		return "domain-badge timer"
+	case "input_boolean":
+		return "domain-badge input-boolean"
+	case "switch":
+		return "domain-badge switch"
+	case "climate":
+		return "domain-badge climate"
+	default:
+		return "domain-badge other"
+	}
 }

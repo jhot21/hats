@@ -8,10 +8,12 @@ import (
 	"net/http"
 
 	"codeberg.org/jhot/hats/internal/admin/templates"
+	"codeberg.org/jhot/hats/internal/cache"
 	"codeberg.org/jhot/hats/internal/secrets"
 	"codeberg.org/jhot/hats/internal/serverconfig"
 	"codeberg.org/jhot/hats/internal/tokens"
 	"github.com/go-chi/chi/v5"
+	"github.com/nats-io/nats.go/jetstream"
 )
 
 //go:embed static
@@ -19,13 +21,17 @@ var staticFiles embed.FS
 
 var adminTokenStore tokens.TokenStore
 var adminSecretStore secrets.SecretStore
+var adminCacheStats *cache.Stats
+var adminHatsKV jetstream.KeyValue
 
 // Init mounts the /admin sub-router onto the provided Chi router.
-func Init(r chi.Router, cfg *serverconfig.ServerConfig, logger *slog.Logger, ts tokens.TokenStore, ss secrets.SecretStore) {
+func Init(r chi.Router, cfg *serverconfig.ServerConfig, logger *slog.Logger, ts tokens.TokenStore, ss secrets.SecretStore, cs *cache.Stats, kv jetstream.KeyValue) {
 	adminCfg = cfg
 	adminLogger = logger
 	adminTokenStore = ts
 	adminSecretStore = ss
+	adminCacheStats = cs
+	adminHatsKV = kv
 	initSessionKey()
 
 	staticFS, err := fs.Sub(staticFiles, "static")
@@ -80,6 +86,12 @@ func Init(r chi.Router, cfg *serverconfig.ServerConfig, logger *slog.Logger, ts 
 			r.Post("/api/ntfy", ntfySaveHandler)
 			r.Post("/api/ntfy/test", ntfyTestHandler)
 			r.Get("/api/ntfy/token", ntfyTokenHandler)
+
+			// Cache browser
+			r.Get("/cache", cachePageHandler)
+			r.Get("/api/cache/stats", cacheStatsHandler)
+			r.Get("/api/cache/entities", cacheEntitiesHandler)
+			r.Post("/api/cache/stats/reset", cacheStatsResetHandler)
 		})
 	})
 }

@@ -18,5 +18,11 @@ templ Dashboard() {
 			hx-trigger="load, every 10s"
 			hx-swap="innerHTML"
 		></div>
+		<div
+			id="cache-stats"
+			hx-get="/admin/api/cache/stats"
+			hx-trigger="load, every 30s"
+			hx-swap="innerHTML"
+		></div>
 	}
 }

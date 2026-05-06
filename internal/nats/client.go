@@ -13,11 +13,12 @@ import (
 )
 
 var (
-	cfg    *config.HatsConfig
-	client *n.NatsConnection
-	kv     jetstream.KeyValue
-	ctx    context.Context
-	logger *slog.Logger
+	cfg     *config.HatsConfig
+	client  *n.NatsConnection
+	kv      jetstream.KeyValue
+	statsKv jetstream.KeyValue
+	ctx     context.Context
+	logger  *slog.Logger
 )
 
 func Close() {
@@ -65,6 +66,28 @@ func KvConnect() error {
 	}
 	return err
 }
+
+// KV returns the main hats KV bucket (entity state cache).
+func KV() jetstream.KeyValue { return kv }
+
+// StatsKvConnect connects to (or creates) the hats_stats KV bucket.
+func StatsKvConnect() error {
+	if client.JS == nil {
+		return errors.New("jetstream must be connected first")
+	}
+	var err error
+	statsKv, err = client.JS.KeyValue(ctx, "hats_stats")
+	if errors.Is(err, jetstream.ErrBucketNotFound) {
+		statsKv, err = client.JS.CreateKeyValue(ctx, jetstream.KeyValueConfig{
+			Bucket:  "hats_stats",
+			History: 1,
+		})
+	}
+	return err
+}
+
+// StatsKV returns the hats_stats KV bucket.
+func StatsKV() jetstream.KeyValue { return statsKv }
 
 func Publish(subject string, message []byte) {
 	client.Publish(ctx, subject, message, jetstream.WithRetryAttempts(2), jetstream.WithRetryWait(500*time.Millisecond))
