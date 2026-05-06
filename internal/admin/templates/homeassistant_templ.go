@@ -64,14 +64,14 @@ func HomeAssistant(data HAConnectionData) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<form id=\"ha-form\" hx-post=\"/admin/api/homeassistant\" hx-target=\"#ha-result\" hx-swap=\"innerHTML\"><div class=\"form-field\"><label class=\"form-label\" for=\"ha-host\">Host</label> <input id=\"ha-host\" type=\"text\" name=\"host\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<form id=\"ha-form\" hx-post=\"/admin/api/homeassistant\" hx-target=\"#ha-result\" hx-swap=\"innerHTML\" style=\"display: flex; flex-direction: column; gap: 20px;\"><div class=\"form-field\"><label class=\"form-label\" for=\"ha-host\">Host</label> <input id=\"ha-host\" type=\"text\" name=\"host\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(data.Host)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/homeassistant.templ`, Line: 29, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/homeassistant.templ`, Line: 30, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -84,13 +84,13 @@ func HomeAssistant(data HAConnectionData) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(data.Port)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/homeassistant.templ`, Line: 40, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/homeassistant.templ`, Line: 41, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" class=\"form-input\" placeholder=\"8123\"></div><div class=\"form-field\"><label class=\"form-label\" style=\"display: flex; align-items: center; gap: 8px; cursor: pointer;\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" class=\"form-input\" placeholder=\"8123\"></div><div class=\"form-field\"><label class=\"form-label\" style=\"display: flex; align-items: center; justify-content: flex-start; gap: 8px; cursor: pointer;\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -105,7 +105,7 @@ func HomeAssistant(data HAConnectionData) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "Secure (HTTPS / WSS)</label></div><div class=\"form-field\"><label class=\"form-label\" for=\"ha-token\">Token</label><div id=\"ha-token-wrapper\" style=\"display: flex; gap: 8px; align-items: center;\"><input id=\"ha-token\" type=\"password\" name=\"token\" class=\"form-input\" placeholder=\"Leave blank to keep existing token\" style=\"flex: 1;\"> <button type=\"button\" class=\"btn btn-ghost\" hx-get=\"/admin/api/homeassistant/token\" hx-target=\"#ha-token-wrapper\" hx-swap=\"outerHTML\">Reveal</button></div></div><div style=\"display: flex; gap: 12px; margin-top: 24px;\"><button type=\"submit\" class=\"btn btn-primary\">Save</button> <button type=\"button\" class=\"btn btn-ghost\" hx-post=\"/admin/api/homeassistant/test\" hx-include=\"#ha-form\" hx-target=\"#ha-test-result\" hx-swap=\"innerHTML\">Test Connection</button></div></form><div id=\"ha-result\" style=\"margin-top: 16px;\"></div><div id=\"ha-test-result\" style=\"margin-top: 16px;\"></div></div><div class=\"panel\" style=\"padding: 32px; max-width: 560px; margin-top: 24px;\"><h2 style=\"font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 12px 0; opacity: 0.7;\">Restart Service</h2><p style=\"margin: 0 0 20px 0; font-size: 14px; opacity: 0.7;\">Restart the service to apply configuration saved in the secret store. Requires a Docker restart policy (<code>restart: unless-stopped</code>).</p><button type=\"button\" class=\"btn btn-ghost\" style=\"color: #f59e0b;\" hx-post=\"/admin/api/restart\" hx-confirm=\"The service will restart briefly and you may be logged out. Restart now?\" hx-target=\"#restart-result\" hx-swap=\"innerHTML\">Restart Service</button><div id=\"restart-result\" style=\"margin-top: 16px;\"></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "Secure (HTTPS / WSS)</label></div><div class=\"form-field\"><label class=\"form-label\" for=\"ha-token\">Token</label><div id=\"ha-token-wrapper\" style=\"display: flex; gap: 8px; align-items: center;\"><input id=\"ha-token\" type=\"password\" name=\"token\" class=\"form-input\" placeholder=\"Leave blank to keep existing token\" style=\"flex: 1;\"> <button type=\"button\" class=\"btn btn-ghost\" hx-get=\"/admin/api/homeassistant/token\" hx-target=\"#ha-token-wrapper\" hx-swap=\"outerHTML\">Reveal</button></div></div><div style=\"display: flex; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border);\"><button type=\"submit\" class=\"btn btn-primary\">Save</button> <button type=\"button\" class=\"btn btn-ghost\" hx-post=\"/admin/api/homeassistant/test\" hx-include=\"#ha-form\" hx-target=\"#ha-test-result\" hx-swap=\"innerHTML\">Test Connection</button></div></form><div id=\"ha-result\" style=\"margin-top: 16px;\"></div><div id=\"ha-test-result\" style=\"margin-top: 16px;\"></div></div><div class=\"panel\" style=\"padding: 32px; max-width: 560px; margin-top: 24px;\"><h2 style=\"font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 12px 0; opacity: 0.7;\">Restart Service</h2><p style=\"margin: 0 0 20px 0; font-size: 14px; opacity: 0.7;\">Restart the service to apply configuration saved in the secret store. Requires a Docker restart policy (<code>restart: unless-stopped</code>).</p><button type=\"button\" class=\"btn btn-ghost\" style=\"color: #f59e0b;\" hx-post=\"/admin/api/restart\" hx-confirm=\"The service will restart briefly and you may be logged out. Restart now?\" hx-target=\"#restart-result\" hx-swap=\"innerHTML\">Restart Service</button><div id=\"restart-result\" style=\"margin-top: 16px;\"></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -148,7 +148,7 @@ func HATestResult(ok bool, message string) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/homeassistant.templ`, Line: 116, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/homeassistant.templ`, Line: 117, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -166,7 +166,7 @@ func HATestResult(ok bool, message string) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/homeassistant.templ`, Line: 118, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/homeassistant.templ`, Line: 119, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -248,7 +248,7 @@ func HATokenReveal(token string) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(token)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/homeassistant.templ`, Line: 142, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/admin/templates/homeassistant.templ`, Line: 143, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {

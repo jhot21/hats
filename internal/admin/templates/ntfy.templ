@@ -19,6 +19,7 @@ templ Ntfy(data NtfyConnectionData) {
 				hx-post="/admin/api/ntfy"
 				hx-target="#ntfy-result"
 				hx-swap="innerHTML"
+				style="display: flex; flex-direction: column; gap: 20px;"
 			>
 				<div class="form-field">
 					<label class="form-label" for="ntfy-host">Host</label>
@@ -51,7 +52,7 @@ templ Ntfy(data NtfyConnectionData) {
 						>Reveal</button>
 					</div>
 				</div>
-				<div style="display: flex; gap: 12px; margin-top: 24px;">
+				<div style="display: flex; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border);">
 					<button type="submit" class="btn btn-primary">Save</button>
 				</div>
 			</form>
@@ -68,6 +69,7 @@ templ Ntfy(data NtfyConnectionData) {
 				hx-include="#ntfy-form"
 				hx-target="#ntfy-test-result"
 				hx-swap="innerHTML"
+				style="display: flex; flex-direction: column; gap: 20px;"
 			>
 				<div class="form-field">
 					<label class="form-label" for="ntfy-test-topic">Test Topic</label>
@@ -79,7 +81,7 @@ templ Ntfy(data NtfyConnectionData) {
 						placeholder="my-topic"
 					/>
 				</div>
-				<div style="display: flex; gap: 12px; margin-top: 24px;">
+				<div style="display: flex; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border);">
 					<button type="submit" class="btn btn-ghost">Test Connection</button>
 				</div>
 			</form>

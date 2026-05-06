@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 vars:
   REPO: codeberg.org/jhot/hats
@@ -7,6 +7,7 @@ tasks:
   docker-build:
     desc: Build and optionally push the multiplatform docker image
     aliases: [docker:build]
+    deps: [templ:generate]
     cmds:
       - >
         docker buildx build

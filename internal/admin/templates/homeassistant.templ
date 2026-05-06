@@ -19,6 +19,7 @@ templ HomeAssistant(data HAConnectionData) {
 				hx-post="/admin/api/homeassistant"
 				hx-target="#ha-result"
 				hx-swap="innerHTML"
+				style="display: flex; flex-direction: column; gap: 20px;"
 			>
 				<div class="form-field">
 					<label class="form-label" for="ha-host">Host</label>
@@ -43,7 +44,7 @@ templ HomeAssistant(data HAConnectionData) {
 					/>
 				</div>
 				<div class="form-field">
-					<label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+					<label class="form-label" style="display: flex; align-items: center; justify-content: flex-start; gap: 8px; cursor: pointer;">
 						if data.Secure {
 							<input type="checkbox" name="secure" value="true" checked/>
 						} else {
@@ -72,7 +73,7 @@ templ HomeAssistant(data HAConnectionData) {
 						>Reveal</button>
 					</div>
 				</div>
-				<div style="display: flex; gap: 12px; margin-top: 24px;">
+				<div style="display: flex; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border);">
 					<button type="submit" class="btn btn-primary">Save</button>
 					<button
 						type="button"

@@ -36,7 +36,7 @@ tasks:
   docker-build:
     desc: Build and optionally push the multiplatform docker image
     aliases: [docker:build]
-    deps: [buildx-use-colima]
+    deps: [buildx-use-colima, templ:generate]
     cmds:
       - >
         docker buildx build
