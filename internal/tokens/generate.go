@@ -3,20 +3,24 @@ package tokens
 import (
 	"crypto/rand"
 	"crypto/sha256"
-	"encoding/base64"
 	"encoding/hex"
 )
 
 const tokenPrefix = "hats_"
 
+const alphanumeric = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
 // GenerateToken returns a new cryptographically random opaque bearer token.
-// Format: hats_ + 32 URL-safe base64 characters (24 random bytes).
+// Format: hats_ + 40 alphanumeric characters.
 func GenerateToken() (string, error) {
-	b := make([]byte, 24)
+	b := make([]byte, 40)
 	if _, err := rand.Read(b); err != nil {
 		return "", err
 	}
-	return tokenPrefix + base64.RawURLEncoding.EncodeToString(b), nil
+	for i := range b {
+		b[i] = alphanumeric[int(b[i])%len(alphanumeric)]
+	}
+	return tokenPrefix + string(b), nil
 }
 
 // HashToken returns the hex-encoded SHA-256 of rawToken.

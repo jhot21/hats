@@ -118,7 +118,7 @@ import (
 )
 
 func main() {
-    // config.New() reads env vars (and Infisical secrets if configured).
+    // config.New() reads env vars; the server overlays secrets from the HATS secret store at startup.
     cfg, err := config.New()
     if err != nil {
         panic(err)

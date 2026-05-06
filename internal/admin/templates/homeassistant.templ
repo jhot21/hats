@@ -54,7 +54,7 @@ templ HomeAssistant(data HAConnectionData) {
 				</div>
 				<div class="form-field">
 					<label class="form-label" for="ha-token">Token</label>
-					<div style="display: flex; gap: 8px; align-items: center;">
+					<div id="ha-token-wrapper" style="display: flex; gap: 8px; align-items: center;">
 						<input
 							id="ha-token"
 							type="password"
@@ -63,7 +63,13 @@ templ HomeAssistant(data HAConnectionData) {
 							placeholder="Leave blank to keep existing token"
 							style="flex: 1;"
 						/>
-						<button type="button" class="btn btn-ghost" onclick="togglePwd(this)">Show</button>
+						<button
+							type="button"
+							class="btn btn-ghost"
+							hx-get="/admin/api/homeassistant/token"
+							hx-target="#ha-token-wrapper"
+							hx-swap="outerHTML"
+						>Reveal</button>
 					</div>
 				</div>
 				<div style="display: flex; gap: 12px; margin-top: 24px;">
@@ -115,4 +121,29 @@ templ HATestResult(ok bool, message string) {
 
 templ HARestartResult() {
 	<p class="login-error" style="color: var(--teal);">Restarting... the service will be back shortly.</p>
+}
+
+templ HATokenReveal(token string) {
+	<div id="ha-token-wrapper" style="display: flex; gap: 8px; align-items: center;">
+		if token == "" {
+			<input
+				id="ha-token"
+				type="text"
+				name="token"
+				class="form-input"
+				placeholder="No token stored"
+				style="flex: 1;"
+			/>
+		} else {
+			<input
+				id="ha-token"
+				type="text"
+				name="token"
+				value={ token }
+				class="form-input"
+				style="flex: 1;"
+			/>
+		}
+		<button type="button" class="btn btn-ghost" onclick="togglePwd(this)">Hide</button>
+	</div>
 }

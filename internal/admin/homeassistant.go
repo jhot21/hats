@@ -84,6 +84,16 @@ func haSaveHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// haTokenHandler fetches the stored HASS_TOKEN and returns the revealed token wrapper fragment.
+func haTokenHandler(w http.ResponseWriter, r *http.Request) {
+	var token string
+	if s, err := adminSecretStore.Get("HASS_TOKEN"); err == nil {
+		token = s.Value
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	templates.HATokenReveal(token).Render(r.Context(), w)
+}
+
 // haTestHandler tests a connection to Home Assistant using the submitted form values.
 // If the token field is empty, it falls back to the stored token so users can test
 // the current configuration without re-entering it.

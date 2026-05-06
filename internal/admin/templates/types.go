@@ -142,3 +142,9 @@ type HAConnectionData struct {
 	Secure bool
 	Error  string // non-empty when a save error should be displayed
 }
+
+// NtfyConnectionData holds pre-populated form values for the ntfy connection page.
+type NtfyConnectionData struct {
+	Host  string
+	Error string // non-empty when a save error should be displayed
+}

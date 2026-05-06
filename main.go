@@ -84,12 +84,12 @@ func main() {
 	}
 	defer homeassistant.CloseSubscription()
 
-	ntfy.InitClient(&cfg.HatsConfig)
+	nc := ntfy.New(ss, cfg.NtfyHost, cfg.NtfyToken)
 
 	api.InitAPI(logger, &cfg.HatsConfig,
 		func() chi.Router { return chi.NewRouter() },
 		func(r chi.Router) { admin.Init(r, cfg, logger, ts, ss) },
-		ts, ss)
+		ts, ss, nc)
 	defer api.Close()
 
 	for sig := range interrupt {
