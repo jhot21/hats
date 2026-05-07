@@ -39,19 +39,24 @@ func (e CacheEntry) TTLClass() string {
 // sorted by UpdatedAt descending (most recently changed first).
 // domain: exact domain match (empty = all). q: case-insensitive substring match on EntityID (empty = all).
 func ListEntries(ctx context.Context, kv jetstream.KeyValue, domain, q string) ([]CacheEntry, error) {
-	keys, err := kv.Keys(ctx)
+	watcher, err := kv.WatchAll(ctx, jetstream.IgnoreDeletes())
 	if err != nil {
 		if err == jetstream.ErrNoKeysFound {
 			return nil, nil
 		}
 		return nil, err
 	}
+	defer watcher.Stop()
 
 	now := time.Now()
 	q = strings.ToLower(q)
 	var entries []CacheEntry
 
-	for _, key := range keys {
+	for entry := range watcher.Updates() {
+		if entry == nil {
+			break // initial snapshot complete
+		}
+		key := entry.Key()
 		if !strings.HasPrefix(key, haStatePrefix) {
 			continue
 		}
@@ -65,16 +70,8 @@ func ListEntries(ctx context.Context, kv jetstream.KeyValue, domain, q string) (
 			continue
 		}
 
-		entry, err := kv.Get(ctx, key)
-		if err != nil {
-			continue
-		}
-
 		age := now.Sub(entry.Created())
-		ttlPct := 1.0 - age.Seconds()/kvTTL.Seconds()
-		if ttlPct < 0 {
-			ttlPct = 0
-		}
+		ttlPct := max(0, 1.0-age.Seconds()/kvTTL.Seconds())
 
 		entries = append(entries, CacheEntry{
 			Domain:    entDomain,

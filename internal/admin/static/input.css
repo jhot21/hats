@@ -1354,7 +1354,7 @@ dialog[open] {
 }
 
 .ring-value {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--teal);
   letter-spacing: -0.02em;
@@ -1678,6 +1678,7 @@ dialog[open] {
 .updated-at .absolute { font-size: 10px; margin-top: 1px; }
 
 .ttl-bar { width: 56px; height: 3px; background: var(--navy-700); border-radius: 2px; overflow: hidden; }
+.ttl-bar .fill { height: 100%; }
 .ttl-bar .fill.fresh { background: var(--teal); }
 .ttl-bar .fill.aging { background: var(--warn); }
 .ttl-bar .fill.old   { background: var(--crit); }
