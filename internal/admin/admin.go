@@ -9,6 +9,7 @@ import (
 
 	"codeberg.org/jhot/hats/internal/admin/templates"
 	"codeberg.org/jhot/hats/internal/cache"
+	"codeberg.org/jhot/hats/internal/cmdstats"
 	"codeberg.org/jhot/hats/internal/secrets"
 	"codeberg.org/jhot/hats/internal/serverconfig"
 	"codeberg.org/jhot/hats/internal/tokens"
@@ -22,15 +23,17 @@ var adminTokenStore tokens.TokenStore
 var adminSecretStore secrets.SecretStore
 var adminCacheStats *cache.Stats
 var adminMirror *cache.EntityMirror
+var adminCmdStats *cmdstats.Recorder
 
 // Init mounts the /admin sub-router onto the provided Chi router.
-func Init(r chi.Router, cfg *serverconfig.ServerConfig, logger *slog.Logger, ts tokens.TokenStore, ss secrets.SecretStore, cs *cache.Stats, mirror *cache.EntityMirror) {
+func Init(r chi.Router, cfg *serverconfig.ServerConfig, logger *slog.Logger, ts tokens.TokenStore, ss secrets.SecretStore, cs *cache.Stats, mirror *cache.EntityMirror, crs *cmdstats.Recorder) {
 	adminCfg = cfg
 	adminLogger = logger
 	adminTokenStore = ts
 	adminSecretStore = ss
 	adminCacheStats = cs
 	adminMirror = mirror
+	adminCmdStats = crs
 	initSessionKey()
 
 	staticFS, err := fs.Sub(staticFiles, "static")
