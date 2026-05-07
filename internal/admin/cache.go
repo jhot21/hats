@@ -14,13 +14,8 @@ func cachePageHandler(w http.ResponseWriter, r *http.Request) {
 func cacheStatsHandler(w http.ResponseWriter, r *http.Request) {
 	snap := adminCacheStats.Snapshot()
 
-	// Merge key counts from KV into domain stats
-	if adminHatsKV != nil {
-		entries, _ := cache.ListEntries(r.Context(), adminHatsKV, "", "")
-		keyCounts := map[string]int{}
-		for _, e := range entries {
-			keyCounts[e.Domain]++
-		}
+	if adminMirror != nil {
+		keyCounts := adminMirror.KeyCountByDomain()
 		for i := range snap {
 			snap[i].Keys = keyCounts[snap[i].Domain]
 		}
@@ -36,12 +31,8 @@ func cacheEntitiesHandler(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("q")
 
 	var entries []cache.CacheEntry
-	if adminHatsKV != nil {
-		var err error
-		entries, err = cache.ListEntries(r.Context(), adminHatsKV, domain, q)
-		if err != nil {
-			adminLogger.Error("cache browser: ListEntries failed", "error", err)
-		}
+	if adminMirror != nil {
+		entries = adminMirror.Filtered(domain, q)
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

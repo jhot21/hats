@@ -13,7 +13,6 @@ import (
 	"codeberg.org/jhot/hats/internal/serverconfig"
 	"codeberg.org/jhot/hats/internal/tokens"
 	"github.com/go-chi/chi/v5"
-	"github.com/nats-io/nats.go/jetstream"
 )
 
 //go:embed static
@@ -22,16 +21,16 @@ var staticFiles embed.FS
 var adminTokenStore tokens.TokenStore
 var adminSecretStore secrets.SecretStore
 var adminCacheStats *cache.Stats
-var adminHatsKV jetstream.KeyValue
+var adminMirror *cache.EntityMirror
 
 // Init mounts the /admin sub-router onto the provided Chi router.
-func Init(r chi.Router, cfg *serverconfig.ServerConfig, logger *slog.Logger, ts tokens.TokenStore, ss secrets.SecretStore, cs *cache.Stats, kv jetstream.KeyValue) {
+func Init(r chi.Router, cfg *serverconfig.ServerConfig, logger *slog.Logger, ts tokens.TokenStore, ss secrets.SecretStore, cs *cache.Stats, mirror *cache.EntityMirror) {
 	adminCfg = cfg
 	adminLogger = logger
 	adminTokenStore = ts
 	adminSecretStore = ss
 	adminCacheStats = cs
-	adminHatsKV = kv
+	adminMirror = mirror
 	initSessionKey()
 
 	staticFS, err := fs.Sub(staticFiles, "static")

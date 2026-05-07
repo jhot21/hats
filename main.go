@@ -98,9 +98,12 @@ func main() {
 
 	nc := ntfy.New(ss, cfg.NtfyHost, cfg.NtfyToken)
 
+	mirror := cache.NewEntityMirror(nats.KV(), logger)
+	mirror.Start(ctx)
+
 	api.InitAPI(logger, &cfg.HatsConfig,
 		func() chi.Router { return chi.NewRouter() },
-		func(r chi.Router) { admin.Init(r, cfg, logger, ts, ss, cacheStats, nats.KV()) },
+		func(r chi.Router) { admin.Init(r, cfg, logger, ts, ss, cacheStats, mirror) },
 		ts, ss, nc, cacheStats)
 	defer api.Close()
 
