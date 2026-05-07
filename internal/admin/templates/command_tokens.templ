@@ -1,0 +1,54 @@
+package templates
+
+import (
+	"fmt"
+	"codeberg.org/jhot/hats/internal/cmdstats"
+)
+
+// CommandTokens renders the inline token breakdown table for one command endpoint.
+// This is returned by the HTMX hx-get on the toggle button.
+templ CommandTokens(data CommandTokensData) {
+	<div class="cmd-token-table-wrap">
+		<table class="cmd-token-table">
+			<thead>
+				<tr>
+					<th>Token</th>
+					<th class="cmd-th-right">Calls (24h)</th>
+					<th>Last called</th>
+					<th class="cmd-th-center">Activity</th>
+				</tr>
+			</thead>
+			<tbody>
+				for _, tok := range data.Tokens {
+					@cmdTokenRow(tok)
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+templ cmdTokenRow(stat cmdstats.CommandStat) {
+	{{ heights := SparklineHeights(stat.Hours) }}
+	<tr>
+		<td>
+			<div class="cmd-token-name">{ stat.TokenName }</div>
+			<div class="cmd-token-hash">{ TruncateHash(stat.TokenHash) }</div>
+		</td>
+		<td class="cmd-td-right">
+			<span class="cmd-token-count">{ fmt.Sprintf("%d", cmdStat24h(stat.Hours)) }</span>
+		</td>
+		<td>
+			<span class="cmd-token-age">{ CmdRelativeTime(stat.LastCalled) }</span>
+		</td>
+		<td class="cmd-td-center">
+			<div class="cmd-sparkline cmd-sparkline--sm">
+				for i, h := range heights {
+					<div
+						class={ cmdSparkBarClass(i, len(heights)-1) }
+						style={ fmt.Sprintf("height:%dpx", h) }
+					></div>
+				}
+			</div>
+		</td>
+	</tr>
+}
