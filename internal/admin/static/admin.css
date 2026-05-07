@@ -3,10 +3,10 @@
 /* ── Command Stats Widget ────────────────────────────────── */
 
 .cmd-stats-panel {
-  background: var(--navy-900);
-  border: 1px solid var(--navy-800);
+  background: var(--panel);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  margin-top: 24px;
+  margin-top: 16px;
 }
 
 .cmd-summary-grid {
@@ -118,7 +118,7 @@
 
 .cmd-spark-bar {
   flex: 1;
-  background: #0e7490;
+  background: var(--teal-dim);
   border-radius: 1px;
   min-height: 2px;
 }

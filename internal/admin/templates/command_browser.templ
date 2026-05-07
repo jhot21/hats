@@ -36,13 +36,7 @@ templ cmdEndpointCard(ep EndpointSummary) {
 	{{ heights := SparklineHeights(ep.Hours) }}
 	{{ dimmed := ep.TotalCalls24h == 0 }}
 	<div class={ cmdCardClass(dimmed) }>
-		<div
-			class="cmd-card-header"
-			hx-get={ fmt.Sprintf("/admin/api/commands/tokens?cmd=%s", ep.CommandName) }
-			hx-target="next .cmd-token-section"
-			hx-swap="innerHTML"
-			hx-trigger="click"
-		>
+		<div class="cmd-card-header">
 			<span class="cmd-card-name">{ ep.CommandName }</span>
 			<div class="cmd-card-stat">
 				<div class="cmd-card-stat-val">{ fmt.Sprintf("%d", ep.TotalCalls24h) }</div>
@@ -66,7 +60,7 @@ templ cmdEndpointCard(ep EndpointSummary) {
 					></div>
 				}
 			</div>
-			<button class="cmd-toggle-btn" type="button">▼ Tokens</button>
+			<button class="cmd-toggle-btn" type="button" data-cmd={ ep.CommandName } onclick="toggleCmdTokens(this)">▼ Tokens</button>
 		</div>
 		<div class="cmd-token-section"></div>
 	</div>
