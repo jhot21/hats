@@ -94,6 +94,12 @@ func Init(r chi.Router, cfg *serverconfig.ServerConfig, logger *slog.Logger, ts 
 			r.Get("/api/cache/stats", cacheStatsHandler)
 			r.Get("/api/cache/entities", cacheEntitiesHandler)
 			r.Post("/api/cache/stats/reset", cacheStatsResetHandler)
+
+			// Command browser
+			r.Get("/commands", commandBrowserHandler)
+			r.Get("/api/commands/stats", commandStatsHandler)
+			r.Get("/api/commands/dashboard", commandDashboardStatsHandler)
+			r.Get("/api/commands/tokens", commandTokensHandler)
 		})
 	})
 }
