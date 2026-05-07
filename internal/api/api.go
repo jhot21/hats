@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 
 	ha "codeberg.org/jhot/go-ha-sdk"
+	"codeberg.org/jhot/hats/internal/cache"
 	"codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/internal/ntfy"
 	"codeberg.org/jhot/hats/internal/secrets"
@@ -38,31 +39,33 @@ var (
 	tokenStore  tokens.TokenStore
 	secretStore secrets.SecretStore
 	ntfyClient  *ntfy.Client
+	cacheStats  *cache.Stats
 )
 
 const (
 	HA_STATE_PREFIX = "homeassistant.states"
 )
 
-func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client) {
-	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client) {
+func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client, cs *cache.Stats) {
+	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client, cs *cache.Stats) {
 		for {
-			err := Listen(parentLogger, parentConfig, newRouter(), mount, ts, ss, nc)
+			err := Listen(parentLogger, parentConfig, newRouter(), mount, ts, ss, nc, cs)
 			if err == nil {
 				break
 			}
 			parentLogger.Error("An error occurred with the API. Restarting now.", "error", err)
 			Close()
 		}
-	}(parentLogger, parentConfig, newRouter, mount, ts, ss, nc)
+	}(parentLogger, parentConfig, newRouter, mount, ts, ss, nc, cs)
 }
 
-func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, router chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client) error {
+func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, router chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client, cs *cache.Stats) error {
 	logger = parentLogger
 	cfg = parentConfig
 	tokenStore = ts
 	secretStore = ss
 	ntfyClient = nc
+	cacheStats = cs
 
 	haClient = ha.New(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
 
@@ -223,11 +226,17 @@ func getEntityStateHandler(w http.ResponseWriter, r *http.Request) {
 	full := r.URL.Query().Get("full") == "true"
 	l := logger.With("endpoint", "GET /api/state/{entityId}", "entityId", entityId, "full", full)
 
+	// Extract domain prefix for stats (e.g. "sensor" from "sensor.thermo1_temperature")
+	domain, _, _ := strings.Cut(entityId, ".")
+
 	if !full {
 		l.Debug("Getting state from KV store")
 		kvVal, err := nats.GetKeyValue(fmt.Sprintf("%s.%s", HA_STATE_PREFIX, entityId))
 		if err == nil && len(kvVal) > 0 {
 			l.Debug("Returning", "value", string(kvVal))
+			if cacheStats != nil {
+				cacheStats.Record(domain, true)
+			}
 			render.PlainText(w, r, string(kvVal))
 			return
 		}
@@ -241,6 +250,9 @@ func getEntityStateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if cacheStats != nil {
+		cacheStats.Record(domain, false)
+	}
 	nats.SetKeyValueString(fmt.Sprintf("%s.%s", HA_STATE_PREFIX, entityId), data.State)
 	if full {
 		render.JSON(w, r, data)

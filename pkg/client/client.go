@@ -58,23 +58,19 @@ func (c *HatsClient) GetStateWithDefault(entityId string, defaultValue string) s
 }
 
 func (c *HatsClient) GetStateBool(entityId string) (bool, error) {
-	stateData, err := c.GetStateFull(entityId)
-
+	state, err := c.GetState(entityId)
 	if err != nil {
 		return false, err
 	}
-
-	return ha.StateToBool(stateData), nil
+	return ha.StateToBool(ha.StateData{EntityID: entityId, State: state}), nil
 }
 
 func (c *HatsClient) GetStateFloat(entityId string) (float64, error) {
-	stateData, err := c.GetStateFull(entityId)
-
+	state, err := c.GetState(entityId)
 	if err != nil {
 		return 0.0, err
 	}
-
-	return ha.StateToFloat(stateData)
+	return ha.StateToFloat(ha.StateData{State: state})
 }
 
 func (c *HatsClient) CallService(entityId string, service string, extras ...map[string]any) error {

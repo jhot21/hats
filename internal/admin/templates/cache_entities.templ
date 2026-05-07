@@ -1,0 +1,92 @@
+package templates
+
+import (
+	"fmt"
+	"strings"
+	"time"
+
+	"codeberg.org/jhot/hats/internal/cache"
+)
+
+// CacheEntities renders the entity table body (used as an HTMX swap target).
+templ CacheEntities(entries []cache.CacheEntry) {
+	<table class="entity-table">
+		<thead>
+			<tr>
+				<th style="width:130px">Domain</th>
+				<th>Entity ID</th>
+				<th style="width:180px">State</th>
+				<th style="width:200px">Last Updated</th>
+				<th style="width:80px;text-align:center">TTL</th>
+			</tr>
+		</thead>
+		<tbody>
+			for _, e := range entries {
+				<tr>
+					<td><span class={ DomainBadgeClass(e.Domain) }>{ e.Domain }</span></td>
+					<td>
+						<span class="entity-id">
+							<span class="domain-part">{ e.Domain }.</span>{ entityName(e.EntityID) }
+						</span>
+					</td>
+					<td><span class={ stateValClass(e.State) }>{ e.State }</span></td>
+					<td>
+						<div class="updated-at">
+							<span class="relative">{ relativeTime(e.UpdatedAt) }</span>
+							<span class="absolute">{ e.UpdatedAt.Format("15:04:05") }</span>
+						</div>
+					</td>
+					<td style="text-align:center">
+						<div class="ttl-bar" style="margin:0 auto">
+							<div class={ "fill " + e.TTLClass() } style={ fmt.Sprintf("width:%.0f%%", e.TTLPct*100) }></div>
+						</div>
+					</td>
+				</tr>
+			}
+			if len(entries) == 0 {
+				<tr>
+					<td colspan="5" style="text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--text-mute);padding:24px;">
+						No entities found.
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+func entityName(entityID string) string {
+	_, after, _ := strings.Cut(entityID, ".")
+	return after
+}
+
+func stateValClass(state string) string {
+	switch state {
+	case "on":
+		return "state-val on"
+	case "off":
+		return "state-val off"
+	default:
+		return "state-val"
+	}
+}
+
+func relativeTime(t time.Time) string {
+	d := time.Since(t)
+	switch {
+	case d < time.Minute:
+		return "just now"
+	case d < time.Hour:
+		m := int(d.Minutes())
+		if m == 1 {
+			return "1 min ago"
+		}
+		return fmt.Sprintf("%d min ago", m)
+	default:
+		h := int(d.Hours())
+		m := int(d.Minutes()) % 60
+		if m == 0 {
+			return fmt.Sprintf("%d hr ago", h)
+		}
+		return fmt.Sprintf("%d hr %d min ago", h, m)
+	}
+}

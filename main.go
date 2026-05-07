@@ -9,6 +9,7 @@ import (
 
 	"codeberg.org/jhot/hats/internal/admin"
 	"codeberg.org/jhot/hats/internal/api"
+	"codeberg.org/jhot/hats/internal/cache"
 	"codeberg.org/jhot/hats/internal/homeassistant"
 	"codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/internal/ntfy"
@@ -46,6 +47,17 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	err = nats.StatsKvConnect()
+	if err != nil {
+		panic(err)
+	}
+
+	cacheStats := cache.New(nats.StatsKV())
+	if err := cacheStats.Load(ctx); err != nil {
+		logger.Warn("Failed to load cache stats from KV", "error", err)
+	}
+	cacheStats.StartFlusher(ctx)
 
 	ts, err := tokens.NewStore(ctx, logger, nats.JetStream())
 	if err != nil {
@@ -86,10 +98,13 @@ func main() {
 
 	nc := ntfy.New(ss, cfg.NtfyHost, cfg.NtfyToken)
 
+	mirror := cache.NewEntityMirror(nats.KV(), logger)
+	mirror.Start(ctx)
+
 	api.InitAPI(logger, &cfg.HatsConfig,
 		func() chi.Router { return chi.NewRouter() },
-		func(r chi.Router) { admin.Init(r, cfg, logger, ts, ss) },
-		ts, ss, nc)
+		func(r chi.Router) { admin.Init(r, cfg, logger, ts, ss, cacheStats, mirror) },
+		ts, ss, nc, cacheStats)
 	defer api.Close()
 
 	for sig := range interrupt {
