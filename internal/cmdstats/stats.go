@@ -2,6 +2,7 @@ package cmdstats
 
 import (
 	"context"
+	"log/slog"
 	"sort"
 	"strconv"
 	"strings"
@@ -43,12 +44,16 @@ type Summary struct {
 // Pass nil for kv to skip all KV I/O (useful in tests).
 type Recorder struct {
 	kv      jetstream.KeyValue
+	logger  *slog.Logger
 	records sync.Map // cmdTokenKey → *cmdRecord
 }
 
 // New creates a Recorder backed by the given KV bucket.
-func New(kv jetstream.KeyValue) *Recorder {
-	return &Recorder{kv: kv}
+func New(kv jetstream.KeyValue, logger *slog.Logger) *Recorder {
+	if logger == nil {
+		logger = slog.Default()
+	}
+	return &Recorder{kv: kv, logger: logger}
 }
 
 // Record increments the current-hour counter for the given command+token pair.
@@ -115,15 +120,18 @@ func (r *Recorder) Snapshot() ([]CommandStat, Summary) {
 // Load reads existing KV state into memory. Call once at startup before StartFlusher.
 func (r *Recorder) Load(ctx context.Context) error {
 	if r.kv == nil {
+		r.logger.Info("cmdstats: no KV bucket configured, skipping load")
 		return nil
 	}
 	keys, err := r.kv.Keys(ctx)
 	if err != nil {
 		if err == jetstream.ErrNoKeysFound {
+			r.logger.Info("cmdstats: KV bucket is empty, nothing to load")
 			return nil
 		}
 		return err
 	}
+	var loaded int
 	for _, key := range keys {
 		entry, err := r.kv.Get(ctx, key)
 		if err != nil {
@@ -142,6 +150,7 @@ func (r *Recorder) Load(ctx context.Context) error {
 				rec.lastCalled = t
 			}
 			rec.mu.Unlock()
+			loaded++
 			continue
 		}
 		if cmd, hour, tokenHash, ok := parseHourlyKey(key); ok {
@@ -155,14 +164,18 @@ func (r *Recorder) Load(ctx context.Context) error {
 			rec.mu.Lock()
 			rec.hours[hour] = n
 			rec.mu.Unlock()
+			loaded++
 		}
 	}
+	r.logger.Info("cmdstats: loaded from KV", "keys", len(keys), "records", loaded)
 	return nil
 }
 
 // StartFlusher starts a background goroutine that writes counters to KV every 60s.
+// The first flush happens immediately, then every 60s thereafter.
 func (r *Recorder) StartFlusher(ctx context.Context) {
 	go func() {
+		r.flush(ctx)
 		ticker := time.NewTicker(60 * time.Second)
 		defer ticker.Stop()
 		for {
@@ -176,19 +189,24 @@ func (r *Recorder) StartFlusher(ctx context.Context) {
 	}()
 }
 
+// Flush writes all current counters to KV. Call on shutdown to persist data.
+func (r *Recorder) Flush(ctx context.Context) {
+	r.flush(ctx)
+}
+
 func (r *Recorder) flush(ctx context.Context) {
 	if r.kv == nil {
 		return
 	}
 	h := currentHour()
 	cutoff := time.Now().UTC().Add(-25 * time.Hour).Format("2006010215")
+	var recordCount int
 	r.records.Range(func(k, v any) bool {
 		key := k.(cmdTokenKey)
 		rec := v.(*cmdRecord)
 		rec.mu.Lock()
 		count := rec.hours[h]
 		lastCalled := rec.lastCalled
-		// Prune hours older than 25h to prevent unbounded memory growth.
 		for hr := range rec.hours {
 			if hr < cutoff {
 				delete(rec.hours, hr)
@@ -197,13 +215,21 @@ func (r *Recorder) flush(ctx context.Context) {
 		rec.mu.Unlock()
 
 		if count > 0 {
-			r.kv.PutString(ctx, hourlyKey(key.CommandName, h, key.TokenHash), strconv.FormatInt(count, 10))
+			if _, err := r.kv.PutString(ctx, hourlyKey(key.CommandName, h, key.TokenHash), strconv.FormatInt(count, 10)); err != nil {
+				r.logger.Error("cmdstats: failed to write hourly key", "key", hourlyKey(key.CommandName, h, key.TokenHash), "error", err)
+			}
 		}
 		if !lastCalled.IsZero() {
-			r.kv.PutString(ctx, metaKey(key.CommandName, key.TokenHash), lastCalled.Format(time.RFC3339))
+			if _, err := r.kv.PutString(ctx, metaKey(key.CommandName, key.TokenHash), lastCalled.Format(time.RFC3339)); err != nil {
+				r.logger.Error("cmdstats: failed to write meta key", "key", metaKey(key.CommandName, key.TokenHash), "error", err)
+			}
 		}
+		recordCount++
 		return true
 	})
+	if recordCount > 0 {
+		r.logger.Debug("cmdstats: flushed to KV", "records", recordCount, "hour", h)
+	}
 }
 
 // --- helpers ---

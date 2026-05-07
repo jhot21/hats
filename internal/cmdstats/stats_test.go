@@ -6,7 +6,7 @@ import (
 )
 
 func TestRecord_incrementsCurrentHour(t *testing.T) {
-	r := New(nil)
+	r := New(nil, nil)
 	r.Record("motion-alert", "aaaa"+string(make([]byte, 60)), "my-token")
 
 	stats, _ := r.Snapshot()
@@ -20,7 +20,7 @@ func TestRecord_incrementsCurrentHour(t *testing.T) {
 }
 
 func TestRecord_multipleTokens(t *testing.T) {
-	r := New(nil)
+	r := New(nil, nil)
 	hash1 := "a" + string(make([]byte, 63)) // 64-char hash
 	hash2 := "b" + string(make([]byte, 63))
 	r.Record("door-unlock", hash1, "token-a")
@@ -43,7 +43,7 @@ func TestRecord_multipleTokens(t *testing.T) {
 }
 
 func TestSnapshot_sortedByCallCount(t *testing.T) {
-	r := New(nil)
+	r := New(nil, nil)
 	hash := "c" + string(make([]byte, 63))
 	r.Record("quiet-cmd", hash, "t")
 	r.Record("busy-cmd", hash, "t")
@@ -109,7 +109,7 @@ func TestParseHourlyKey_badInput(t *testing.T) {
 }
 
 func TestRecord_lastCalled(t *testing.T) {
-	r := New(nil)
+	r := New(nil, nil)
 	hash := "d" + string(make([]byte, 63))
 	before := time.Now().UTC().Add(-time.Second)
 	r.Record("ping", hash, "tok")

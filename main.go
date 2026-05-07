@@ -65,7 +65,7 @@ func main() {
 		panic(err)
 	}
 
-	cmdStats := cmdstats.New(nats.CmdStatsKV())
+	cmdStats := cmdstats.New(nats.CmdStatsKV(), logger)
 	if err := cmdStats.Load(ctx); err != nil {
 		logger.Warn("Failed to load command stats from KV", "error", err)
 	}
@@ -121,6 +121,8 @@ func main() {
 
 	for sig := range interrupt {
 		logger.Debug("Interrupt:", "signal", sig.String())
+		logger.Info("Shutting down, flushing command stats...")
+		cmdStats.Flush(context.Background())
 		cancel()
 		break
 	}
