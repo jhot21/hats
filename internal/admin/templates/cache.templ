@@ -58,7 +58,7 @@ templ Cache() {
 			<div
 				id="entity-table-container"
 				hx-get="/admin/api/cache/entities"
-				hx-trigger="load, every 15s"
+				hx-trigger="load, every 15s, domain-change"
 				hx-swap="innerHTML"
 				hx-include="#domain-filter, #entity-search">
 			</div>
@@ -68,7 +68,7 @@ templ Cache() {
 				document.getElementById('domain-filter').value = domain;
 				document.querySelectorAll('.filter-tab').forEach(function(t) { t.classList.remove('active'); });
 				event.currentTarget.classList.add('active');
-				htmx.trigger(document.getElementById('entity-table-container'), 'load');
+				htmx.trigger(document.getElementById('entity-table-container'), 'domain-change');
 			}
 		</script>
 	}
