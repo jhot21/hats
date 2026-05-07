@@ -15,10 +15,11 @@ import (
 var (
 	cfg     *config.HatsConfig
 	client  *n.NatsConnection
-	kv      jetstream.KeyValue
-	statsKv jetstream.KeyValue
-	ctx     context.Context
-	logger  *slog.Logger
+	kv         jetstream.KeyValue
+	statsKv    jetstream.KeyValue
+	cmdStatsKv jetstream.KeyValue
+	ctx        context.Context
+	logger     *slog.Logger
 )
 
 func Close() {
@@ -88,6 +89,27 @@ func StatsKvConnect() error {
 
 // StatsKV returns the hats_stats KV bucket.
 func StatsKV() jetstream.KeyValue { return statsKv }
+
+// CmdStatsKvConnect connects to (or creates) the hats_cmd_stats KV bucket.
+// The bucket has a 25h TTL so hourly keys expire automatically.
+func CmdStatsKvConnect() error {
+	if client.JS == nil {
+		return errors.New("jetstream must be connected first")
+	}
+	var err error
+	cmdStatsKv, err = client.JS.KeyValue(ctx, "hats_cmd_stats")
+	if errors.Is(err, jetstream.ErrBucketNotFound) {
+		cmdStatsKv, err = client.JS.CreateKeyValue(ctx, jetstream.KeyValueConfig{
+			Bucket:  "hats_cmd_stats",
+			History: 1,
+			TTL:     25 * time.Hour,
+		})
+	}
+	return err
+}
+
+// CmdStatsKV returns the hats_cmd_stats KV bucket.
+func CmdStatsKV() jetstream.KeyValue { return cmdStatsKv }
 
 func Publish(subject string, message []byte) {
 	client.Publish(ctx, subject, message, jetstream.WithRetryAttempts(2), jetstream.WithRetryWait(500*time.Millisecond))

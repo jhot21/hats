@@ -1,0 +1,70 @@
+package templates
+
+import "fmt"
+
+// CommandStats renders the command endpoints dashboard widget.
+templ CommandStats(data CommandStatsData) {
+	<div class="cmd-stats-panel">
+		<div class="panel-header" style="padding: 14px 22px;">
+			<div class="panel-title">
+				<span class="dot-indicator"></span>
+				Command Endpoints
+			</div>
+			<a href="/admin/commands" style="font-family:var(--font-mono);font-size:10px;color:var(--teal);letter-spacing:.1em;text-decoration:none;">
+				VIEW ALL →
+			</a>
+		</div>
+		<div style="padding: 0 22px 18px;">
+			<div class="cmd-summary-grid">
+				<div class="cmd-summary-tile">
+					<div class="cmd-summary-val">{ fmt.Sprintf("%d", data.Summary.TotalCalls) }</div>
+					<div class="cmd-summary-lbl">calls / 24h</div>
+				</div>
+				<div class="cmd-summary-tile">
+					<div class="cmd-summary-val">{ fmt.Sprintf("%d", data.Summary.Endpoints) }</div>
+					<div class="cmd-summary-lbl">endpoints</div>
+				</div>
+				<div class="cmd-summary-tile">
+					<div class="cmd-summary-val">{ fmt.Sprintf("%d", data.Summary.TokensUsed) }</div>
+					<div class="cmd-summary-lbl">tokens</div>
+				</div>
+			</div>
+			if len(data.Endpoints) > 0 {
+				<div class="cmd-section-label">Busiest endpoints</div>
+				<div class="cmd-endpoint-list">
+					for _, ep := range data.Top5() {
+						@cmdEndpointRow(ep)
+					}
+				</div>
+			} else {
+				<p style="font-family:var(--font-mono);font-size:11px;color:var(--text-mute);padding:8px 0;">
+					No commands recorded yet.
+				</p>
+			}
+		</div>
+	</div>
+}
+
+templ cmdEndpointRow(ep EndpointSummary) {
+	{{ heights := SparklineHeights(ep.Hours) }}
+	<div class="cmd-endpoint-row">
+		<span class="cmd-endpoint-name">{ ep.CommandName }</span>
+		<span class="cmd-endpoint-age">{ CmdRelativeTime(ep.LastCalled) }</span>
+		<div class="cmd-sparkline">
+			for i, h := range heights {
+				<div
+					class={ cmdSparkBarClass(i, len(heights)-1) }
+					style={ fmt.Sprintf("height:%dpx", h) }
+				></div>
+			}
+		</div>
+		<span class="cmd-endpoint-count">{ fmt.Sprintf("%d", ep.TotalCalls24h) }</span>
+	</div>
+}
+
+func cmdSparkBarClass(i, lastIdx int) string {
+	if i == lastIdx {
+		return "cmd-spark-bar current"
+	}
+	return "cmd-spark-bar"
+}

@@ -1,0 +1,74 @@
+package templates
+
+import "fmt"
+
+// CommandBrowser renders the full command browser page shell.
+// Content is loaded and refreshed via HTMX from /admin/api/commands/stats.
+templ CommandBrowser(data CommandBrowserData) {
+	@Layout("Commands", "Commands") {
+		<div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;">
+			<div>
+				<h1 class="page-title">Command <strong>Browser</strong></h1>
+				<div class="page-meta">
+					<span>{ fmt.Sprintf("%d endpoints · %d calls in the last 24h", data.Summary.Endpoints, data.Summary.TotalCalls) }</span>
+				</div>
+			</div>
+		</div>
+		<div
+			id="command-list"
+			hx-get="/admin/api/commands/stats"
+			hx-trigger="load, every 30s"
+			hx-swap="innerHTML"
+		></div>
+	}
+}
+
+// CommandBrowserList renders the HTMX-refreshable endpoint card list.
+templ CommandBrowserList(data CommandBrowserData) {
+	<div class="cmd-browser-list">
+		for _, ep := range data.Endpoints {
+			@cmdEndpointCard(ep)
+		}
+	</div>
+}
+
+templ cmdEndpointCard(ep EndpointSummary) {
+	{{ heights := SparklineHeights(ep.Hours) }}
+	{{ dimmed := ep.TotalCalls24h == 0 }}
+	<div class={ cmdCardClass(dimmed) }>
+		<div class="cmd-card-header">
+			<span class="cmd-card-name">{ ep.CommandName }</span>
+			<div class="cmd-card-stat">
+				<div class="cmd-card-stat-val">{ fmt.Sprintf("%d", ep.TotalCalls24h) }</div>
+				<div class="cmd-card-stat-lbl">24h calls</div>
+			</div>
+			<div class="cmd-card-divider"></div>
+			<div class="cmd-card-stat">
+				<div class="cmd-card-stat-val">{ fmt.Sprintf("%d", ep.TokenCount) }</div>
+				<div class="cmd-card-stat-lbl">tokens</div>
+			</div>
+			<div class="cmd-card-divider"></div>
+			<div class="cmd-card-stat">
+				<div class="cmd-card-stat-val cmd-card-stat-val--sm">{ CmdRelativeTime(ep.LastCalled) }</div>
+				<div class="cmd-card-stat-lbl">last call</div>
+			</div>
+			<div class="cmd-sparkline">
+				for i, h := range heights {
+					<div
+						class={ cmdSparkBarClass(i, len(heights)-1) }
+						style={ fmt.Sprintf("height:%dpx", h) }
+					></div>
+				}
+			</div>
+			<button class="cmd-toggle-btn" type="button" data-cmd={ ep.CommandName } onclick="toggleCmdTokens(this)">▼ Tokens</button>
+		</div>
+		<div class="cmd-token-section"></div>
+	</div>
+}
+
+func cmdCardClass(dimmed bool) string {
+	if dimmed {
+		return "cmd-card cmd-card--dim"
+	}
+	return "cmd-card"
+}
