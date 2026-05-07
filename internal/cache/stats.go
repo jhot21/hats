@@ -17,7 +17,7 @@ type DomainStat struct {
 	Domain string
 	Hits   int64
 	Misses int64
-	Keys   int // populated externally by browser.ListEntries
+	Keys   int // populated externally by EntityMirror.KeyCountByDomain()
 }
 
 // Stats tracks cache hit/miss counts per HA domain using lock-free atomic counters.
