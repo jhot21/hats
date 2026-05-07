@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"strings"
 
 	ha "codeberg.org/jhot/go-ha-sdk"
 	"codeberg.org/jhot/hats/pkg/ntfy"
@@ -58,6 +59,13 @@ func (c *HatsClient) GetStateWithDefault(entityId string, defaultValue string) s
 }
 
 func (c *HatsClient) GetStateBool(entityId string) (bool, error) {
+	if strings.HasPrefix(entityId, "group.") {
+		data, err := c.GetStateFull(entityId)
+		if err != nil {
+			return false, err
+		}
+		return ha.StateToBool(data), nil
+	}
 	state, err := c.GetState(entityId)
 	if err != nil {
 		return false, err
