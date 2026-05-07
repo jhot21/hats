@@ -16,6 +16,7 @@ import (
 
 	ha "codeberg.org/jhot/go-ha-sdk"
 	"codeberg.org/jhot/hats/internal/cache"
+	"codeberg.org/jhot/hats/internal/cmdstats"
 	"codeberg.org/jhot/hats/internal/nats"
 	"codeberg.org/jhot/hats/internal/ntfy"
 	"codeberg.org/jhot/hats/internal/secrets"
@@ -40,32 +41,34 @@ var (
 	secretStore secrets.SecretStore
 	ntfyClient  *ntfy.Client
 	cacheStats  *cache.Stats
+	cmdStats    *cmdstats.Recorder
 )
 
 const (
 	HA_STATE_PREFIX = "homeassistant.states"
 )
 
-func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client, cs *cache.Stats) {
-	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client, cs *cache.Stats) {
+func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client, cs *cache.Stats, crs *cmdstats.Recorder) {
+	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client, cs *cache.Stats, crs *cmdstats.Recorder) {
 		for {
-			err := Listen(parentLogger, parentConfig, newRouter(), mount, ts, ss, nc, cs)
+			err := Listen(parentLogger, parentConfig, newRouter(), mount, ts, ss, nc, cs, crs)
 			if err == nil {
 				break
 			}
 			parentLogger.Error("An error occurred with the API. Restarting now.", "error", err)
 			Close()
 		}
-	}(parentLogger, parentConfig, newRouter, mount, ts, ss, nc, cs)
+	}(parentLogger, parentConfig, newRouter, mount, ts, ss, nc, cs, crs)
 }
 
-func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, router chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client, cs *cache.Stats) error {
+func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, router chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client, cs *cache.Stats, crs *cmdstats.Recorder) error {
 	logger = parentLogger
 	cfg = parentConfig
 	tokenStore = ts
 	secretStore = ss
 	ntfyClient = nc
 	cacheStats = cs
+	cmdStats = crs
 
 	haClient = ha.New(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
 
@@ -501,6 +504,12 @@ func postCommandHandler(w http.ResponseWriter, r *http.Request) {
 		logger.Error("Error marshaling command payload", "error", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
+	}
+
+	if cmdStats != nil {
+		if tok := tokens.TokenFromContext(r.Context()); tok != nil {
+			cmdStats.Record(commandName, tok.Hash, tok.Name)
+		}
 	}
 
 	commandPublish(fmt.Sprintf("command.%s", commandName), data)
