@@ -20,7 +20,7 @@ type Message struct {
 		Label   string            `json:"label"`
 		URL     string            `json:"url,omitempty"`
 		Method  string            `json:"method,omitempty"`
-		Headers string            `json:"headers,omitempty"`
+		Headers map[string]string `json:"headers,omitempty"`
 		Body    string            `json:"body,omitempty"`
 		Intent  string            `json:"intent,omitempty"`
 		Clear   bool              `json:"clear,omitempty"`
