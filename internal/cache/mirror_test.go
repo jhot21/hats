@@ -130,3 +130,24 @@ func TestFiltered_AlwaysSorted(t *testing.T) {
 		t.Errorf("Filtered result not sorted desc by UpdatedAt: %v", times)
 	}
 }
+
+func TestGet_Present(t *testing.T) {
+	m := newMirrorWithEntries(map[string]CacheEntry{
+		"sensor.temp": {Domain: "sensor", EntityID: "sensor.temp", State: "21.5"},
+	})
+	state, ok := m.Get("sensor.temp")
+	if !ok {
+		t.Fatal("expected entry to be present")
+	}
+	if state != "21.5" {
+		t.Errorf("expected state %q, got %q", "21.5", state)
+	}
+}
+
+func TestGet_Absent(t *testing.T) {
+	m := newMirrorWithEntries(map[string]CacheEntry{})
+	_, ok := m.Get("sensor.nonexistent")
+	if ok {
+		t.Fatal("expected entry to be absent")
+	}
+}

@@ -174,3 +174,12 @@ func (m *EntityMirror) KeyCountByDomain() map[string]int {
 	}
 	return counts
 }
+
+// Get returns the cached state string for entityID.
+// Returns ("", false) if the entity is not present in the mirror.
+func (m *EntityMirror) Get(entityID string) (string, bool) {
+	m.mu.RLock()
+	e, ok := m.entries[entityID]
+	m.mu.RUnlock()
+	return e.State, ok
+}
