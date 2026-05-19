@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"codeberg.org/jhot/hats/internal/nats"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
@@ -61,43 +62,14 @@ func NewStore(ctx context.Context, logger *slog.Logger, js jetstream.JetStream) 
 		usage:  make(map[string]time.Time),
 	}
 
-	if err := s.startWatch(); err != nil {
-		return nil, err
-	}
-
-	go s.flushLoop()
-	return s, nil
-}
-
-func (s *store) startWatch() error {
-	watcher, err := s.kv.WatchAll(s.ctx)
-	if err != nil {
-		return err
-	}
-	go s.runWatch(watcher)
-	return nil
-}
-
-func (s *store) runWatch(watcher jetstream.KeyWatcher) {
-	defer watcher.Stop()
-	for {
-		select {
-		case <-s.ctx.Done():
-			return
-		case entry, ok := <-watcher.Updates():
-			if !ok {
-				// Channel closed — NATS connection dropped. Restart the watcher.
-				s.logger.Warn("tokens: KV watcher closed, restarting")
-				newWatcher, err := s.kv.WatchAll(s.ctx)
-				if err != nil {
-					s.logger.Error("tokens: failed to restart KV watcher", "error", err)
-					return
-				}
-				watcher = newWatcher
-				continue
-			}
+	go nats.RunWatch(ctx, logger, "token-store",
+		func() (jetstream.KeyWatcher, error) {
+			return kv.WatchAll(ctx)
+		},
+		nil,
+		func(entry jetstream.KeyValueEntry) {
 			if entry == nil {
-				continue // signals end of initial values
+				return
 			}
 			hash := entry.Key()
 			op := entry.Operation()
@@ -108,12 +80,12 @@ func (s *store) runWatch(watcher jetstream.KeyWatcher) {
 				s.usageMu.Lock()
 				delete(s.usage, hash)
 				s.usageMu.Unlock()
-				continue
+				return
 			}
 			var rec tokenRecord
 			if err := json.Unmarshal(entry.Value(), &rec); err != nil {
-				s.logger.Error("tokens: failed to unmarshal token record", "hash", hash, "error", err)
-				continue
+				logger.Error("tokens: failed to unmarshal token record", "hash", hash, "error", err)
+				return
 			}
 			t := &Token{
 				Hash:       hash,
@@ -126,8 +98,11 @@ func (s *store) runWatch(watcher jetstream.KeyWatcher) {
 			s.mu.Lock()
 			s.cache[hash] = t
 			s.mu.Unlock()
-		}
-	}
+		},
+	)
+
+	go s.flushLoop()
+	return s, nil
 }
 
 func (s *store) Create(name string, scopes []string, expiresAt *time.Time) (string, error) {
@@ -261,7 +236,7 @@ func (s *store) flush() {
 			continue // token was revoked between flush ticks
 		}
 		// Safe to read t's fields without holding mu: Token fields are set once at
-		// construction in startWatch and never mutated afterward.
+		// construction in the RunWatch callback and never mutated afterward.
 		lu := lastUsed
 		rec := tokenRecord{
 			Name:       t.Name,
