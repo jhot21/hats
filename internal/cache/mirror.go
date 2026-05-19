@@ -2,13 +2,13 @@ package cache
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
+	"codeberg.org/jhot/hats/internal/nats"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
@@ -37,64 +37,34 @@ func (m *EntityMirror) Start(ctx context.Context) {
 }
 
 func (m *EntityMirror) run(ctx context.Context) {
-	backoff := time.Second
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		}
-		snapshotOK, err := m.watch(ctx)
-		if snapshotOK {
-			backoff = time.Second // reset after a successful connection
-		}
-		if err != nil {
-			m.logger.Error("entity mirror: watcher error, retrying", "error", err, "backoff", backoff)
-		}
-		select {
-		case <-ctx.Done():
-			return
-		case <-time.After(backoff):
-			backoff = min(backoff*2, 30*time.Second)
-		}
-	}
-}
+	var (
+		pending      map[string]CacheEntry
+		snapshotDone bool
+	)
 
-// watch opens a WatchAll subscription and processes updates until ctx is
-// cancelled or the channel closes. Returns (true, nil) on clean ctx exit
-// after the snapshot was delivered; (false, err) on connection failure.
-func (m *EntityMirror) watch(ctx context.Context) (snapshotOK bool, err error) {
-	watcher, err := m.kv.WatchAll(ctx)
-	if err != nil {
-		return false, fmt.Errorf("WatchAll: %w", err)
-	}
-	defer watcher.Stop()
-
-	pending := make(map[string]CacheEntry)
-	snapshotDone := false
-
-	for {
-		select {
-		case <-ctx.Done():
-			return snapshotDone, nil
-		case entry, ok := <-watcher.Updates():
-			if !ok {
-				return snapshotDone, fmt.Errorf("watcher channel closed")
-			}
+	nats.RunWatch(ctx, m.logger, "entity-mirror",
+		func() (jetstream.KeyWatcher, error) {
+			return m.kv.WatchAll(ctx)
+		},
+		func() {
+			// Reset snapshot state for each new watcher session.
+			pending = make(map[string]CacheEntry)
+			snapshotDone = false
+		},
+		func(entry jetstream.KeyValueEntry) {
 			if entry == nil {
-				// Initial snapshot complete — atomically swap the map.
-				// Old entries stay live until this point so handlers
-				// never see an empty result mid-reconnect.
+				// Snapshot complete — atomically swap the pending map into m.entries.
+				// Reads continue to see the old map until this point.
 				m.mu.Lock()
 				m.entries = pending
 				m.mu.Unlock()
 				snapshotDone = true
-				pending = nil // allow GC
-				continue
+				pending = nil
+				return
 			}
 			m.applyEntry(entry, pending, snapshotDone)
-		}
-	}
+		},
+	)
 }
 
 func (m *EntityMirror) applyEntry(entry jetstream.KeyValueEntry, pending map[string]CacheEntry, live bool) {
