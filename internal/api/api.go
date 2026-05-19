@@ -42,26 +42,27 @@ var (
 	ntfyClient  *ntfy.Client
 	cacheStats  *cache.Stats
 	cmdStats    *cmdstats.Recorder
+	mirror      *cache.EntityMirror
 )
 
 const (
 	HA_STATE_PREFIX = "homeassistant.states"
 )
 
-func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client, cs *cache.Stats, crs *cmdstats.Recorder) {
-	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client, cs *cache.Stats, crs *cmdstats.Recorder) {
+func InitAPI(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client, cs *cache.Stats, crs *cmdstats.Recorder, m *cache.EntityMirror) {
+	go func(parentLogger *slog.Logger, parentConfig *config.HatsConfig, newRouter func() chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client, cs *cache.Stats, crs *cmdstats.Recorder, m *cache.EntityMirror) {
 		for {
-			err := Listen(parentLogger, parentConfig, newRouter(), mount, ts, ss, nc, cs, crs)
+			err := Listen(parentLogger, parentConfig, newRouter(), mount, ts, ss, nc, cs, crs, m)
 			if err == nil {
 				break
 			}
 			parentLogger.Error("An error occurred with the API. Restarting now.", "error", err)
 			Close()
 		}
-	}(parentLogger, parentConfig, newRouter, mount, ts, ss, nc, cs, crs)
+	}(parentLogger, parentConfig, newRouter, mount, ts, ss, nc, cs, crs, m)
 }
 
-func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, router chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client, cs *cache.Stats, crs *cmdstats.Recorder) error {
+func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, router chi.Router, mount func(chi.Router), ts tokens.TokenStore, ss secrets.SecretStore, nc *ntfy.Client, cs *cache.Stats, crs *cmdstats.Recorder, m *cache.EntityMirror) error {
 	logger = parentLogger
 	cfg = parentConfig
 	tokenStore = ts
@@ -69,6 +70,7 @@ func Listen(parentLogger *slog.Logger, parentConfig *config.HatsConfig, router c
 	ntfyClient = nc
 	cacheStats = cs
 	cmdStats = crs
+	mirror = m
 
 	haClient = ha.New(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
 
@@ -233,15 +235,15 @@ func getEntityStateHandler(w http.ResponseWriter, r *http.Request) {
 	domain, _, _ := strings.Cut(entityId, ".")
 
 	if !full {
-		l.Debug("Getting state from KV store")
-		kvVal, err := nats.GetKeyValue(fmt.Sprintf("%s.%s", HA_STATE_PREFIX, entityId))
-		if err == nil && len(kvVal) > 0 {
-			l.Debug("Returning", "value", string(kvVal))
-			if cacheStats != nil {
-				cacheStats.Record(domain, true)
+		if mirror != nil {
+			if state, ok := mirror.Get(entityId); ok {
+				l.Debug("Returning state from mirror", "value", state)
+				if cacheStats != nil {
+					cacheStats.Record(domain, true)
+				}
+				render.PlainText(w, r, state)
+				return
 			}
-			render.PlainText(w, r, string(kvVal))
-			return
 		}
 	}
 
@@ -256,6 +258,7 @@ func getEntityStateHandler(w http.ResponseWriter, r *http.Request) {
 	if cacheStats != nil {
 		cacheStats.Record(domain, false)
 	}
+	// Write to KV so the mirror picks up the new state via its watch subscription.
 	nats.SetKeyValueString(fmt.Sprintf("%s.%s", HA_STATE_PREFIX, entityId), data.State)
 	if full {
 		render.JSON(w, r, data)

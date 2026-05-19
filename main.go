@@ -116,7 +116,7 @@ func main() {
 	api.InitAPI(logger, &cfg.HatsConfig,
 		func() chi.Router { return chi.NewRouter() },
 		func(r chi.Router) { admin.Init(r, cfg, logger, ts, ss, cacheStats, mirror, cmdStats) },
-		ts, ss, nc, cacheStats, cmdStats)
+		ts, ss, nc, cacheStats, cmdStats, mirror)
 	defer api.Close()
 
 	for sig := range interrupt {
