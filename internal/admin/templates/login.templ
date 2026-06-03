@@ -1,6 +1,6 @@
 package templates
 
-templ Login(errMsg string) {
+templ Login(errMsg string, next string) {
 	<!DOCTYPE html>
 	<html lang="en" class="h-full">
 		<head>
@@ -34,6 +34,9 @@ templ Login(errMsg string) {
 							<p class="login-error">{ errMsg }</p>
 						}
 						<form method="POST" action="/admin/login" style="display: flex; flex-direction: column; gap: 20px;">
+							if next != "" {
+								<input type="hidden" name="next" value={ next }/>
+							}
 							<div class="form-field">
 								<label class="form-label" for="password">Password <span class="required">*</span></label>
 								<input

@@ -91,14 +91,19 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	next := r.FormValue("next")
+	if !strings.HasPrefix(next, "/admin") {
+		next = ""
+	}
+
 	if r.Method == http.MethodGet {
-		templates.Login("").Render(r.Context(), w)
+		templates.Login("", next).Render(r.Context(), w)
 		return
 	}
 
 	password := r.FormValue("password")
 	if err := bcrypt.CompareHashAndPassword([]byte(adminCfg.AdminPasswordHash), []byte(password)); err != nil {
-		templates.Login("Invalid password").Render(r.Context(), w)
+		templates.Login("Invalid password", next).Render(r.Context(), w)
 		return
 	}
 
@@ -110,11 +115,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	setSessionCookie(w, tokenStr)
 
-	next := r.URL.Query().Get("next")
-	if !strings.HasPrefix(next, "/admin") {
-		next = "/admin"
+	dest := next
+	if dest == "" {
+		dest = "/admin"
 	}
-	http.Redirect(w, r, next, http.StatusSeeOther)
+	http.Redirect(w, r, dest, http.StatusSeeOther)
 }
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
