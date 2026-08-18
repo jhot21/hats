@@ -42,7 +42,7 @@ Add `restart: unless-stopped` (or `restart: always`) to the HATS service in your
 ```yaml
 services:
   hats:
-    image: codeberg.org/jhot/hats:latest
+    image: ghcr.io/jhot21/hats:latest
     restart: unless-stopped        # required for the Restart button to work
     environment:
       NATS_HOST: nats

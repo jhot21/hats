@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	ha "codeberg.org/jhot/go-ha-sdk"
+	ha "github.com/jhot21/go-ha-sdk"
 	"github.com/nats-io/nats.go"
 )
 

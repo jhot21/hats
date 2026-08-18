@@ -3,7 +3,7 @@ package cocorahs
 import (
 	"fmt"
 
-	"codeberg.org/jhot/hats/internal/util"
+	"github.com/jhot21/hats/internal/util"
 	"github.com/go-resty/resty/v2"
 )
 

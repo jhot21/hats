@@ -3,8 +3,8 @@ package admin
 import (
 	"net/http"
 
-	"codeberg.org/jhot/hats/internal/admin/templates"
-	"codeberg.org/jhot/hats/internal/cache"
+	"github.com/jhot21/hats/internal/admin/templates"
+	"github.com/jhot21/hats/internal/cache"
 )
 
 func cachePageHandler(w http.ResponseWriter, r *http.Request) {

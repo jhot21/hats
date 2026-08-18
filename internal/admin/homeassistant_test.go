@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"codeberg.org/jhot/hats/internal/secrets"
+	"github.com/jhot21/hats/internal/secrets"
 	"github.com/stretchr/testify/assert"
 )
 

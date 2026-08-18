@@ -28,28 +28,28 @@ task tag VERSION=x.x.x
 
 The Dockerfile itself runs tests in a builder stage (`go test -v ./...`), so a successful image build confirms tests pass.
 
-## Codeberg Workflow (fj CLI)
+CI (`.github/workflows/ci.yml`) builds and tests on every push to `main`, then builds and publishes a multi-arch image to `ghcr.io/jhot21/hats` (tagged `latest` + commit SHA on `main`, or the semver tag on a `v*.*.*` tag push).
 
-This repo is hosted on Codeberg (`codeberg.org/jhot/hats`). Use `fj` (Forgejo CLI) instead of `gh` for PRs, issues, and repo operations.
+## GitHub Workflow (gh CLI)
+
+This repo is hosted on GitHub (`github.com/jhot21/hats`). Use `gh` for PRs, issues, and repo operations.
 
 ```bash
 # Create a PR (autofill title/body from commits)
-fj pr create --base main --head <branch> --autofill
+gh pr create --base main --head <branch> --fill
 
 # Create a PR with explicit title
-fj pr create --base main --head <branch> "feat: my feature"
+gh pr create --base main --head <branch> --title "feat: my feature"
 
 # View a PR
-fj pr view <number>
+gh pr view <number>
 
 # List PRs
-fj pr search
+gh pr list
 
 # Merge a PR
-fj pr merge <number>
+gh pr merge <number>
 ```
-
-Note: `fj` does not use `-r` or `--repo` flags for repo targeting in subcommands. It infers the repo from the git remote or current directory context.
 
 ## Architecture
 
@@ -113,4 +113,4 @@ See `pkg/config/config.go` for the full struct with all tags.
 
 ### Module path
 
-`codeberg.org/jhot/hats` — repo is hosted on Codeberg, not GitHub.
+`github.com/jhot21/hats` — repo is hosted on GitHub.

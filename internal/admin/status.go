@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"codeberg.org/jhot/hats/internal/admin/templates"
-	"codeberg.org/jhot/hats/internal/homeassistant"
-	"codeberg.org/jhot/hats/internal/nats"
+	"github.com/jhot21/hats/internal/admin/templates"
+	"github.com/jhot21/hats/internal/homeassistant"
+	"github.com/jhot21/hats/internal/nats"
 )
 
 func statusHandler(w http.ResponseWriter, r *http.Request) {

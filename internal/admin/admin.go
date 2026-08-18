@@ -7,12 +7,12 @@ import (
 	"log/slog"
 	"net/http"
 
-	"codeberg.org/jhot/hats/internal/admin/templates"
-	"codeberg.org/jhot/hats/internal/cache"
-	"codeberg.org/jhot/hats/internal/cmdstats"
-	"codeberg.org/jhot/hats/internal/secrets"
-	"codeberg.org/jhot/hats/internal/serverconfig"
-	"codeberg.org/jhot/hats/internal/tokens"
+	"github.com/jhot21/hats/internal/admin/templates"
+	"github.com/jhot21/hats/internal/cache"
+	"github.com/jhot21/hats/internal/cmdstats"
+	"github.com/jhot21/hats/internal/secrets"
+	"github.com/jhot21/hats/internal/serverconfig"
+	"github.com/jhot21/hats/internal/tokens"
 	"github.com/go-chi/chi/v5"
 )
 

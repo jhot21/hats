@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	ha "codeberg.org/jhot/go-ha-sdk"
-	"codeberg.org/jhot/hats/internal/admin/templates"
-	"codeberg.org/jhot/hats/internal/secrets"
+	ha "github.com/jhot21/go-ha-sdk"
+	"github.com/jhot21/hats/internal/admin/templates"
+	"github.com/jhot21/hats/internal/secrets"
 )
 
 var haReservedNames = map[string]bool{

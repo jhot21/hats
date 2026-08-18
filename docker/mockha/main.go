@@ -9,7 +9,7 @@ import (
 	"os"
 	"strconv"
 
-	"codeberg.org/jhot/hats/integration/haserver"
+	"github.com/jhot21/hats/integration/haserver"
 )
 
 func main() {

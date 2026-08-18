@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	ha "codeberg.org/jhot/go-ha-sdk"
-	"codeberg.org/jhot/hats/pkg/ntfy"
+	ha "github.com/jhot21/go-ha-sdk"
+	"github.com/jhot21/hats/pkg/ntfy"
 	"github.com/go-resty/resty/v2"
 )
 

@@ -3,8 +3,8 @@ package serverconfig
 import (
 	"reflect"
 
-	"codeberg.org/jhot/hats/internal/secrets"
-	"codeberg.org/jhot/hats/pkg/config"
+	"github.com/jhot21/hats/internal/secrets"
+	"github.com/jhot21/hats/pkg/config"
 )
 
 // ServerConfig extends HatsConfig with fields only needed by the HATS server process.

@@ -9,7 +9,7 @@ import (
     "testing"
     "time"
 
-    "codeberg.org/jhot/hats/internal/tokens"
+    "github.com/jhot21/hats/internal/tokens"
     "github.com/go-chi/chi/v5"
 )
 

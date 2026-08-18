@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	ha "codeberg.org/jhot/go-ha-sdk"
+	ha "github.com/jhot21/go-ha-sdk"
 )
 
 var (

@@ -8,12 +8,12 @@ Config variables for each service are listed in [getting-started.md#third-party-
 
 ## ntfy
 
-Package: `codeberg.org/jhot/hats/pkg/ntfy`
+Package: `github.com/jhot21/hats/pkg/ntfy`
 
 [ntfy](https://ntfy.sh) is an HTTP-based push notification service.
 
 ```go
-import "codeberg.org/jhot/hats/pkg/ntfy"
+import "github.com/jhot21/hats/pkg/ntfy"
 
 client := ntfy.New(cfg.NtfyHost, cfg.NtfyToken)
 
@@ -43,12 +43,12 @@ See [hats-client-vs-ha-client.md](hats-client-vs-ha-client.md) for guidance on w
 
 ## Gokapi
 
-Package: `codeberg.org/jhot/hats/pkg/gokapi`
+Package: `github.com/jhot21/hats/pkg/gokapi`
 
 [Gokapi](https://github.com/Forceu/Gokapi) is a self-hosted file sharing service. Useful for generating temporary download links from your subscriber.
 
 ```go
-import "codeberg.org/jhot/hats/pkg/gokapi"
+import "github.com/jhot21/hats/pkg/gokapi"
 
 client := gokapi.New(cfg.GokapiHost, cfg.GokapiToken)
 ```
@@ -59,12 +59,12 @@ client := gokapi.New(cfg.GokapiHost, cfg.GokapiToken)
 
 ## Syncthing
 
-Package: `codeberg.org/jhot/hats/pkg/syncthing`
+Package: `github.com/jhot21/hats/pkg/syncthing`
 
 [Syncthing](https://github.com/syncthing/syncthing) is a peer-to-peer file sync application.
 
 ```go
-import "codeberg.org/jhot/hats/pkg/syncthing"
+import "github.com/jhot21/hats/pkg/syncthing"
 
 client := syncthing.New(cfg.SyncthingHost, cfg.SyncthingToken)
 ```
@@ -75,14 +75,14 @@ client := syncthing.New(cfg.SyncthingHost, cfg.SyncthingToken)
 
 ## National Weather Service (NWS)
 
-Package: `codeberg.org/jhot/hats/pkg/nws`
+Package: `github.com/jhot21/hats/pkg/nws`
 
 Client for the [National Weather Service public API](https://www.weather.gov/) — no API key required. Useful for precipitation totals, forecasts, and temperature data.
 
 Typically initialized using your home zone's coordinates from Home Assistant:
 
 ```go
-import "codeberg.org/jhot/hats/pkg/nws"
+import "github.com/jhot21/hats/pkg/nws"
 
 // Get lat/lon from the HA zone state
 homeZone, err := haClient.GetState("zone.home")
@@ -99,12 +99,12 @@ err = weather.UpdateTemps(21) // fetch forecasted high/low for next N days
 
 ## Amcrest cameras
 
-Package: `codeberg.org/jhot/hats/pkg/amcrest`
+Package: `github.com/jhot21/hats/pkg/amcrest`
 
 Client for [Amcrest IP cameras](https://amcrest.com/). Uses custom settings (not standard config fields) to support multiple cameras with different credentials:
 
 ```go
-import "codeberg.org/jhot/hats/pkg/amcrest"
+import "github.com/jhot21/hats/pkg/amcrest"
 
 client := amcrest.New(
     cfg.GetCustomSetting("AMCREST_FRONT_DOOR_HOST", ""),

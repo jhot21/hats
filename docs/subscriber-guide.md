@@ -9,10 +9,10 @@ Prerequisites: HATS and NATS must both be running. See [getting-started.md](gett
 ## 1. Module setup
 
 ```sh
-go get codeberg.org/jhot/hats
+go get github.com/jhot21/hats
 ```
 
-Your subscriber imports from `codeberg.org/jhot/hats/pkg/...`.
+Your subscriber imports from `github.com/jhot21/hats/pkg/...`.
 
 ---
 
@@ -25,8 +25,8 @@ import (
     "log/slog"
     "os"
 
-    "codeberg.org/jhot/hats/pkg/config"
-    "codeberg.org/jhot/hats/pkg/nats"
+    "github.com/jhot21/hats/pkg/config"
+    "github.com/jhot21/hats/pkg/nats"
 )
 
 func main() {
@@ -111,10 +111,10 @@ import (
     "os/signal"
     "syscall"
 
-    "codeberg.org/jhot/hats/pkg/client"
-    "codeberg.org/jhot/hats/pkg/config"
-    "codeberg.org/jhot/hats/pkg/homeassistant"
-    "codeberg.org/jhot/hats/pkg/nats"
+    "github.com/jhot21/hats/pkg/client"
+    "github.com/jhot21/hats/pkg/config"
+    "github.com/jhot21/hats/pkg/homeassistant"
+    "github.com/jhot21/hats/pkg/nats"
 )
 
 func main() {

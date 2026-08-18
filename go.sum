@@ -1,9 +1,3 @@
-codeberg.org/jhot/go-ha-sdk v0.2.0 h1:LB6cHAtIzhL7aUP9iTKB1g+jhshOuYLs+ed2QqBWxqw=
-codeberg.org/jhot/go-ha-sdk v0.2.0/go.mod h1:AQ0J6+47BELM74MTkknUb7DZG0Zqk1W0XeGmBiidkRU=
-codeberg.org/jhot/go-sdk-base v0.1.0-b3 h1:MGAbna41svxCOBHQ5ndQcTynGnnzamVgYIz3AsWzTo0=
-codeberg.org/jhot/go-sdk-base v0.1.0-b3/go.mod h1:ykUm2QR/lmnrGdPrQsfblRyIXgj2MWsu9aAFzFE1OgE=
-codeberg.org/jhot/passgen v0.0.0-20260310191203-c0cce4aeabf3 h1:wwHC4uGAE3vTi+0cwVOOdZfuSwjRiV8u7iTlFeEfYmQ=
-codeberg.org/jhot/passgen v0.0.0-20260310191203-c0cce4aeabf3/go.mod h1:YbK9uLAvBbXpN30L91B2Gc2/WNrK/IJ7GZhZSd8un24=
 ekyu.moe/base91 v0.2.3 h1:1jCZrrpWjDSMMjjU9LANfQV+n7EHeW0OQ0MO9fpDRHg=
 ekyu.moe/base91 v0.2.3/go.mod h1:/qmmaFUj5d0p9xcpj8beZDj33yXrc54eGU+hO/V5vuo=
 github.com/a-h/templ v0.3.1001 h1:yHDTgexACdJttyiyamcTHXr2QkIeVF1MukLy44EAhMY=
@@ -45,6 +39,12 @@ github.com/gorilla/websocket v1.5.3 h1:saDtZ6Pbx/0u+bgYQ3q96pZgCzfhKXGPqt7kZ72aN
 github.com/gorilla/websocket v1.5.3/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/icholy/digest v0.1.22 h1:dRIwCjtAcXch57ei+F0HSb5hmprL873+q7PoVojdMzM=
 github.com/icholy/digest v0.1.22/go.mod h1:uLAeDdWKIWNFMH0wqbwchbTQOmJWhzSnL7zmqSPqEEc=
+github.com/jhot21/go-ha-sdk v0.3.0 h1:6I4hCE1dkR2nM458gO9DAsJ7Mb5k7uEavozvD3C1Xpk=
+github.com/jhot21/go-ha-sdk v0.3.0/go.mod h1:RtBCTKqSmowPt+Gu1tB++vXqXZubT41WApT03vx5Vus=
+github.com/jhot21/go-sdk-base v0.2.0 h1:3te0mbzjgE/UrXA/1nfxiu6zhfEVE+YoEmolDVOgr/U=
+github.com/jhot21/go-sdk-base v0.2.0/go.mod h1:7bpT2D6R2VPgxndV9/7zb/UYhdUy1fa9yxPTD4lrjZ0=
+github.com/jhot21/passgen v1.1.0 h1:wXULoRtOeOlgdkxOp9j8WTMAZrQMVDYa9lBoi/dukbU=
+github.com/jhot21/passgen v1.1.0/go.mod h1:Ylqy/2VNquI3Pbl5cPYvpZ8Sh5ZuFhVf9wwAjqpoi4Y=
 github.com/klauspost/compress v1.18.3 h1:9PJRvfbmTabkOX8moIpXPbMMbYN60bWImDDU7L+/6zw=
 github.com/klauspost/compress v1.18.3/go.mod h1:R0h/fSBs8DE4ENlcrlib3PsXS61voFxhIs2DeRhCvJ4=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=

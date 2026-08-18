@@ -10,9 +10,9 @@ import (
 
 	"log/slog"
 
-	"codeberg.org/jhot/hats/internal/nats"
-	"codeberg.org/jhot/hats/pkg/config"
-	ha "codeberg.org/jhot/go-ha-sdk"
+	"github.com/jhot21/hats/internal/nats"
+	"github.com/jhot21/hats/pkg/config"
+	ha "github.com/jhot21/go-ha-sdk"
 )
 
 var (

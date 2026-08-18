@@ -33,7 +33,7 @@ services:
       - SERVER_NAME=nats1
 
   hats:
-    image: codeberg.org/jhot/hats:latest
+    image: ghcr.io/jhot21/hats:latest
     restart: always
     ports:
       - "8888:8888"   # HATS API — check http://localhost:8888 for the rendered README

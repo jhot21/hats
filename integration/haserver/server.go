@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"sync"
 
-	ha "codeberg.org/jhot/go-ha-sdk"
+	ha "github.com/jhot21/go-ha-sdk"
 	"github.com/gorilla/websocket"
 )
 

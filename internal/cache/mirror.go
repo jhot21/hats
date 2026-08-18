@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"codeberg.org/jhot/hats/internal/nats"
+	"github.com/jhot21/hats/internal/nats"
 	"github.com/nats-io/nats.go/jetstream"
 )
 

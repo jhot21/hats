@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"codeberg.org/jhot/hats/internal/util"
+	"github.com/jhot21/hats/internal/util"
 	"github.com/samber/lo"
 )
 

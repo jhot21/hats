@@ -3,8 +3,8 @@ package ntfy
 import (
 	"fmt"
 
-	"codeberg.org/jhot/hats/internal/secrets"
-	ntfyPkg "codeberg.org/jhot/hats/pkg/ntfy"
+	"github.com/jhot21/hats/internal/secrets"
+	ntfyPkg "github.com/jhot21/hats/pkg/ntfy"
 	"github.com/go-resty/resty/v2"
 )
 

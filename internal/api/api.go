@@ -14,22 +14,22 @@ import (
 
 	"encoding/json"
 
-	ha "codeberg.org/jhot/go-ha-sdk"
-	"codeberg.org/jhot/hats/internal/cache"
-	"codeberg.org/jhot/hats/internal/cmdstats"
-	"codeberg.org/jhot/hats/internal/nats"
-	"codeberg.org/jhot/hats/internal/ntfy"
-	"codeberg.org/jhot/hats/internal/secrets"
-	"codeberg.org/jhot/hats/internal/tokens"
-	"codeberg.org/jhot/hats/pkg/config"
-	pkgnats "codeberg.org/jhot/hats/pkg/nats"
-	ntfyPkg "codeberg.org/jhot/hats/pkg/ntfy"
-	"codeberg.org/jhot/passgen"
+	ha "github.com/jhot21/go-ha-sdk"
+	"github.com/jhot21/hats/internal/cache"
+	"github.com/jhot21/hats/internal/cmdstats"
+	"github.com/jhot21/hats/internal/nats"
+	"github.com/jhot21/hats/internal/ntfy"
+	"github.com/jhot21/hats/internal/secrets"
+	"github.com/jhot21/hats/internal/tokens"
+	"github.com/jhot21/hats/pkg/config"
+	pkgnats "github.com/jhot21/hats/pkg/nats"
+	ntfyPkg "github.com/jhot21/hats/pkg/ntfy"
+	"github.com/jhot21/passgen"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 
-	"codeberg.org/jhot/hats/internal/admin/templates"
+	"github.com/jhot21/hats/internal/admin/templates"
 )
 
 var (

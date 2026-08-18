@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	internalnats "codeberg.org/jhot/hats/internal/nats"
-	"codeberg.org/jhot/hats/integration/haserver"
+	internalnats "github.com/jhot21/hats/internal/nats"
+	"github.com/jhot21/hats/integration/haserver"
 	"github.com/nats-io/nats.go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

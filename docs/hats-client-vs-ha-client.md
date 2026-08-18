@@ -9,7 +9,7 @@ Subscribers have two options for interacting with Home Assistant: the **HatsClie
 Talks to the HATS HTTP API at `HATS_HOST:HATS_PORT`. Your subscriber only needs HATS reachable — no direct HA connection required.
 
 ```go
-import "codeberg.org/jhot/hats/pkg/client"
+import "github.com/jhot21/hats/pkg/client"
 
 hatsClient := client.NewHatsClient(cfg.GetHatsBaseUrl(), cfg.HatsToken)
 ```
@@ -78,7 +78,7 @@ See [third-party-clients.md#ntfy](third-party-clients.md#ntfy) for the `ntfy.Mes
 Talks directly to Home Assistant's REST API at `HASS_HOST:HASS_PORT`. Requires `HASS_HOST` and `HASS_TOKEN` to be set in your subscriber's environment.
 
 ```go
-import "codeberg.org/jhot/hats/pkg/homeassistant"
+import "github.com/jhot21/hats/pkg/homeassistant"
 
 haClient := homeassistant.NewRestClient(cfg.GetHomeAssistantBaseUrl(), cfg.HomeAssistantToken)
 ```

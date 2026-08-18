@@ -31,7 +31,7 @@ services:
       - "4222:4222"
 
   hats:
-    image: codeberg.org/jhot/hats:latest
+    image: github.com/jhot21/hats:latest
     ports:
       - "8888:8888"
     environment:
@@ -54,10 +54,10 @@ import (
     "os/signal"
     "syscall"
 
-    "codeberg.org/jhot/hats/pkg/client"
-    "codeberg.org/jhot/hats/pkg/config"
-    "codeberg.org/jhot/hats/pkg/homeassistant"
-    "codeberg.org/jhot/hats/pkg/nats"
+    "github.com/jhot21/hats/pkg/client"
+    "github.com/jhot21/hats/pkg/config"
+    "github.com/jhot21/hats/pkg/homeassistant"
+    "github.com/jhot21/hats/pkg/nats"
 )
 
 func main() {

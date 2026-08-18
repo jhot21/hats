@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"codeberg.org/jhot/hats/internal/cache"
-	"codeberg.org/jhot/hats/internal/cmdstats"
+	"github.com/jhot21/hats/internal/cache"
+	"github.com/jhot21/hats/internal/cmdstats"
 )
 
 // ServiceStatus holds the display state for a single status card.

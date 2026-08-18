@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"codeberg.org/jhot/hats/pkg/client"
+	"github.com/jhot21/hats/pkg/client"
 )
 
 // HatsConfig holds configuration shared by the HATS server and all subscriber services.

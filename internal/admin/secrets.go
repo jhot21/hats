@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"sort"
 
-	"codeberg.org/jhot/hats/internal/admin/templates"
-	"codeberg.org/jhot/hats/internal/secrets"
+	"github.com/jhot21/hats/internal/admin/templates"
+	"github.com/jhot21/hats/internal/secrets"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 )

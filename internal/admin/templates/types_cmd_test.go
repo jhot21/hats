@@ -3,7 +3,7 @@ package templates
 import (
 	"testing"
 
-	"codeberg.org/jhot/hats/internal/cmdstats"
+	"github.com/jhot21/hats/internal/cmdstats"
 )
 
 func TestSparklineHeights_normalizes(t *testing.T) {

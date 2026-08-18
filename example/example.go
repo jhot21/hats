@@ -6,10 +6,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	ha "codeberg.org/jhot/go-ha-sdk"
-	"codeberg.org/jhot/hats/pkg/client"
-	"codeberg.org/jhot/hats/pkg/config"
-	"codeberg.org/jhot/hats/pkg/nats"
+	ha "github.com/jhot21/go-ha-sdk"
+	"github.com/jhot21/hats/pkg/client"
+	"github.com/jhot21/hats/pkg/config"
+	"github.com/jhot21/hats/pkg/nats"
 )
 
 func main() {

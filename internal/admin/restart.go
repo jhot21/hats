@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"codeberg.org/jhot/hats/internal/admin/templates"
+	"github.com/jhot21/hats/internal/admin/templates"
 )
 
 func restartHandler(w http.ResponseWriter, r *http.Request) {

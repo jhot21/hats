@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"codeberg.org/jhot/hats/internal/util"
+	"github.com/jhot21/hats/internal/util"
 	"github.com/go-resty/resty/v2"
 	"github.com/icholy/digest"
 	"github.com/samber/lo"

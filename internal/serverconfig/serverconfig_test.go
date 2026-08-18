@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"codeberg.org/jhot/hats/internal/secrets"
-	"codeberg.org/jhot/hats/internal/serverconfig"
+	"github.com/jhot21/hats/internal/secrets"
+	"github.com/jhot21/hats/internal/serverconfig"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

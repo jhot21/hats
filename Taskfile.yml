@@ -9,15 +9,15 @@ includes:
     taskfile: https://codeberg.org/jhot/taskfiles/raw/branch/main/git.yaml
 
 vars:
-  REPO: codeberg.org/jhot/hats
+  REPO: ghcr.io/jhot21/hats
 
 tasks:
   docker-login:
     desc: Login to the {{.REPO}} repo
     cmds:
-      - docker login {{.REPO}}
+      - docker login ghcr.io
     status:
-      - cat ~/.docker/config.json | jq -e '.auths."codeberg.org".auth'
+      - cat ~/.docker/config.json | jq -e '.auths."ghcr.io".auth'
 
   test:
     desc: Run unit tests

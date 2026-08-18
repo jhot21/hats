@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	pkgnats "codeberg.org/jhot/hats/pkg/nats"
+	pkgnats "github.com/jhot21/hats/pkg/nats"
 )
 
 func TestCommandHandler_StripsAuthHeaders(t *testing.T) {
