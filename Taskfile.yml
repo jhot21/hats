@@ -6,7 +6,7 @@ includes:
     flatten: true
     optional: true
   git:
-    taskfile: https://codeberg.org/jhot/taskfiles/raw/branch/main/git.yaml
+    taskfile: https://raw.githubusercontent.com/jhot21/taskfiles/main/git.yaml
 
 vars:
   REPO: ghcr.io/jhot21/hats
