@@ -146,10 +146,16 @@ func (m *EntityMirror) KeyCountByDomain() map[string]int {
 }
 
 // Get returns the cached state string for entityID.
-// Returns ("", false) if the entity is not present in the mirror.
+// Returns ("", false) if the entity is not present in the mirror, or if its entry
+// is older than the KV TTL. The KV bucket expires keys by max age, which sends the
+// watcher no delete, so without this check the mirror would serve an entry long
+// after the KV dropped it. A miss makes the caller read Home Assistant instead.
 func (m *EntityMirror) Get(entityID string) (string, bool) {
 	m.mu.RLock()
 	e, ok := m.entries[entityID]
 	m.mu.RUnlock()
-	return e.State, ok
+	if !ok || time.Since(e.UpdatedAt) >= kvTTL {
+		return "", false
+	}
+	return e.State, true
 }

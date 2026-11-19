@@ -133,7 +133,7 @@ func TestFiltered_AlwaysSorted(t *testing.T) {
 
 func TestGet_Present(t *testing.T) {
 	m := newMirrorWithEntries(map[string]CacheEntry{
-		"sensor.temp": {Domain: "sensor", EntityID: "sensor.temp", State: "21.5"},
+		"sensor.temp": {Domain: "sensor", EntityID: "sensor.temp", State: "21.5", UpdatedAt: time.Now()},
 	})
 	state, ok := m.Get("sensor.temp")
 	if !ok {
@@ -149,5 +149,27 @@ func TestGet_Absent(t *testing.T) {
 	_, ok := m.Get("sensor.nonexistent")
 	if ok {
 		t.Fatal("expected entry to be absent")
+	}
+}
+
+// Regression: bucket-wide max age expires KV keys without sending the watcher a
+// delete, so the mirror kept entries forever (a stale "unknown" for group.family
+// was served ~17h after the KV had dropped it). Get must treat an entry older
+// than the KV TTL as absent so the API falls through to Home Assistant.
+func TestGet_ExpiredEntryIsAbsent(t *testing.T) {
+	m := newMirrorWithEntries(map[string]CacheEntry{
+		"group.family": {Domain: "group", EntityID: "group.family", State: "unknown", UpdatedAt: time.Now().Add(-3 * time.Hour)},
+	})
+	if state, ok := m.Get("group.family"); ok {
+		t.Fatalf("expired entry must be a miss, got %q", state)
+	}
+}
+
+func TestGet_EntryInsideTTLIsPresent(t *testing.T) {
+	m := newMirrorWithEntries(map[string]CacheEntry{
+		"sensor.temp": {Domain: "sensor", EntityID: "sensor.temp", State: "21.5", UpdatedAt: time.Now().Add(-kvTTL + time.Minute)},
+	})
+	if _, ok := m.Get("sensor.temp"); !ok {
+		t.Fatal("entry still inside the TTL must be served from the mirror")
 	}
 }
